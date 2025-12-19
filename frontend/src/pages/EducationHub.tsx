@@ -15,6 +15,8 @@ import { useUser } from '../context/UserContext'
 import { useNavbar } from '../context/NavbarContext'
 import educationService from '../services/educationService'
 
+
+
 // Import Lottie animations
 import streakFireAnimation from '../assets/animations/streak-fire.json'
 import moneyAnimation from '../assets/animations/Money.json'
@@ -22,6 +24,8 @@ import financeAnimation from '../assets/animations/Finance.json'
 import investingAnimation from '../assets/animations/investing.json'
 import stocksAnimation from '../assets/animations/stocks.json'
 import elephantAnimation from '../assets/animations/elephant.json'
+
+
 
 interface Island {
   id: string
