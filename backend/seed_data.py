@@ -430,12 +430,21 @@ def seed_sample_data():
     print("\n🔗 Creating KC prerequisites...")
 
     # Create prerequisite relationship
-    collections.kc_prerequisites.insert_one({
-        'kc_id': collections.knowledge_components.find_one({'slug': 'building-credit'})['_id'],
-        'prerequisite_kc_id': collections.knowledge_components.find_one({'slug': 'credit-score-basics'})['_id'],
-        'is_required': True
-    })
-    print(f"  ✓ Created prerequisite: Building Credit requires Credit Basics")
+    try:
+        building_credit_kc = collections.knowledge_components.find_one({'slug': 'building-credit'})
+        credit_basics_kc = collections.knowledge_components.find_one({'slug': 'credit-score-basics'})
+        
+        if building_credit_kc and credit_basics_kc:
+            collections.kc_prerequisites.insert_one({
+                'kc_id': building_credit_kc['_id'],
+                'prerequisite_kc_id': credit_basics_kc['_id'],
+                'is_required': True
+            })
+            print(f"  ✓ Created prerequisite: Building Credit requires Credit Basics")
+        else:
+            print(f"  ⚠️  Could not find required knowledge components")
+    except DuplicateKeyError:
+        print(f"  ⚠️  Prerequisite already exists: Building Credit requires Credit Basics")
 
     print("\n" + "="*80)
     print(" DATABASE SEEDING COMPLETED SUCCESSFULLY!")
