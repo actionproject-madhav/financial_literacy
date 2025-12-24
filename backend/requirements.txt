@@ -14,7 +14,3 @@ gunicorn
 requests
 yfinance>=0.2.0
 certifi>=2023.0.0
-psycopg2-binary>=2.9.0
-SQLAlchemy>=2.0.0
-Flask-SQLAlchemy>=3.0.0
-Flask-Migrate>=4.0.0
