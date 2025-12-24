@@ -12,7 +12,7 @@ from trading import trading_bp
 from education import education_bp
 
 # PostgreSQL/SQLAlchemy imports
-from config.database import init_db, Session, close_db
+from config.database import init_app, init_db_tables, db
 import models
 
 
@@ -80,8 +80,19 @@ app.register_blueprint(trading_bp, url_prefix='/api/trading')
 app.register_blueprint(education_bp, url_prefix='/api/education')
 
 
-# Initialize database
-db = ReceiptDatabase()
+# Initialize MongoDB database (legacy)
+receipt_db = ReceiptDatabase()
+
+# Initialize PostgreSQL database with Flask-SQLAlchemy and Flask-Migrate
+init_app(app)
+
+# Create tables if they don't exist
+try:
+    init_db_tables(app)
+except Exception as e:
+    print(f"Warning: Could not initialize PostgreSQL database: {e}")
+    print("The app will continue to work with MongoDB only.")
+    print("Make sure PostgreSQL is installed and DATABASE_URL is set in .env")
 
 # Frontend serving routes (place these BEFORE your API routes)
 @app.route('/')
@@ -575,7 +586,7 @@ def scan_receipt():
             'logo': logo
         }
         
-        receipt_id = db.save_receipt_scan(
+        receipt_id = receipt_db.save_receipt_scan(
             user_id=user_id,
             company_name=company_name,
             total_amount=total_amount,
@@ -616,7 +627,7 @@ def get_user_receipts(user_id):
         limit = int(request.args.get('limit', 20))
         skip = (page - 1) * limit
         
-        receipts = db.get_user_receipts(user_id, limit=limit, skip=skip)
+        receipts = receipt_db.get_user_receipts(user_id, limit=limit, skip=skip)
         
         return jsonify({
             'success': True,
@@ -635,7 +646,7 @@ def get_user_receipts(user_id):
 def get_user_stats(user_id):
     """Get dashboard statistics for a user"""
     try:
-        stats = db.get_user_stats(user_id)
+        stats = receipt_db.get_user_stats(user_id)
         
         if stats is None:
             return jsonify({
@@ -658,7 +669,7 @@ def get_user_stats(user_id):
 def get_company_breakdown(user_id):
     """Get spending breakdown by company"""
     try:
-        companies = db.get_company_breakdown(user_id)
+        companies = receipt_db.get_company_breakdown(user_id)
         
         return jsonify({
             'success': True,
@@ -676,7 +687,7 @@ def get_monthly_spending(user_id):
     """Get monthly spending trends"""
     try:
         months = int(request.args.get('months', 12))
-        monthly_data = db.get_monthly_spending(user_id, months=months)
+        monthly_data = receipt_db.get_monthly_spending(user_id, months=months)
         
         return jsonify({
             'success': True,
@@ -700,7 +711,7 @@ def delete_receipt(receipt_id):
                 'error': 'user_id is required'
             }), 400
         
-        success = db.delete_receipt(receipt_id, user_id)
+        success = receipt_db.delete_receipt(receipt_id, user_id)
         
         return jsonify({
             'success': success,
@@ -735,7 +746,7 @@ def update_receipt(receipt_id):
         if 'confidence' in data:
             updates['confidence'] = data['confidence']
         
-        success = db.update_receipt(receipt_id, user_id, updates)
+        success = receipt_db.update_receipt(receipt_id, user_id, updates)
         
         return jsonify({
             'success': success,
@@ -750,7 +761,7 @@ def update_receipt(receipt_id):
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({'status': 'healthy', 'database': 'connected' if db.is_connected else 'disconnected'})
+    return jsonify({'status': 'healthy', 'database': 'connected' if receipt_db.is_connected else 'disconnected'})
 
 @app.route('/', methods=['GET'])
 def home():
@@ -774,7 +785,7 @@ def health_check():
     # Check if database is connected (triggers lazy connection)
     # This will attempt to connect if not already connected
     try:
-        is_connected = db.is_connected
+        is_connected = receipt_db.is_connected
     except Exception as e:
         print(f"Error checking database connection: {e}")
         is_connected = False

@@ -5,10 +5,10 @@ from datetime import datetime
 from sqlalchemy import Column, String, Integer, Float, DateTime, ForeignKey, PrimaryKeyConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from config.database import Base
+from config.database import db
 
 
-class LearnerSkillState(Base):
+class LearnerSkillState(db.Model):
     __tablename__ = 'learner_skill_states'
 
     learner_id = Column(UUID(as_uuid=True), ForeignKey('learners.learner_id'), nullable=False)

@@ -4,10 +4,10 @@ KCPrerequisite model - defines prerequisite relationships between knowledge comp
 from sqlalchemy import Column, Boolean, ForeignKey, PrimaryKeyConstraint, CheckConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from config.database import Base
+from config.database import db
 
 
-class KCPrerequisite(Base):
+class KCPrerequisite(db.Model):
     __tablename__ = 'kc_prerequisites'
 
     kc_id = Column(UUID(as_uuid=True), ForeignKey('knowledge_components.kc_id'), nullable=False)

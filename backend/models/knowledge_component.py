@@ -6,10 +6,10 @@ from datetime import datetime
 from sqlalchemy import Column, String, Integer, Boolean, Text, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from config.database import Base
+from config.database import db
 
 
-class KnowledgeComponent(Base):
+class KnowledgeComponent(db.Model):
     __tablename__ = 'knowledge_components'
 
     kc_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

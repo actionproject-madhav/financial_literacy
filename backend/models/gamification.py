@@ -6,10 +6,10 @@ from datetime import datetime, date
 from sqlalchemy import Column, String, Integer, Boolean, Text, Date, DateTime, JSON, ForeignKey, PrimaryKeyConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from config.database import Base
+from config.database import db
 
 
-class Achievement(Base):
+class Achievement(db.Model):
     __tablename__ = 'achievements'
 
     achievement_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -36,7 +36,7 @@ class Achievement(Base):
         }
 
 
-class LearnerAchievement(Base):
+class LearnerAchievement(db.Model):
     __tablename__ = 'learner_achievements'
 
     learner_id = Column(UUID(as_uuid=True), ForeignKey('learners.learner_id'), nullable=False)
@@ -64,7 +64,7 @@ class LearnerAchievement(Base):
         }
 
 
-class DailyProgress(Base):
+class DailyProgress(db.Model):
     __tablename__ = 'daily_progress'
 
     learner_id = Column(UUID(as_uuid=True), ForeignKey('learners.learner_id'), nullable=False)

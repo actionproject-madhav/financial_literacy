@@ -5,10 +5,10 @@ import uuid
 from sqlalchemy import Column, String, Boolean, Text, JSON, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from config.database import Base
+from config.database import db
 
 
-class QuestionTemplate(Base):
+class QuestionTemplate(db.Model):
     __tablename__ = 'question_templates'
 
     template_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -38,7 +38,7 @@ class QuestionTemplate(Base):
         }
 
 
-class CulturalContext(Base):
+class CulturalContext(db.Model):
     __tablename__ = 'cultural_contexts'
 
     context_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

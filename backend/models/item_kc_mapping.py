@@ -4,10 +4,10 @@ ItemKCMapping model - maps learning items to knowledge components
 from sqlalchemy import Column, Float, ForeignKey, PrimaryKeyConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from config.database import Base
+from config.database import db
 
 
-class ItemKCMapping(Base):
+class ItemKCMapping(db.Model):
     __tablename__ = 'item_kc_mappings'
 
     item_id = Column(UUID(as_uuid=True), ForeignKey('learning_items.item_id'), nullable=False)

@@ -5,10 +5,10 @@ import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, Integer, Boolean, Float, JSON, DateTime
 from sqlalchemy.dialects.postgresql import UUID
-from config.database import Base
+from config.database import db
 
 
-class LearningItem(Base):
+class LearningItem(db.Model):
     __tablename__ = 'learning_items'
 
     item_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
