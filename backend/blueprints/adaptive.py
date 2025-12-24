@@ -853,6 +853,327 @@ def generate_cultural_bridge():
         return jsonify({'error': str(e)}), 500
 
 
+@adaptive_bp.route('/placement-test/start', methods=['POST'])
+def start_placement_test():
+    """
+    Start placement test for new learner.
+
+    Request JSON:
+    {
+        "learner_id": "507f..."
+    }
+
+    Response:
+    {
+        "test_id": "uuid",
+        "items": [
+            {
+                "item_id": "...",
+                "item_type": "multiple_choice",
+                "content": {...},
+                "kc_id": "...",
+                "kc_name": "...",
+                "position": 0
+            },
+            ...  // 10 items total
+        ],
+        "total_items": 10
+    }
+    """
+    try:
+        data = request.get_json()
+        learner_id = data.get('learner_id')
+
+        if not learner_id:
+            return jsonify({'error': 'learner_id required'}), 400
+
+        db = get_db()
+
+        # Verify learner exists
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        # Select 10 questions across difficulty range
+        # Get items from different difficulty tiers (1-3) for balanced assessment
+        items_per_tier = {1: 4, 2: 4, 3: 2}  # More beginner items
+
+        selected_items = []
+        position = 0
+
+        for tier, count in items_per_tier.items():
+            # Get items for this tier
+            tier_items = list(db.collections.learning_items.aggregate([
+                {
+                    '$lookup': {
+                        'from': 'item_kc_mappings',
+                        'localField': '_id',
+                        'foreignField': 'item_id',
+                        'as': 'mappings'
+                    }
+                },
+                {'$unwind': '$mappings'},
+                {
+                    '$lookup': {
+                        'from': 'knowledge_components',
+                        'localField': 'mappings.kc_id',
+                        'foreignField': '_id',
+                        'as': 'kc'
+                    }
+                },
+                {'$unwind': '$kc'},
+                {'$match': {
+                    'kc.difficulty_tier': tier,
+                    'item_type': 'multiple_choice'
+                }},
+                {'$sample': {'size': count}}
+            ]))
+
+            for item_data in tier_items:
+                selected_items.append({
+                    'item_id': str(item_data['_id']),
+                    'item_type': item_data.get('item_type', 'multiple_choice'),
+                    'content': item_data.get('content', {}),
+                    'kc_id': str(item_data['kc']['_id']),
+                    'kc_name': item_data['kc'].get('name'),
+                    'kc_domain': item_data['kc'].get('domain'),
+                    'difficulty_tier': tier,
+                    'position': position
+                })
+                position += 1
+
+        # If we don't have enough items, get any available items
+        if len(selected_items) < 10:
+            additional_needed = 10 - len(selected_items)
+            additional_items = list(db.collections.learning_items.aggregate([
+                {
+                    '$lookup': {
+                        'from': 'item_kc_mappings',
+                        'localField': '_id',
+                        'foreignField': 'item_id',
+                        'as': 'mappings'
+                    }
+                },
+                {'$unwind': '$mappings'},
+                {
+                    '$lookup': {
+                        'from': 'knowledge_components',
+                        'localField': 'mappings.kc_id',
+                        'foreignField': '_id',
+                        'as': 'kc'
+                    }
+                },
+                {'$unwind': '$kc'},
+                {'$match': {
+                    'item_type': 'multiple_choice',
+                    '_id': {'$nin': [ObjectId(item['item_id']) for item in selected_items]}
+                }},
+                {'$sample': {'size': additional_needed}}
+            ]))
+
+            for item_data in additional_items:
+                selected_items.append({
+                    'item_id': str(item_data['_id']),
+                    'item_type': item_data.get('item_type', 'multiple_choice'),
+                    'content': item_data.get('content', {}),
+                    'kc_id': str(item_data['kc']['_id']),
+                    'kc_name': item_data['kc'].get('name'),
+                    'kc_domain': item_data['kc'].get('domain'),
+                    'difficulty_tier': item_data['kc'].get('difficulty_tier', 1),
+                    'position': position
+                })
+                position += 1
+
+        test_id = str(uuid.uuid4())
+
+        return jsonify({
+            'test_id': test_id,
+            'items': selected_items,
+            'total_items': len(selected_items)
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@adaptive_bp.route('/placement-test/complete', methods=['POST'])
+def complete_placement_test():
+    """
+    Process placement test results and set initial skill states.
+
+    Request JSON:
+    {
+        "learner_id": "507f...",
+        "test_id": "uuid",
+        "results": [
+            {
+                "item_id": "...",
+                "kc_id": "...",
+                "is_correct": true,
+                "response_time_ms": 12000
+            },
+            ...
+        ]
+    }
+
+    Response:
+    {
+        "success": true,
+        "score": 0.75,
+        "skills_initialized": 15,
+        "performance_level": "intermediate",
+        "message": "Placement test complete! Your skills have been initialized."
+    }
+    """
+    try:
+        data = request.get_json()
+        learner_id = data.get('learner_id')
+        test_id = data.get('test_id')
+        results = data.get('results', [])
+
+        if not learner_id or not results:
+            return jsonify({'error': 'learner_id and results required'}), 400
+
+        db = get_db()
+
+        # Verify learner exists
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        # Calculate overall score
+        total_items = len(results)
+        correct_count = sum(1 for r in results if r.get('is_correct'))
+        score = correct_count / total_items if total_items > 0 else 0.0
+
+        # Determine performance level
+        if score >= 0.8:
+            performance_level = 'advanced'
+            base_mastery = 0.6
+        elif score >= 0.6:
+            performance_level = 'intermediate'
+            base_mastery = 0.4
+        elif score >= 0.4:
+            performance_level = 'beginner'
+            base_mastery = 0.2
+        else:
+            performance_level = 'novice'
+            base_mastery = 0.1
+
+        # Calculate per-KC performance
+        kc_performance = {}
+        for result in results:
+            kc_id = result.get('kc_id')
+            if kc_id:
+                if kc_id not in kc_performance:
+                    kc_performance[kc_id] = {'correct': 0, 'total': 0}
+                kc_performance[kc_id]['total'] += 1
+                if result.get('is_correct'):
+                    kc_performance[kc_id]['correct'] += 1
+
+        # Get all tier-1 skills to initialize
+        tier1_skills = list(db.collections.knowledge_components.find({
+            'difficulty_tier': 1
+        }))
+
+        skills_initialized = 0
+
+        for skill in tier1_skills:
+            kc_id = str(skill['_id'])
+
+            # Check if learner already has this skill state
+            existing_state = db.collections.learner_skill_states.find_one({
+                'learner_id': ObjectId(learner_id),
+                'kc_id': ObjectId(kc_id)
+            })
+
+            # Calculate initial mastery for this KC
+            if kc_id in kc_performance:
+                kc_score = kc_performance[kc_id]['correct'] / kc_performance[kc_id]['total']
+                # Adjust based on KC-specific performance
+                p_mastery = base_mastery + (kc_score - score) * 0.2
+                p_mastery = max(0.05, min(0.85, p_mastery))  # Clamp between 0.05 and 0.85
+            else:
+                # Use base mastery for untested KCs
+                p_mastery = base_mastery
+
+            # Determine status
+            if p_mastery >= 0.95:
+                status = 'mastered'
+            elif p_mastery >= 0.5:
+                status = 'in_progress'
+            else:
+                status = 'available'
+
+            if existing_state:
+                # Update existing state
+                db.collections.learner_skill_states.update_one(
+                    {'_id': existing_state['_id']},
+                    {
+                        '$set': {
+                            'p_mastery': p_mastery,
+                            'status': status,
+                            'updated_at': datetime.utcnow()
+                        }
+                    }
+                )
+            else:
+                # Create new state
+                db.collections.create_learner_skill_state(
+                    learner_id=learner_id,
+                    kc_id=kc_id,
+                    status=status,
+                    p_mastery=p_mastery
+                )
+
+            skills_initialized += 1
+
+        # Log all placement test interactions
+        for result in results:
+            try:
+                db.collections.interactions.insert_one({
+                    'learner_id': ObjectId(learner_id),
+                    'item_id': ObjectId(result['item_id']),
+                    'kc_id': ObjectId(result['kc_id']),
+                    'session_id': test_id,
+                    'is_correct': result.get('is_correct', False),
+                    'response_time_ms': result.get('response_time_ms', 0),
+                    'response_value': result.get('response_value', {}),
+                    'hint_used': False,
+                    'is_placement_test': True,
+                    'created_at': datetime.utcnow()
+                })
+            except Exception:
+                pass  # Ignore individual interaction logging errors
+
+        # Update learner profile with placement test completion
+        db.collections.learners.update_one(
+            {'_id': ObjectId(learner_id)},
+            {
+                '$set': {
+                    'placement_test_completed': True,
+                    'placement_test_completed_at': datetime.utcnow(),
+                    'placement_test_score': score,
+                    'performance_level': performance_level,
+                    'updated_at': datetime.utcnow()
+                }
+            }
+        )
+
+        return jsonify({
+            'success': True,
+            'score': round(score, 2),
+            'correct_count': correct_count,
+            'total_items': total_items,
+            'skills_initialized': skills_initialized,
+            'performance_level': performance_level,
+            'message': f'Placement test complete! You scored {correct_count}/{total_items}. Your skills have been initialized based on your performance.'
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # Health check endpoint
 @adaptive_bp.route('/health', methods=['GET'])
 def health_check():

@@ -5,6 +5,7 @@ from auth import auth_bp
 from database import Database
 from services import LearningEngine
 from blueprints.adaptive import adaptive_bp
+from blueprints.learners import learners_bp
 
 # Create Flask app
 app = Flask(__name__)
@@ -55,6 +56,7 @@ app.config['LEARNING_ENGINE'] = learning_engine
 # Register blueprints
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(adaptive_bp)
+app.register_blueprint(learners_bp)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
