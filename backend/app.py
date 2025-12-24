@@ -11,6 +11,10 @@ from ai_hub import ai_hub_bp
 from trading import trading_bp
 from education import education_bp
 
+# PostgreSQL/SQLAlchemy imports
+from config.database import init_db, Session, close_db
+import models
+
 
 # Optional imports for OCR functionality
 try:
