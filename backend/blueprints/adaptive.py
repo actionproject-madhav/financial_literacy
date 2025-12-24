@@ -580,6 +580,279 @@ def calibrate_items():
         return jsonify({'error': str(e)}), 500
 
 
+@adaptive_bp.route('/personalize', methods=['POST'])
+def personalize_content():
+    """
+    Personalize learning content for a learner.
+
+    Request JSON:
+    {
+        "learner_id": "507f...",
+        "item_id": "507f..."
+    }
+
+    Response:
+    {
+        "item_id": "...",
+        "content": {...},
+        "cultural_bridge": "...",  // if available
+        "visa_note": "...",        // if available
+        "personalized": true
+    }
+    """
+    try:
+        from services import PersonalizationService
+
+        data = request.get_json()
+        learner_id = data.get('learner_id')
+        item_id = data.get('item_id')
+
+        if not learner_id or not item_id:
+            return jsonify({'error': 'learner_id and item_id required'}), 400
+
+        db = get_db()
+
+        # Get learner
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        # Get item
+        item = db.collections.learning_items.find_one({'_id': ObjectId(item_id)})
+        if not item:
+            return jsonify({'error': 'Item not found'}), 404
+
+        # Get KC for this item
+        mapping = db.collections.item_kc_mappings.find_one({'item_id': ObjectId(item_id)})
+        if mapping:
+            item['kc_id'] = str(mapping['kc_id'])
+
+        # Personalize
+        service = PersonalizationService(db.collections)
+        personalized = service.personalize_item(
+            {
+                'item_id': str(item['_id']),
+                'kc_id': item.get('kc_id'),
+                'content': item.get('content', {})
+            },
+            {
+                'country_of_origin': learner.get('country_of_origin'),
+                'visa_type': learner.get('visa_type'),
+                'english_proficiency': learner.get('english_proficiency')
+            }
+        )
+
+        personalized['personalized'] = True
+        return jsonify(personalized), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@adaptive_bp.route('/explain-wrong', methods=['POST'])
+def explain_wrong_answer():
+    """
+    Generate personalized explanation for wrong answer.
+
+    Request JSON:
+    {
+        "learner_id": "507f...",
+        "item_id": "507f...",
+        "learner_answer": 0  // index of chosen answer
+    }
+
+    Response:
+    {
+        "explanation": "Personalized explanation...",
+        "encouragement": "Keep going! You're learning."
+    }
+    """
+    try:
+        from services import PersonalizationService
+
+        data = request.get_json()
+        learner_id = data.get('learner_id')
+        item_id = data.get('item_id')
+        learner_answer = data.get('learner_answer')
+
+        if learner_id is None or item_id is None or learner_answer is None:
+            return jsonify({'error': 'learner_id, item_id, and learner_answer required'}), 400
+
+        db = get_db()
+
+        # Get learner
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        # Get item
+        item = db.collections.learning_items.find_one({'_id': ObjectId(item_id)})
+        if not item:
+            return jsonify({'error': 'Item not found'}), 404
+
+        # Generate explanation
+        service = PersonalizationService(db.collections)
+        explanation = service.generate_wrong_answer_explanation(
+            {
+                'content': item.get('content', {})
+            },
+            learner_answer,
+            {
+                'country_of_origin': learner.get('country_of_origin'),
+                'english_proficiency': learner.get('english_proficiency'),
+                'display_name': learner.get('display_name')
+            }
+        )
+
+        # Generate encouragement
+        encouragement = service.generate_encouragement(
+            {
+                'display_name': learner.get('display_name'),
+                'country_of_origin': learner.get('country_of_origin')
+            },
+            context='incorrect'
+        )
+
+        return jsonify({
+            'explanation': explanation,
+            'encouragement': encouragement
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@adaptive_bp.route('/hint', methods=['POST'])
+def get_hint():
+    """
+    Get a personalized hint for a question.
+
+    Request JSON:
+    {
+        "learner_id": "507f...",
+        "item_id": "507f..."
+    }
+
+    Response:
+    {
+        "hint": "Think about the key principle..."
+    }
+    """
+    try:
+        from services import PersonalizationService
+
+        data = request.get_json()
+        learner_id = data.get('learner_id')
+        item_id = data.get('item_id')
+
+        if not learner_id or not item_id:
+            return jsonify({'error': 'learner_id and item_id required'}), 400
+
+        db = get_db()
+
+        # Get learner
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        # Get item
+        item = db.collections.learning_items.find_one({'_id': ObjectId(item_id)})
+        if not item:
+            return jsonify({'error': 'Item not found'}), 404
+
+        # Generate hint
+        service = PersonalizationService(db.collections)
+        hint = service.generate_hint(
+            {
+                'content': item.get('content', {})
+            },
+            {
+                'country_of_origin': learner.get('country_of_origin'),
+                'english_proficiency': learner.get('english_proficiency')
+            }
+        )
+
+        return jsonify({
+            'hint': hint
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@adaptive_bp.route('/generate-cultural-bridge', methods=['POST'])
+def generate_cultural_bridge():
+    """
+    Generate cultural context for a KC using LLM.
+
+    Request JSON:
+    {
+        "kc_id": "507f...",
+        "country_code": "IND"
+    }
+
+    Response:
+    {
+        "cultural_bridge": "Generated context...",
+        "cached": false
+    }
+    """
+    try:
+        from services import PersonalizationService
+
+        data = request.get_json()
+        kc_id = data.get('kc_id')
+        country_code = data.get('country_code')
+
+        if not kc_id or not country_code:
+            return jsonify({'error': 'kc_id and country_code required'}), 400
+
+        db = get_db()
+
+        # Verify KC exists
+        kc = db.collections.knowledge_components.find_one({'_id': ObjectId(kc_id)})
+        if not kc:
+            return jsonify({'error': 'Knowledge component not found'}), 404
+
+        service = PersonalizationService(db.collections)
+
+        # Check cache first
+        cached_bridge = service.get_cultural_bridge(kc_id, country_code)
+
+        if cached_bridge:
+            return jsonify({
+                'cultural_bridge': cached_bridge,
+                'cached': True
+            }), 200
+
+        # Generate new one
+        bridge = service.generate_cultural_bridge(kc_id, country_code)
+
+        # Optionally cache it
+        if bridge and bridge != f"This topic covers {kc['name']} in the US financial system.":
+            try:
+                db.collections.cultural_contexts.insert_one({
+                    'kc_id': ObjectId(kc_id),
+                    'country_code': country_code,
+                    'context_type': 'comparison',
+                    'content': bridge,
+                    'is_verified': False,  # LLM-generated, not human-verified
+                    'created_at': datetime.utcnow(),
+                    'upvotes': 0,
+                    'downvotes': 0
+                })
+            except Exception:
+                pass  # Ignore cache errors
+
+        return jsonify({
+            'cultural_bridge': bridge,
+            'cached': False
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # Health check endpoint
 @adaptive_bp.route('/health', methods=['GET'])
 def health_check():
