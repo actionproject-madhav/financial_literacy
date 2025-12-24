@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
+from mongo_collections import FinLitCollections
 
 load_dotenv()
 
@@ -8,11 +9,12 @@ class Database:
     def __init__(self):
         self.mongo_uri = os.getenv('MONGO_URI', 'mongodb://localhost:27017/')
         self.database_name = os.getenv('DATABASE_NAME', 'app_database')
-        
+
         self.client = None
         self.db = None
+        self.collections = None
         self._connection_attempted = False
-        
+
         # Configure connection based on URI
         if 'localhost' in self.mongo_uri:
             self._mongo_uri = self.mongo_uri
@@ -54,6 +56,11 @@ class Database:
             self.db = self.client[self.database_name]
             # Test connection
             self.client.admin.command('ping')
+
+            # Initialize FinLit collections
+            self.collections = FinLitCollections(self.db)
+            print("✅ FinLit collections initialized")
+
             return True
             
         except Exception as e:
@@ -66,3 +73,16 @@ class Database:
     def is_connected(self):
         """Check if database is connected"""
         return self._ensure_connection()
+
+    def initialize_indexes(self):
+        """Create all database indexes"""
+        if not self._ensure_connection():
+            print("❌ Cannot create indexes - database not connected")
+            return False
+
+        try:
+            self.collections.create_indexes()
+            return True
+        except Exception as e:
+            print(f"❌ Error creating indexes: {e}")
+            return False
