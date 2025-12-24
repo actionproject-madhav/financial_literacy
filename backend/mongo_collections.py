@@ -170,7 +170,7 @@ class FinLitCollections:
 
     def update_streak(self, learner_id: str, increment: bool = True) -> bool:
         """Update learner's streak"""
-        today = date.today()
+        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         if increment:
             result = self.learners.update_one(
                 {'_id': ObjectId(learner_id)},
@@ -470,10 +470,16 @@ class FinLitCollections:
         learner = self.get_learner_by_id(learner_id)
         daily_goal = learner.get('daily_goal_minutes', 10) if learner else 10
 
+        # Convert date to datetime for MongoDB storage
+        if isinstance(date_obj, date):
+            date_datetime = datetime.combine(date_obj, datetime.min.time())
+        else:
+            date_datetime = date_obj
+
         result = self.daily_progress.update_one(
             {
                 'learner_id': ObjectId(learner_id),
-                'date': date_obj
+                'date': date_datetime
             },
             {
                 '$inc': {
@@ -488,7 +494,7 @@ class FinLitCollections:
         # Check if goal met
         progress = self.daily_progress.find_one({
             'learner_id': ObjectId(learner_id),
-            'date': date_obj
+            'date': date_datetime
         })
         if progress and progress.get('minutes_practiced', 0) >= daily_goal:
             self.daily_progress.update_one(

@@ -8,6 +8,7 @@ Usage: python seed_data.py
 from database import Database
 from datetime import datetime, timedelta, date
 import uuid
+from pymongo.errors import DuplicateKeyError
 
 def seed_sample_data():
     """Seed the database with sample data"""
@@ -19,7 +20,7 @@ def seed_sample_data():
     db = Database()
 
     if not db.is_connected:
-        print("❌ Cannot connect to database. Check your MONGO_URI in .env")
+        print(" Cannot connect to database. Check your MONGO_URI in .env")
         return
 
     # Create indexes first
@@ -33,41 +34,53 @@ def seed_sample_data():
     # Sample learners
     learners = []
 
-    learner1_id = collections.create_learner(
-        email="maria.garcia@example.com",
-        display_name="Maria Garcia",
-        native_language="Spanish",
-        english_proficiency="intermediate",
-        immigration_status="H1B",
-        country_of_origin="Mexico",
-        visa_type="H1B",
-        has_ssn=True,
-        sends_remittances=True,
-        financial_goals=["emergency_fund", "retirement", "home_purchase"],
-        financial_experience_level="novice",
-        daily_goal_minutes=15,
-        timezone="America/Los_Angeles"
-    )
+    # Check if Maria already exists
+    maria = collections.get_learner_by_email("maria.garcia@example.com")
+    if maria:
+        learner1_id = str(maria['_id'])
+        print(f"  ⚠️  Learner already exists: Maria Garcia ({learner1_id})")
+    else:
+        learner1_id = collections.create_learner(
+            email="maria.garcia@example.com",
+            display_name="Maria Garcia",
+            native_language="Spanish",
+            english_proficiency="intermediate",
+            immigration_status="H1B",
+            country_of_origin="Mexico",
+            visa_type="H1B",
+            has_ssn=True,
+            sends_remittances=True,
+            financial_goals=["emergency_fund", "retirement", "home_purchase"],
+            financial_experience_level="novice",
+            daily_goal_minutes=15,
+            timezone="America/Los_Angeles"
+        )
+        print(f"  ✓ Created learner: Maria Garcia ({learner1_id})")
     learners.append(learner1_id)
-    print(f"  ✓ Created learner: Maria Garcia ({learner1_id})")
 
-    learner2_id = collections.create_learner(
-        email="raj.patel@example.com",
-        display_name="Raj Patel",
-        native_language="Hindi",
-        english_proficiency="advanced",
-        immigration_status="Green Card",
-        country_of_origin="India",
-        visa_type="Green Card",
-        has_ssn=True,
-        sends_remittances=False,
-        financial_goals=["investing", "college_fund"],
-        financial_experience_level="intermediate",
-        daily_goal_minutes=20,
-        timezone="America/New_York"
-    )
+    # Check if Raj already exists
+    raj = collections.get_learner_by_email("raj.patel@example.com")
+    if raj:
+        learner2_id = str(raj['_id'])
+        print(f"  ⚠️  Learner already exists: Raj Patel ({learner2_id})")
+    else:
+        learner2_id = collections.create_learner(
+            email="raj.patel@example.com",
+            display_name="Raj Patel",
+            native_language="Hindi",
+            english_proficiency="advanced",
+            immigration_status="Green Card",
+            country_of_origin="India",
+            visa_type="Green Card",
+            has_ssn=True,
+            sends_remittances=False,
+            financial_goals=["investing", "college_fund"],
+            financial_experience_level="intermediate",
+            daily_goal_minutes=20,
+            timezone="America/New_York"
+        )
+        print(f"  ✓ Created learner: Raj Patel ({learner2_id})")
     learners.append(learner2_id)
-    print(f"  ✓ Created learner: Raj Patel ({learner2_id})")
 
     print("\n📚 Creating knowledge components...")
 
@@ -75,48 +88,67 @@ def seed_sample_data():
     kcs = {}
 
     # Credit domain
-    credit_basics_id = collections.create_knowledge_component(
-        slug="credit-score-basics",
-        name="Understanding Credit Scores",
-        description="Learn what credit scores are, how they're calculated, and why they matter for your financial future in the US",
-        domain="credit",
-        difficulty_tier=1,
-        bloom_level="understand",
-        estimated_minutes=20,
-        icon_url="/icons/credit-score.svg"
-    )
-    kcs['credit_basics'] = credit_basics_id
-    print(f"  ✓ Created KC: Credit Score Basics ({credit_basics_id})")
+    try:
+        credit_basics_id = collections.create_knowledge_component(
+            slug="credit-score-basics",
+            name="Understanding Credit Scores",
+            description="Learn what credit scores are, how they're calculated, and why they matter for your financial future in the US",
+            domain="credit",
+            difficulty_tier=1,
+            bloom_level="understand",
+            estimated_minutes=20,
+            icon_url="/icons/credit-score.svg"
+        )
+        kcs['credit_basics'] = credit_basics_id
+        print(f"  ✓ Created KC: Credit Score Basics ({credit_basics_id})")
+    except DuplicateKeyError:
+        # Find existing KC by slug
+        existing = collections.knowledge_components.find_one({"slug": "credit-score-basics"})
+        credit_basics_id = str(existing['_id'])
+        kcs['credit_basics'] = credit_basics_id
+        print(f"  ⚠️  KC already exists: Credit Score Basics ({credit_basics_id})")
 
-    credit_building_id = collections.create_knowledge_component(
-        slug="building-credit",
-        name="Building Credit History",
-        description="Strategies for establishing and improving your credit score",
-        domain="credit",
-        parent_kc_id=credit_basics_id,
-        difficulty_tier=2,
-        bloom_level="apply",
-        estimated_minutes=25,
-        icon_url="/icons/credit-building.svg"
-    )
-    kcs['credit_building'] = credit_building_id
-    print(f"  ✓ Created KC: Building Credit ({credit_building_id})")
+    try:
+        credit_building_id = collections.create_knowledge_component(
+            slug="building-credit",
+            name="Building Credit History",
+            description="Strategies for establishing and improving your credit score",
+            domain="credit",
+            parent_kc_id=credit_basics_id,
+            difficulty_tier=2,
+            bloom_level="apply",
+            estimated_minutes=25,
+            icon_url="/icons/credit-building.svg"
+        )
+        kcs['credit_building'] = credit_building_id
+        print(f"  ✓ Created KC: Building Credit ({credit_building_id})")
+    except DuplicateKeyError:
+        existing = collections.knowledge_components.find_one({"slug": "building-credit"})
+        credit_building_id = str(existing['_id'])
+        kcs['credit_building'] = credit_building_id
+        print(f"  ⚠️  KC already exists: Building Credit ({credit_building_id})")
 
     # Banking domain
-    banking_basics_id = collections.create_knowledge_component(
-        slug="banking-basics",
-        name="Banking Fundamentals",
-        description="Understanding bank accounts, fees, and services in the US",
-        domain="banking",
-        difficulty_tier=1,
-        bloom_level="understand",
-        estimated_minutes=15,
-        icon_url="/icons/bank.svg"
-    )
-    kcs['banking_basics'] = banking_basics_id
-    print(f"  ✓ Created KC: Banking Basics ({banking_basics_id})")
+    try:
+        banking_basics_id = collections.create_knowledge_component(
+            slug="banking-basics",
+            name="Banking Fundamentals",
+            description="Understanding bank accounts, fees, and services in the US",
+            domain="banking",
+            difficulty_tier=1,
+            bloom_level="understand",
+            estimated_minutes=15,
+            icon_url="/icons/bank.svg"
+        )
+        kcs['banking_basics'] = banking_basics_id
+        print(f"  ✓ Created KC: Banking Basics ({banking_basics_id})")
+    except DuplicateKeyError:
+        existing = collections.knowledge_components.find_one({"slug": "banking-basics"})
+        banking_basics_id = str(existing['_id'])
+        kcs['banking_basics'] = banking_basics_id
+        print(f"  ⚠️  KC already exists: Banking Basics ({banking_basics_id})")
 
-    print("\n📝 Creating learning items...")
+    print("\n Creating learning items...")
 
     # Create learning items
     items = {}
@@ -186,53 +218,88 @@ def seed_sample_data():
     items['first_account'] = item3_id
     print(f"  ✓ Created item: First Bank Account ({item3_id})")
 
-    print("\n🔗 Creating item-KC mappings...")
+    print("\n📝 Creating item-KC mappings...")
 
     # Map items to knowledge components
-    collections.create_item_kc_mapping(item1_id, credit_basics_id, weight=1.0)
-    collections.create_item_kc_mapping(item2_id, credit_basics_id, weight=1.0)
-    collections.create_item_kc_mapping(item3_id, banking_basics_id, weight=1.0)
-    print(f"  ✓ Created 3 item-KC mappings")
+    mapping_count = 0
+    try:
+        collections.create_item_kc_mapping(item1_id, credit_basics_id, weight=1.0)
+        mapping_count += 1
+    except DuplicateKeyError:
+        pass
+    try:
+        collections.create_item_kc_mapping(item2_id, credit_basics_id, weight=1.0)
+        mapping_count += 1
+    except DuplicateKeyError:
+        pass
+    try:
+        collections.create_item_kc_mapping(item3_id, banking_basics_id, weight=1.0)
+        mapping_count += 1
+    except DuplicateKeyError:
+        pass
+    print(f"  ✓ Created/verified {mapping_count} item-KC mappings")
 
     print("\n🎯 Creating learner skill states...")
 
     # Initialize skill states for Maria
-    collections.create_learner_skill_state(
-        learner1_id,
-        credit_basics_id,
-        status='available'
-    )
-    collections.create_learner_skill_state(
-        learner1_id,
-        banking_basics_id,
-        status='available'
-    )
-    collections.create_learner_skill_state(
-        learner1_id,
-        credit_building_id,
-        status='locked'
-    )
-    print(f"  ✓ Created skill states for Maria")
+    skill_state_count = 0
+    try:
+        collections.create_learner_skill_state(
+            learner1_id,
+            credit_basics_id,
+            status='available'
+        )
+        skill_state_count += 1
+    except DuplicateKeyError:
+        pass
+    try:
+        collections.create_learner_skill_state(
+            learner1_id,
+            banking_basics_id,
+            status='available'
+        )
+        skill_state_count += 1
+    except DuplicateKeyError:
+        pass
+    try:
+        collections.create_learner_skill_state(
+            learner1_id,
+            credit_building_id,
+            status='locked'
+        )
+        skill_state_count += 1
+    except DuplicateKeyError:
+        pass
+    print(f"  ✓ Created/verified skill states for Maria ({skill_state_count} new)")
 
     # Initialize skill states for Raj
-    collections.create_learner_skill_state(
-        learner2_id,
-        credit_basics_id,
-        status='in_progress',
-        p_mastery=0.6,
-        total_attempts=5,
-        correct_count=4
-    )
-    collections.create_learner_skill_state(
-        learner2_id,
-        banking_basics_id,
-        status='mastered',
-        p_mastery=0.95,
-        total_attempts=10,
-        correct_count=10,
-        mastered_at=datetime.utcnow() - timedelta(days=7)
-    )
-    print(f"  ✓ Created skill states for Raj")
+    skill_state_count = 0
+    try:
+        collections.create_learner_skill_state(
+            learner2_id,
+            credit_basics_id,
+            status='in_progress',
+            p_mastery=0.6,
+            total_attempts=5,
+            correct_count=4
+        )
+        skill_state_count += 1
+    except DuplicateKeyError:
+        pass
+    try:
+        collections.create_learner_skill_state(
+            learner2_id,
+            banking_basics_id,
+            status='mastered',
+            p_mastery=0.95,
+            total_attempts=10,
+            correct_count=10,
+            mastered_at=datetime.utcnow() - timedelta(days=7)
+        )
+        skill_state_count += 1
+    except DuplicateKeyError:
+        pass
+    print(f"  ✓ Created/verified skill states for Raj ({skill_state_count} new)")
 
     print("\n💬 Creating sample interactions...")
 
@@ -270,42 +337,56 @@ def seed_sample_data():
     )
     print(f"  ✓ Created 2 interactions for Raj")
 
-    # Update item statistics
-    collections.update_item_statistics(item1_id, is_correct=True, response_time_ms=8500)
-    collections.update_item_statistics(item2_id, is_correct=True, response_time_ms=12000)
+    # Update item statistics (optional - items are created without stats)
+    try:
+        collections.update_item_statistics(item1_id, is_correct=True, response_time_ms=8500)
+        collections.update_item_statistics(item2_id, is_correct=True, response_time_ms=12000)
+        print("  ✓ Updated item statistics")
+    except Exception as e:
+        print(f"  ⚠️  Could not update item statistics: {e}")
 
     print("\n🏆 Creating achievements...")
 
     # Create achievements
-    first_steps = collections.create_achievement(
-        slug="first-steps",
-        name="First Steps",
-        description="Complete your first lesson",
-        icon_url="/icons/achievements/first-steps.svg",
-        xp_reward=50,
-        criteria={"type": "lessons_completed", "count": 1}
-    )
-    print(f"  ✓ Created achievement: First Steps ({first_steps})")
+    try:
+        first_steps = collections.create_achievement(
+            slug="first-steps",
+            name="First Steps",
+            description="Complete your first lesson",
+            icon_url="/icons/achievements/first-steps.svg",
+            xp_reward=50,
+            criteria={"type": "lessons_completed", "count": 1}
+        )
+        print(f"  ✓ Created achievement: First Steps ({first_steps})")
+    except DuplicateKeyError:
+        existing = collections.achievements.find_one({"slug": "first-steps"})
+        first_steps = str(existing['_id'])
+        print(f"  ⚠️  Achievement already exists: First Steps ({first_steps})")
 
-    week_warrior = collections.create_achievement(
-        slug="week-warrior",
-        name="Week Warrior",
-        description="Maintain a 7-day streak",
-        icon_url="/icons/achievements/week-warrior.svg",
-        xp_reward=100,
-        criteria={"type": "streak", "days": 7}
-    )
-    print(f"  ✓ Created achievement: Week Warrior ({week_warrior})")
+    try:
+        week_warrior = collections.create_achievement(
+            slug="week-warrior",
+            name="Week Warrior",
+            description="Maintain a 7-day streak",
+            icon_url="/icons/achievements/week-warrior.svg",
+            xp_reward=100,
+            criteria={"type": "streak", "days": 7}
+        )
+        print(f"  ✓ Created achievement: Week Warrior ({week_warrior})")
+    except DuplicateKeyError:
+        existing = collections.achievements.find_one({"slug": "week-warrior"})
+        week_warrior = str(existing['_id'])
+        print(f"  ⚠️  Achievement already exists: Week Warrior ({week_warrior})")
 
     # Award achievement to Raj
     collections.award_achievement(learner2_id, first_steps)
     print(f"  ✓ Awarded 'First Steps' to Raj")
 
-    print("\n📅 Creating daily progress...")
+    print("\n Creating daily progress...")
 
     # Create daily progress for last 7 days for Raj
     for i in range(7):
-        progress_date = date.today() - timedelta(days=i)
+        progress_date = datetime.now().date() - timedelta(days=i)
         collections.update_daily_progress(
             learner_id=learner2_id,
             date_obj=progress_date,
@@ -318,13 +399,15 @@ def seed_sample_data():
     # Update learner XP and streak
     collections.add_xp(learner2_id, 450)
     collections.update_streak(learner2_id, increment=True)
-    collections.learners.update_one(
-        {'_id': collections.learners.find_one({'email': 'raj.patel@example.com'})['_id']},
-        {'$set': {'streak_count': 7, 'streak_last_date': date.today()}}
-    )
+    raj_learner = collections.get_learner_by_email('raj.patel@example.com')
+    if raj_learner:
+        collections.learners.update_one(
+            {'_id': raj_learner['_id']},
+            {'$set': {'streak_count': 7, 'streak_last_date': datetime.now()}}
+        )
     print(f"  ✓ Updated Raj's XP and streak")
 
-    print("\n🌍 Creating cultural contexts...")
+    print("\n Creating cultural contexts...")
 
     # Add cultural context
     collections.cultural_contexts.insert_one({
@@ -355,9 +438,9 @@ def seed_sample_data():
     print(f"  ✓ Created prerequisite: Building Credit requires Credit Basics")
 
     print("\n" + "="*80)
-    print("✅ DATABASE SEEDING COMPLETED SUCCESSFULLY!")
+    print(" DATABASE SEEDING COMPLETED SUCCESSFULLY!")
     print("="*80)
-    print("\n📊 Summary:")
+    print("\n Summary:")
     print(f"  • Learners: 2")
     print(f"  • Knowledge Components: 3")
     print(f"  • Learning Items: 3")
