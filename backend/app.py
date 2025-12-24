@@ -3,6 +3,8 @@ from flask_cors import CORS
 import os
 from auth import auth_bp
 from database import Database
+from services import LearningEngine
+from blueprints.adaptive import adaptive_bp
 
 # Create Flask app
 app = Flask(__name__)
@@ -35,11 +37,24 @@ app.config['SESSION_COOKIE_SECURE'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = False
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
-# Register blueprints
-app.register_blueprint(auth_bp, url_prefix='/auth')
-
 # Initialize database
 db = Database()
+
+# Initialize learning engine
+learning_engine = None
+if db.is_connected:
+    learning_engine = LearningEngine(db.collections)
+    print("✅ Learning Engine initialized")
+else:
+    print("⚠️  Warning: Database not connected. Learning Engine not available.")
+
+# Store in app config for blueprint access
+app.config['DATABASE'] = db
+app.config['LEARNING_ENGINE'] = learning_engine
+
+# Register blueprints
+app.register_blueprint(auth_bp, url_prefix='/auth')
+app.register_blueprint(adaptive_bp)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
