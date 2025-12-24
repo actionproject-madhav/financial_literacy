@@ -168,7 +168,8 @@ class LearningEngine:
 
             stats['kcs'].append({
                 'kc_id': str(state['kc_id']),
-                'kc_name': kc.get('name') if kc else 'Unknown',
+                'kc_name': kc.get('name', 'Unknown') if kc else 'Unknown',
+                'name': kc.get('name', 'Unknown') if kc else 'Unknown',  # Add for compatibility
                 'status': status,
                 'p_mastery': p_mastery,
                 'total_attempts': state.get('total_attempts', 0),

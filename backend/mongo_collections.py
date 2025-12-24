@@ -47,6 +47,17 @@ class FinLitCollections:
         self.question_templates = db.question_templates
         self.cultural_contexts = db.cultural_contexts
         self.kc_prerequisites = db.kc_prerequisites
+    
+    def _to_object_id(self, id_value):
+        """Convert string ID to ObjectId, or return as-is if already ObjectId"""
+        if isinstance(id_value, ObjectId):
+            return id_value
+        if isinstance(id_value, str):
+            try:
+                return ObjectId(id_value)
+            except:
+                return id_value
+        return id_value
 
     def create_indexes(self):
         """Create all indexes for optimal query performance"""
@@ -263,13 +274,16 @@ class FinLitCollections:
         if not item:
             return False
 
-        new_count = item['response_count'] + 1
-        old_correct = item.get('correct_rate', 0.5) * item['response_count']
+        # Handle None values - initialize if not present
+        response_count = item.get('response_count', 0) or 0
+        new_count = response_count + 1
+        old_correct_rate = item.get('correct_rate', 0.5) or 0.5
+        old_correct = old_correct_rate * response_count
         new_correct_rate = (old_correct + (1 if is_correct else 0)) / new_count
 
         # Update average response time
-        old_avg = item.get('avg_response_time_ms', response_time_ms)
-        new_avg = ((old_avg * item['response_count']) + response_time_ms) / new_count
+        old_avg = item.get('avg_response_time_ms') or response_time_ms
+        new_avg = ((old_avg * response_count) + response_time_ms) / new_count
 
         result = self.learning_items.update_one(
             {'_id': ObjectId(item_id)},
@@ -476,20 +490,44 @@ class FinLitCollections:
         else:
             date_datetime = date_obj
 
-        result = self.daily_progress.update_one(
-            {
-                'learner_id': ObjectId(learner_id),
-                'date': date_datetime
-            },
-            {
-                '$inc': {
-                    'xp_earned': xp_earned,
-                    'lessons_completed': lessons_completed,
-                    'minutes_practiced': minutes_practiced
+        # Check if document exists
+        existing = self.daily_progress.find_one({
+            'learner_id': ObjectId(learner_id),
+            'date': date_datetime
+        })
+        
+        if existing:
+            # Update existing document
+            result = self.daily_progress.update_one(
+                {
+                    'learner_id': ObjectId(learner_id),
+                    'date': date_datetime
+                },
+                {
+                    '$inc': {
+                        'xp_earned': xp_earned,
+                        'lessons_completed': lessons_completed,
+                        'minutes_practiced': minutes_practiced
+                    }
                 }
-            },
-            upsert=True
-        )
+            )
+        else:
+            # Insert new document
+            result = self.daily_progress.update_one(
+                {
+                    'learner_id': ObjectId(learner_id),
+                    'date': date_datetime
+                },
+                {
+                    '$set': {
+                        'xp_earned': xp_earned,
+                        'lessons_completed': lessons_completed,
+                        'minutes_practiced': minutes_practiced,
+                        'goal_met': False
+                    }
+                },
+                upsert=True
+            )
 
         # Check if goal met
         progress = self.daily_progress.find_one({

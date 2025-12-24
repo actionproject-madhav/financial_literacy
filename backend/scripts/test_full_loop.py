@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from database import Database
 from bson import ObjectId
+from services import LearningEngine
 
 BASE_URL = 'http://localhost:5000/api'
 
@@ -60,6 +61,11 @@ def create_test_learner():
 
     print(f"✅ Created test learner: {learner_id}")
     print(f"   Email: {test_email}")
+
+    # Initialize learner's skill states
+    engine = LearningEngine(db.collections)
+    initialized = engine.initialize_learner_kcs(learner_id)
+    print(f"✅ Initialized {initialized} knowledge components for test learner")
 
     return learner_id
 
