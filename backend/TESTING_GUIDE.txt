@@ -1,0 +1,312 @@
+================================================================================
+                      BACKEND TESTING & API CLIENT GUIDE
+================================================================================
+
+PHASE 10 COMPLETE ✅
+
+This guide covers:
+1. Testing the complete backend system
+2. Generating questions with LLM assistance
+3. Using the TypeScript API client in your React frontend
+
+================================================================================
+1. TESTING THE COMPLETE SYSTEM
+================================================================================
+
+Test Script: scripts/test_full_loop.py
+
+This script tests the entire adaptive learning flow from start to finish.
+
+WHAT IT TESTS:
+--------------
+✓ Server connectivity
+✓ Database seeding verification
+✓ Learner creation
+✓ Session creation
+✓ Question answering with BKT/FSRS/IRT updates
+✓ XP earning
+✓ Achievement unlocking
+✓ Progress tracking
+✓ Next item recommendation
+✓ Personalization features (hints, explanations)
+
+USAGE:
+------
+# Make sure Flask server is running first
+python app.py
+
+# In another terminal, run the test
+python scripts/test_full_loop.py
+
+OUTPUT:
+-------
+The script will:
+1. Create a test learner
+2. Start a learning session with 5 questions
+3. Answer questions (alternating correct/incorrect)
+4. Show mastery updates after each question
+5. Display any achievements earned
+6. Show final progress summary
+7. Test personalization features
+
+EXAMPLE OUTPUT:
+---------------
+============================================================
+  ADAPTIVE LEARNING SYSTEM - FULL INTEGRATION TEST
+============================================================
+
+✅ Server is running
+✅ Found 42 knowledge components
+
+============================================================
+CREATING TEST LEARNER
+============================================================
+✅ Created test learner: 507f1f77bcf86cd799439011
+
+============================================================
+TESTING FULL ADAPTIVE LEARNING LOOP
+============================================================
+
+1️⃣  Starting learning session...
+✅ Session started: a1b2c3d4-e5f6-7890
+   Got 5 items to practice
+
+2️⃣  Answering questions...
+
+Question 1/5
+  Skill: Credit Score Basics
+  Answer: ✓ Correct
+  Mastery: 0.450 (Δ +0.150)
+  XP Earned: +20
+  🎉 Achievements: First Steps
+
+...
+
+================================================================================
+2. GENERATING QUESTIONS WITH LLM
+================================================================================
+
+Script: scripts/generate_all_content.py
+
+Generate questions for skills using GPT/Claude/Gemini.
+
+USAGE:
+------
+# Generate 15 questions for a single skill
+python scripts/generate_all_content.py \
+  --skill checking-accounts \
+  --count 15 \
+  --llm openai
+
+# Generate questions for all skills in a domain
+python scripts/generate_all_content.py \
+  --batch banking \
+  --count 10 \
+  --llm gemini
+
+# Generate for all domains
+python scripts/generate_all_content.py \
+  --all \
+  --count 10 \
+  --llm anthropic
+
+# Insert reviewed questions into database
+python scripts/generate_all_content.py \
+  --insert generated_questions/checking-accounts_20250124_123456.json
+
+LLM PROVIDERS:
+--------------
+- openai: Uses GPT-3.5/GPT-4 (requires OPENAI_API_KEY)
+- gemini: Uses Google Gemini (requires GEMINI_API_KEY)
+- anthropic: Uses Claude (requires ANTHROPIC_API_KEY)
+
+Set in .env file:
+  LLM_PROVIDER=openai
+  OPENAI_API_KEY=sk-...
+
+WORKFLOW:
+---------
+1. Generate questions → Saved to generated_questions/
+2. MANUALLY REVIEW the JSON file
+3. Edit/fix any issues
+4. Insert into database with --insert flag
+
+QUESTION FORMAT:
+----------------
+{
+  "stem": "What is the main purpose of a checking account?",
+  "choices": ["...", "...", "...", "..."],
+  "correct_answer": 1,
+  "explanation": "...",
+  "difficulty": 0.3,
+  "visa_variants": {
+    "F1": {
+      "additional_context": "..."
+    }
+  }
+}
+
+================================================================================
+3. TYPESCRIPT API CLIENT (FOR REACT FRONTEND)
+================================================================================
+
+File: docs/api-client-reference.ts
+
+Copy this file to your React project when you start building the frontend.
+
+LOCATION IN REACT PROJECT:
+---------------------------
+src/services/api-client.ts  (or api.ts)
+
+INSTALLATION:
+-------------
+# In your React project
+npm install axios  # Optional, uses fetch API by default
+
+CONFIGURATION:
+--------------
+# .env in React project
+REACT_APP_API_URL=http://localhost:5000/api
+
+USAGE EXAMPLES:
+---------------
+
+// Import in your React components
+import { adaptiveApi, learnerApi, achievementApi } from './services/api-client';
+
+// Start learning session
+const session = await adaptiveApi.startSession(learnerId, 10);
+
+// Log answer
+const result = await adaptiveApi.logInteraction({
+  learner_id: learnerId,
+  item_id: currentItem.item_id,
+  kc_id: currentItem.kc_id,
+  session_id: sessionId,
+  is_correct: isCorrect,
+  response_value: { selected_choice: selectedAnswer },
+  response_time_ms: responseTime
+});
+
+// Update UI with new mastery
+setMastery(result.skill_state.p_mastery);
+setXP(prevXP => prevXP + result.xp_earned);
+
+// Show achievements if any
+if (result.achievements.length > 0) {
+  showAchievementPopup(result.achievements);
+}
+
+// Get wrong answer explanation
+if (!isCorrect) {
+  const explanation = await personalizationApi.explainWrongAnswer(
+    learnerId,
+    itemId,
+    selectedAnswer
+  );
+  showExplanation(explanation.explanation);
+}
+
+AVAILABLE API MODULES:
+----------------------
+✓ authApi - Authentication (login, logout, current user)
+✓ learnerApi - Profile management, skills, achievements, progress
+✓ adaptiveApi - Sessions, interactions, progress, analytics
+✓ personalizationApi - Content personalization, hints, explanations
+✓ achievementApi - Earned and available achievements
+✓ placementTestApi - Placement test flow
+
+================================================================================
+4. COMPLETE TESTING CHECKLIST
+================================================================================
+
+Before deploying to production:
+
+[ ] 1. Run seed scripts
+       python scripts/seed_all.py
+
+[ ] 2. Test full learning loop
+       python scripts/test_full_loop.py
+
+[ ] 3. Test all API endpoints
+       curl http://localhost:5000/api/adaptive/health
+       curl http://localhost:5000/api/learners/health
+
+[ ] 4. Generate questions for all skills
+       python scripts/generate_all_content.py --all
+
+[ ] 5. Review and insert generated questions
+       Manually review JSON files
+       Insert with --insert flag
+
+[ ] 6. Test placement test flow
+       curl -X POST http://localhost:5000/api/adaptive/placement-test/start
+       curl -X POST http://localhost:5000/api/adaptive/placement-test/complete
+
+[ ] 7. Test achievement system
+       Complete interactions and verify achievements trigger
+
+[ ] 8. Test personalization
+       curl -X POST http://localhost:5000/api/adaptive/hint
+       curl -X POST http://localhost:5000/api/adaptive/explain-wrong
+
+[ ] 9. Load test (optional)
+       Use tools like Apache Bench or Locust
+
+[ ] 10. Frontend integration
+        Copy api-client-reference.ts to React project
+        Test all flows from UI
+
+================================================================================
+5. TROUBLESHOOTING
+================================================================================
+
+"Server not running"
+  → python app.py
+
+"No items available"
+  → python scripts/seed_all.py
+
+"LLM API key error"
+  → Set API key in .env file
+  → Check LLM_PROVIDER setting
+
+"Database not connected"
+  → Check MONGO_URI in .env
+  → Ensure MongoDB is running
+
+"Import errors in test scripts"
+  → Run from backend directory: python scripts/test_full_loop.py
+  → Not: cd scripts && python test_full_loop.py
+
+================================================================================
+6. NEXT STEPS
+================================================================================
+
+Backend Complete! ✅
+
+Now you can:
+
+1. BUILD REACT FRONTEND
+   - Copy API client to frontend project
+   - Build UI components
+   - Integrate with API endpoints
+
+2. GENERATE MORE CONTENT
+   - Use generate_all_content.py for all skills
+   - Add visa-specific variants
+   - Create cultural context
+
+3. DEPLOY
+   - Set up production MongoDB (Atlas)
+   - Deploy Flask app (Heroku, Railway, etc.)
+   - Configure CORS for production frontend URL
+   - Set environment variables
+
+4. MONITOR
+   - Track learner progress
+   - Monitor API performance
+   - Analyze achievement unlock rates
+   - Review mastery progression
+
+================================================================================
