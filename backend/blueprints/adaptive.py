@@ -853,6 +853,143 @@ def generate_cultural_bridge():
         return jsonify({'error': str(e)}), 500
 
 
+@adaptive_bp.route('/achievements/<learner_id>', methods=['GET'])
+def get_achievements(learner_id):
+    """
+    Get learner's earned achievements.
+
+    Response:
+    {
+        "achievements": [
+            {
+                "achievement_id": "...",
+                "slug": "first-lesson",
+                "name": "First Steps",
+                "description": "Complete your first lesson",
+                "icon_url": "...",
+                "xp_reward": 50,
+                "earned_at": "2025-01-15T10:00:00Z"
+            },
+            ...
+        ]
+    }
+    """
+    try:
+        from services.achievements import AchievementService
+
+        db = get_db()
+
+        # Verify learner exists
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        service = AchievementService(db.collections)
+        achievements = service.get_learner_achievements(learner_id)
+
+        return jsonify({
+            'achievements': achievements,
+            'count': len(achievements)
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@adaptive_bp.route('/achievements/<learner_id>/available', methods=['GET'])
+def get_available_achievements(learner_id):
+    """
+    Get achievements not yet earned by learner with progress.
+
+    Response:
+    {
+        "achievements": [
+            {
+                "achievement_id": "...",
+                "slug": "week-streak",
+                "name": "Week Warrior",
+                "description": "Maintain a 7-day learning streak",
+                "xp_reward": 100,
+                "progress": 3,
+                "threshold": 7
+            },
+            ...
+        ]
+    }
+    """
+    try:
+        from services.achievements import AchievementService
+
+        db = get_db()
+
+        # Verify learner exists
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        service = AchievementService(db.collections)
+        achievements = service.get_available_achievements(learner_id)
+
+        return jsonify({
+            'achievements': achievements,
+            'count': len(achievements)
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@adaptive_bp.route('/achievements/check', methods=['POST'])
+def check_achievements():
+    """
+    Check for newly earned achievements.
+
+    Request JSON:
+    {
+        "learner_id": "507f..."
+    }
+
+    Response:
+    {
+        "newly_earned": [
+            {
+                "achievement_id": "...",
+                "slug": "first-lesson",
+                "name": "First Steps",
+                "description": "Complete your first lesson",
+                "xp_reward": 50
+            }
+        ]
+    }
+    """
+    try:
+        from services.achievements import AchievementService
+
+        data = request.get_json()
+        learner_id = data.get('learner_id')
+
+        if not learner_id:
+            return jsonify({'error': 'learner_id required'}), 400
+
+        db = get_db()
+
+        # Verify learner exists
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        service = AchievementService(db.collections)
+        newly_earned = service.check_achievements(learner_id)
+
+        return jsonify({
+            'newly_earned': newly_earned,
+            'count': len(newly_earned)
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @adaptive_bp.route('/placement-test/start', methods=['POST'])
 def start_placement_test():
     """

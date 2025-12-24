@@ -15,6 +15,7 @@ import sys
 from seed_skills import seed_skills
 from generate_questions import insert_questions
 from seed_cultural_contexts import seed_contexts
+from seed_achievements import seed_achievements
 
 
 def seed_all():
@@ -27,6 +28,7 @@ def seed_all():
     print("   1. Knowledge Components (Skills)")
     print("   2. Learning Items (Questions)")
     print("   3. Cultural Contexts")
+    print("   4. Achievements")
     print("\n⚠️  This may take a few minutes...\n")
 
     response = input("Continue? [y/N]: ")
@@ -66,7 +68,7 @@ def seed_all():
 
     # Step 3: Seed cultural contexts
     print("\n" + "="*80)
-    print("STEP 3/3: SEEDING CULTURAL CONTEXTS")
+    print("STEP 3/4: SEEDING CULTURAL CONTEXTS")
     print("="*80)
     try:
         if not seed_contexts():
@@ -74,6 +76,17 @@ def seed_all():
             success = False
     except Exception as e:
         print(f"❌ Error seeding cultural contexts: {e}")
+        success = False
+
+    # Step 4: Seed achievements
+    print("\n" + "="*80)
+    print("STEP 4/4: SEEDING ACHIEVEMENTS")
+    print("="*80)
+    try:
+        seed_achievements()  # This function doesn't return a boolean
+        print("✅ Achievements seeded successfully")
+    except Exception as e:
+        print(f"❌ Error seeding achievements: {e}")
         success = False
 
     # Final summary
@@ -89,6 +102,7 @@ def seed_all():
         print("   • 40+ Knowledge Components across 7 domains")
         print("   • 30+ Learning Items (Questions)")
         print("   • 40+ Cultural Contexts for 5+ countries")
+        print("   • 15+ Achievements for gamification")
         print("\n💡 Next Steps:")
         print("   1. Run the API test: python test_api.py")
         print("   2. Start the Flask server: python app.py")
@@ -100,6 +114,7 @@ def seed_all():
         print("   • python -m scripts.seed_skills")
         print("   • python -m scripts.generate_questions")
         print("   • python -m scripts.seed_cultural_contexts")
+        print("   • python -m scripts.seed_achievements")
         print("\n")
 
     return success

@@ -407,7 +407,9 @@ class LearningEngine:
 
     def check_achievements(self, learner_id: str) -> List[Dict]:
         """
-        Check and award any newly earned achievements
+        Check and award any newly earned achievements.
+
+        Delegates to AchievementService for comprehensive achievement logic.
 
         Args:
             learner_id: Learner ID
@@ -415,60 +417,9 @@ class LearningEngine:
         Returns:
             List of newly awarded achievements
         """
-        learner = self.collections.learners.find_one({
-            '_id': self.collections._to_object_id(learner_id)
-        })
+        from services.achievements import AchievementService
 
-        if not learner:
-            return []
+        service = AchievementService(self.collections)
+        newly_earned = service.check_achievements(learner_id)
 
-        # Get all achievements
-        all_achievements = self.collections.achievements.find()
-
-        # Get already earned achievements
-        earned = set()
-        earned_achievements = self.collections.learner_achievements.find({
-            'learner_id': self.collections._to_object_id(learner_id)
-        })
-        for ea in earned_achievements:
-            earned.add(str(ea['achievement_id']))
-
-        newly_awarded = []
-
-        for achievement in all_achievements:
-            achievement_id = str(achievement['_id'])
-
-            if achievement_id in earned:
-                continue
-
-            # Check criteria
-            criteria = achievement.get('criteria', {})
-            criteria_type = criteria.get('type')
-
-            if criteria_type == 'lessons_completed':
-                # Count completed lessons from interactions
-                completed = self.collections.interactions.count_documents({
-                    'learner_id': self.collections._to_object_id(learner_id),
-                    'is_correct': True
-                })
-
-                if completed >= criteria.get('count', 1):
-                    self.collections.award_achievement(learner_id, achievement_id)
-                    newly_awarded.append(achievement)
-
-            elif criteria_type == 'streak':
-                if learner.get('streak_count', 0) >= criteria.get('days', 7):
-                    self.collections.award_achievement(learner_id, achievement_id)
-                    newly_awarded.append(achievement)
-
-            elif criteria_type == 'mastery':
-                mastered_count = self.collections.learner_skill_states.count_documents({
-                    'learner_id': self.collections._to_object_id(learner_id),
-                    'status': 'mastered'
-                })
-
-                if mastered_count >= criteria.get('count', 1):
-                    self.collections.award_achievement(learner_id, achievement_id)
-                    newly_awarded.append(achievement)
-
-        return newly_awarded
+        return newly_earned
