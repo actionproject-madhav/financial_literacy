@@ -4,51 +4,55 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../utils/cn';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-bold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 uppercase tracking-wide',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-[16px] text-sm font-bold ring-offset-background transition-all duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-duo-border-focus focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 uppercase tracking-wide',
   {
     variants: {
       variant: {
         default:
-          'bg-white text-black border-slate-200 border-2 border-b-4 active:border-b-2 hover:bg-slate-100 text-slate-500',
+          'bg-duo-surface text-duo-text border-duo-border border-2 border-b-4 shadow-duo-gray hover:bg-[#F7F7F7] active:border-b-2 active:translate-y-[2px] active:shadow-none',
 
-        // Duolingo-style variants
+        // Duolingo-style variants with 3D effects
         locked:
-          'bg-neutral-200 text-primary-foreground hover:bg-neutral-200/90 border-neutral-400 border-b-4 active:border-b-0',
+          'bg-neutral-200 text-duo-text-subtle border-neutral-400 border-2 border-b-4 cursor-not-allowed opacity-60',
 
         primary:
-          'bg-sky-400 text-primary-foreground hover:bg-sky-400/90 border-sky-500 border-b-4 active:border-b-0',
-        primaryOutline: 'bg-white text-sky-500 hover:bg-slate-100',
+          'bg-duo-blue text-white border-2 border-b-4 border-duo-blue-shadow shadow-duo-blue hover:bg-duo-blue-hover active:border-b-2 active:translate-y-[2px] active:shadow-none',
+        primaryOutline:
+          'bg-duo-surface text-duo-blue border-2 border-duo-blue hover:bg-duo-blue-tint',
 
         secondary:
-          'bg-green-500 text-primary-foreground hover:bg-green-500/90 border-green-600 border-b-4 active:border-b-0',
-        secondaryOutline: 'bg-white text-green-500 hover:bg-slate-100',
+          'bg-duo-green text-white border-2 border-b-4 border-duo-green-shadow shadow-duo-green hover:bg-duo-green-hover active:border-b-2 active:translate-y-[2px] active:shadow-none',
+        secondaryOutline:
+          'bg-duo-surface text-duo-green border-2 border-duo-green hover:bg-[#D7FFB8]',
 
         danger:
-          'bg-rose-500 text-primary-foreground hover:bg-rose-500/90 border-rose-600 border-b-4 active:border-b-0',
-        dangerOutline: 'bg-white text-rose-500 hover:bg-slate-100',
+          'bg-duo-red text-white border-2 border-b-4 border-duo-red-dark shadow-duo-red hover:brightness-110 active:border-b-2 active:translate-y-[2px] active:shadow-none',
+        dangerOutline:
+          'bg-duo-surface text-duo-red border-2 border-duo-red hover:bg-duo-red-tint',
 
         super:
-          'bg-indigo-500 text-primary-foreground hover:bg-indigo-500/90 border-indigo-600 border-b-4 active:border-b-0',
-        superOutline: 'bg-white text-indigo-500 hover:bg-slate-100',
+          'bg-duo-purple text-white border-2 border-b-4 border-duo-purple-light shadow-[0_4px_0_#CE82FF] hover:brightness-110 active:border-b-2 active:translate-y-[2px] active:shadow-none',
+        superOutline:
+          'bg-duo-surface text-duo-purple border-2 border-duo-purple hover:bg-duo-purple-tint',
 
         ghost:
-          'bg-transparent text-slate-500 border-transparent border-0 hover:bg-slate-100',
+          'bg-transparent text-duo-text-muted border-transparent border-0 hover:bg-[#F7F7F7]',
 
         sidebar:
-          'bg-transparent text-slate-500 border-2 border-transparent hover:bg-slate-100 transition-none',
+          'bg-transparent text-duo-text-muted border-2 border-transparent hover:bg-[#F7F7F7] transition-none',
         sidebarOutline:
-          'bg-sky-500/15 text-sky-500 border-sky-300 border-2 hover:bg-sky-500/20 transition-none',
+          'bg-duo-blue-tint text-duo-blue border-duo-blue border-2 hover:bg-[#C4E9FF] transition-none',
 
         // Legacy variant for backward compatibility
         outline:
-          'bg-white text-sky-500 hover:bg-slate-100 border-2 border-slate-200',
+          'bg-duo-surface text-duo-blue border-2 border-duo-border hover:bg-[#F7F7F7]',
       },
       size: {
-        default: 'h-11 px-4 py-2',
-        sm: 'h-9 px-3',
-        md: 'h-11 px-4 py-2', // Alias for default
-        lg: 'h-12 px-8',
-        xl: 'h-14 px-10', // Extra large size
+        default: 'h-[48px] px-5 text-[15px]',
+        sm: 'h-[44px] px-4 text-[15px]',
+        md: 'h-[48px] px-5 text-[15px]', // Alias for default
+        lg: 'h-[50px] px-6 text-[17px]',
+        xl: 'h-[58px] px-8 text-[17px]', // Extra large size
         icon: 'h-10 w-10',
 
         // Duolingo custom size

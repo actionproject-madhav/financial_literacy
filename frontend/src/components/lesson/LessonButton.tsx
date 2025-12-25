@@ -26,14 +26,38 @@ export const LessonButton: React.FC<LessonButtonProps> = ({
   const cycleLength = 8;
   const cycleIndex = index % cycleLength;
 
+  // Duolingo pattern: 0→1→2→2→1→0→0→1 (creates organic S-curve)
   let indentationLevel;
+  switch (cycleIndex) {
+    case 0:
+      indentationLevel = 0;
+      break;
+    case 1:
+      indentationLevel = 1;
+      break;
+    case 2:
+      indentationLevel = 2;
+      break;
+    case 3:
+      indentationLevel = 2; // Hold right
+      break;
+    case 4:
+      indentationLevel = 1;
+      break;
+    case 5:
+      indentationLevel = 0;
+      break;
+    case 6:
+      indentationLevel = 0; // Hold left
+      break;
+    case 7:
+      indentationLevel = 1;
+      break;
+    default:
+      indentationLevel = 0;
+  }
 
-  if (cycleIndex <= 2) indentationLevel = cycleIndex;
-  else if (cycleIndex <= 4) indentationLevel = 4 - cycleIndex;
-  else if (cycleIndex <= 6) indentationLevel = 4 - cycleIndex;
-  else indentationLevel = cycleIndex - 8;
-
-  const rightPosition = indentationLevel * 40;
+  const rightPosition = indentationLevel * 40; // 40px per level
 
   const isFirst = index === 0;
   const isLast = index === totalCount;
@@ -58,7 +82,7 @@ export const LessonButton: React.FC<LessonButtonProps> = ({
       >
         {current ? (
           <div className="relative h-[102px] w-[102px]">
-            <div className="absolute -top-6 left-2.5 z-10 animate-bounce rounded-xl border-2 bg-white px-3 py-2.5 font-bold uppercase tracking-wide text-green-500">
+            <div className="absolute -top-6 left-2.5 z-10 animate-bounce rounded-xl border-2 border-duo-border bg-duo-surface px-3 py-2.5 font-bold uppercase tracking-wide text-duo-green">
               Start
               <div
                 className="absolute -bottom-2 left-1/2 h-0 w-0 -translate-x-1/2 transform border-x-8 border-t-8 border-x-transparent"
@@ -69,10 +93,10 @@ export const LessonButton: React.FC<LessonButtonProps> = ({
               value={Number.isNaN(percentage) ? 0 : percentage}
               styles={{
                 path: {
-                  stroke: '#4ade80',
+                  stroke: '#58CC02',
                 },
                 trail: {
-                  stroke: '#e5e7eb',
+                  stroke: '#E5E5E5',
                 },
               }}
             >

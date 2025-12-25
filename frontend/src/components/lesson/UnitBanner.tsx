@@ -10,7 +10,7 @@ type UnitBannerProps = {
 
 export const UnitBanner: React.FC<UnitBannerProps> = ({ title, description }) => {
   return (
-    <div className="flex w-full items-center justify-between rounded-xl bg-green-500 p-5 text-white">
+    <div className="flex w-full items-center justify-between rounded-xl bg-duo-green p-5 text-white">
       <div className="space-y-2.5">
         <h3 className="text-2xl font-bold">{title}</h3>
         <p className="text-lg">{description}</p>

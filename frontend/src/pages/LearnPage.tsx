@@ -210,8 +210,8 @@ export const LearnPage: React.FC = () => {
         </div>
 
         {units.length === 0 && !isLoading && (
-          <div className="rounded-xl border-2 border-slate-200 bg-white p-12 text-center">
-            <p className="text-slate-500">
+          <div className="rounded-xl border-2 border-duo-border bg-duo-surface p-12 text-center">
+            <p className="text-duo-text-muted">
               No learning paths available. Complete onboarding to get started!
             </p>
           </div>
