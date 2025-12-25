@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, redirect, session
+from flask import Blueprint, request, jsonify, redirect, session, make_response, make_response
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from google_auth_oauthlib.flow import Flow
@@ -89,7 +89,7 @@ def google_callback():
             # Get the created learner
             learner = db.collections.get_learner_by_email(email)
             is_new_user = True
-        else:
+            else:
             learner_id = str(learner['_id'])
             is_new_user = False
 
@@ -102,13 +102,23 @@ def google_callback():
             'picture': id_info.get('picture', ''),
             'is_new_user': is_new_user
         }
+        
+        # Force session to persist (Flask sessions are signed cookies by default)
+        session.permanent = True
+        
+        print(f"✅ Session set for user: {email}, learner_id: {learner_id}")
+        print(f"🔍 Session contents: {dict(session)}")
 
         # Redirect to frontend (onboarding if new user)
         # Use hash-based routing for frontend
-        if is_new_user:
-            return redirect(f"{FRONTEND_URL}/#/onboarding")
-        else:
-            return redirect(f"{FRONTEND_URL}/#/learn")
+        # Create response to ensure session cookie is set
+        redirect_url = f"{FRONTEND_URL}/#/onboarding" if is_new_user else f"{FRONTEND_URL}/#/learn"
+        response = make_response(redirect(redirect_url))
+        
+        # Debug: log session cookie
+        print(f"🔍 Redirecting to: {redirect_url}")
+        
+        return response
         
     except Exception as e:
         print(f"OAuth error: {e}")
@@ -161,10 +171,10 @@ def _initialize_learner_skills(learner_id: str):
                 )
                 print(f"  ✓ Initialized: {skill['name']}")
                 initialized_count += 1
-            else:
+        else:
                 print(f"  ⚠️  Skill not found: {slug}")
-
-        except Exception as e:
+            
+    except Exception as e:
             print(f"  ❌ Error initializing {slug}: {e}")
 
     print(f"✅ Initialized {initialized_count}/{len(starter_slugs)} starter skills")

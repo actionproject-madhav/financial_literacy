@@ -19,14 +19,14 @@ CORS_ORIGINS = [FRONTEND_BASE]
 if 'localhost' in FRONTEND_URL_ENV or '127.0.0.1' in FRONTEND_URL_ENV:
     CORS_ORIGINS.extend([
         "http://localhost:5173",
-        "http://localhost:5174",
+        "http://localhost:5174", 
         "http://localhost:3000",
     ])
 
 CORS_ORIGINS = [origin.rstrip('/') for origin in CORS_ORIGINS]
 CORS_ORIGINS = list(dict.fromkeys(CORS_ORIGINS))
 
-CORS(app,
+CORS(app, 
      origins=CORS_ORIGINS,
      supports_credentials=True,
      allow_headers=["Content-Type", "Authorization"],
@@ -34,9 +34,11 @@ CORS(app,
 
 # Configure session
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your-secret-key-change-this')
-app.config['SESSION_COOKIE_SECURE'] = False
-app.config['SESSION_COOKIE_HTTPONLY'] = False
+app.config['SESSION_COOKIE_SECURE'] = False  # False for localhost, True for HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # True for security
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_DOMAIN'] = None  # None for localhost (no domain restriction)
+app.config['SESSION_COOKIE_PATH'] = '/'
 
 # Initialize database
 db = Database()
@@ -60,3 +62,4 @@ app.register_blueprint(learners_bp)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+ 
