@@ -1,0 +1,347 @@
+"""
+Voice Service for Speech-to-Text and Text-to-Speech
+
+This service handles:
+- Voice transcription using OpenAI Whisper
+- Text-to-speech generation
+- Audio confidence analysis
+"""
+
+import os
+import base64
+import io
+import tempfile
+from typing import Dict, Optional
+import numpy as np
+from openai import OpenAI
+from dotenv import load_dotenv
+
+# Try to import pydub for audio processing
+try:
+    from pydub import AudioSegment
+    from pydub.silence import detect_leading_silence
+    PYDUB_AVAILABLE = True
+except ImportError:
+    PYDUB_AVAILABLE = False
+    print("Warning: pydub not available. Audio analysis features will be limited.")
+
+load_dotenv()
+
+
+class VoiceService:
+    """
+    Voice input/output service using OpenAI APIs
+
+    Features:
+    - Speech-to-text transcription
+    - Text-to-speech generation
+    - Audio confidence analysis
+    - Multi-language support
+    """
+
+    SUPPORTED_LANGUAGES = ['en', 'es', 'zh', 'hi', 'ne', 'ko', 'ja', 'ar', 'fr', 'pt']
+
+    # TTS voices
+    VOICES = {
+        'en': 'alloy',     # Clear, neutral
+        'es': 'nova',      # Warm, friendly
+        'default': 'alloy'
+    }
+
+    def __init__(self):
+        """Initialize OpenAI client"""
+        self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        self.tts_model = "tts-1"  # or tts-1-hd for higher quality
+        self.whisper_model = "whisper-1"
+
+    def _decode_base64_audio(self, audio_base64: str) -> bytes:
+        """
+        Decode base64 audio string to bytes
+
+        Args:
+            audio_base64: Base64 encoded audio (may include data URI prefix)
+
+        Returns:
+            Raw audio bytes
+        """
+        # Remove data URI prefix if present
+        if ',' in audio_base64:
+            audio_base64 = audio_base64.split(',')[1]
+
+        return base64.b64decode(audio_base64)
+
+    def transcribe(
+        self,
+        audio_base64: str,
+        language_hint: Optional[str] = None
+    ) -> Dict:
+        """
+        Transcribe audio to text using Whisper
+
+        Args:
+            audio_base64: Base64 encoded audio file
+            language_hint: Optional language code hint (e.g., 'en', 'es')
+
+        Returns:
+            {
+                'transcription': str,
+                'confidence': float (0-1),
+                'detected_language': str,
+                'duration_ms': int
+            }
+        """
+        try:
+            # Decode audio
+            audio_bytes = self._decode_base64_audio(audio_base64)
+
+            # Write to temporary file (Whisper API requires file-like object)
+            with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as temp_audio:
+                temp_audio.write(audio_bytes)
+                temp_audio.flush()
+
+                # Transcribe
+                with open(temp_audio.name, 'rb') as audio_file:
+                    response = self.client.audio.transcriptions.create(
+                        model=self.whisper_model,
+                        file=audio_file,
+                        language=language_hint,
+                        response_format='verbose_json'
+                    )
+
+            # Clean up temp file
+            os.unlink(temp_audio.name)
+
+            # Extract results
+            transcription = response.text
+            duration_ms = int(response.duration * 1000) if hasattr(response, 'duration') else 0
+            detected_language = response.language if hasattr(response, 'language') else language_hint or 'en'
+
+            # Whisper doesn't provide confidence directly, estimate from segments if available
+            confidence = 0.9  # Default high confidence
+            if hasattr(response, 'segments') and response.segments:
+                # Average no_speech_prob from segments (lower is better)
+                avg_no_speech = np.mean([seg.get('no_speech_probability', 0.1) for seg in response.segments])
+                confidence = 1.0 - avg_no_speech
+
+            return {
+                'transcription': transcription,
+                'confidence': round(confidence, 3),
+                'detected_language': detected_language,
+                'duration_ms': duration_ms
+            }
+
+        except Exception as e:
+            print(f"Error transcribing audio: {e}")
+            return {
+                'transcription': '',
+                'confidence': 0.0,
+                'detected_language': language_hint or 'en',
+                'duration_ms': 0,
+                'error': str(e)
+            }
+
+    def generate_tts(
+        self,
+        text: str,
+        language: str = 'en',
+        voice: Optional[str] = None
+    ) -> Optional[str]:
+        """
+        Generate text-to-speech audio
+
+        Args:
+            text: Text to convert to speech
+            language: Language code
+            voice: Voice to use (default: auto-select by language)
+
+        Returns:
+            Base64 encoded audio or None on error
+        """
+        try:
+            # Select voice
+            if not voice:
+                voice = self.VOICES.get(language, self.VOICES['default'])
+
+            # Generate speech
+            response = self.client.audio.speech.create(
+                model=self.tts_model,
+                voice=voice,
+                input=text,
+                response_format='mp3'
+            )
+
+            # Convert to base64
+            audio_bytes = response.content
+            audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
+
+            return f"data:audio/mp3;base64,{audio_base64}"
+
+        except Exception as e:
+            print(f"Error generating TTS: {e}")
+            return None
+
+    def analyze_audio_confidence(self, audio_base64: str) -> Dict:
+        """
+        Analyze audio for learning signals
+
+        Args:
+            audio_base64: Base64 encoded audio
+
+        Returns:
+            {
+                'hesitation_ms': int,
+                'speech_pace_wpm': int,
+                'confidence_score': float (0-1),
+                'filler_words_count': int,
+                'volume_variance': float,
+                'false_starts': int
+            }
+        """
+        if not PYDUB_AVAILABLE:
+            return {
+                'hesitation_ms': 0,
+                'speech_pace_wpm': 0,
+                'confidence_score': 0.5,
+                'filler_words_count': 0,
+                'volume_variance': 0.0,
+                'false_starts': 0,
+                'warning': 'Audio analysis unavailable (pydub not installed)'
+            }
+
+        try:
+            # Decode audio
+            audio_bytes = self._decode_base64_audio(audio_base64)
+
+            # Load with pydub
+            audio = AudioSegment.from_file(io.BytesIO(audio_bytes))
+
+            # 1. Detect leading silence (hesitation)
+            hesitation_ms = detect_leading_silence(audio, silence_threshold=-40.0)
+
+            # 2. Calculate volume variance
+            samples = np.array(audio.get_array_of_samples())
+            volume_variance = float(np.std(samples)) if len(samples) > 0 else 0.0
+
+            # 3. Estimate speech pace (rough approximation)
+            # Actual WPM would require transcription timing
+            duration_seconds = len(audio) / 1000.0
+            # Assume average speaking rate as baseline
+            estimated_wpm = 120  # Default assumption
+
+            # 4. Filler words - would need transcription
+            # Placeholder for now
+            filler_words_count = 0
+
+            # 5. False starts - would need advanced analysis
+            false_starts = 0
+
+            # 6. Overall confidence score
+            # Lower hesitation = higher confidence
+            # Lower volume variance = higher confidence (more controlled)
+            hesitation_penalty = min(hesitation_ms / 2000.0, 0.3)  # Max 0.3 penalty
+            variance_penalty = min(volume_variance / 10000.0, 0.2)  # Max 0.2 penalty
+
+            confidence_score = max(0.0, min(1.0, 1.0 - hesitation_penalty - variance_penalty))
+
+            return {
+                'hesitation_ms': hesitation_ms,
+                'speech_pace_wpm': estimated_wpm,
+                'confidence_score': round(confidence_score, 3),
+                'filler_words_count': filler_words_count,
+                'volume_variance': round(volume_variance, 2),
+                'false_starts': false_starts
+            }
+
+        except Exception as e:
+            print(f"Error analyzing audio: {e}")
+            return {
+                'hesitation_ms': 0,
+                'speech_pace_wpm': 0,
+                'confidence_score': 0.5,
+                'filler_words_count': 0,
+                'volume_variance': 0.0,
+                'false_starts': 0,
+                'error': str(e)
+            }
+
+    def detect_filler_words(self, transcription: str) -> int:
+        """
+        Count filler words in transcription
+
+        Args:
+            transcription: Transcribed text
+
+        Returns:
+            Count of filler words
+        """
+        filler_words = [
+            'um', 'uh', 'like', 'you know', 'basically', 'literally',
+            'actually', 'sort of', 'kind of', 'i mean', 'well'
+        ]
+
+        text_lower = transcription.lower()
+        count = sum(text_lower.count(filler) for filler in filler_words)
+
+        return count
+
+    def detect_false_starts(self, transcription: str) -> int:
+        """
+        Detect false starts in transcription
+
+        Args:
+            transcription: Transcribed text
+
+        Returns:
+            Count of false starts
+        """
+        # Look for patterns like "I think... no wait" or "It's... um..."
+        false_start_indicators = ['...', 'no wait', 'i mean', 'wait no', 'actually']
+
+        text_lower = transcription.lower()
+        count = sum(text_lower.count(indicator) for indicator in false_start_indicators)
+
+        return count
+
+    def enhanced_confidence_analysis(
+        self,
+        audio_base64: str,
+        transcription: str
+    ) -> Dict:
+        """
+        Enhanced confidence analysis combining audio and transcription
+
+        Args:
+            audio_base64: Base64 encoded audio
+            transcription: Transcribed text
+
+        Returns:
+            Enhanced confidence metrics
+        """
+        # Get basic audio analysis
+        audio_analysis = self.analyze_audio_confidence(audio_base64)
+
+        # Add transcription-based analysis
+        filler_count = self.detect_filler_words(transcription)
+        false_starts = self.detect_false_starts(transcription)
+
+        # Calculate word count and pace
+        word_count = len(transcription.split())
+        duration_seconds = max(1, audio_analysis.get('hesitation_ms', 1000) / 1000.0)
+
+        # Calculate actual WPM
+        actual_wpm = int((word_count / duration_seconds) * 60)
+
+        # Adjust confidence based on fillers and false starts
+        filler_penalty = min(filler_count * 0.05, 0.2)
+        false_start_penalty = min(false_starts * 0.1, 0.2)
+
+        adjusted_confidence = max(0.0, audio_analysis['confidence_score'] - filler_penalty - false_start_penalty)
+
+        return {
+            **audio_analysis,
+            'speech_pace_wpm': actual_wpm,
+            'filler_words_count': filler_count,
+            'false_starts': false_starts,
+            'confidence_score': round(adjusted_confidence, 3),
+            'word_count': word_count
+        }

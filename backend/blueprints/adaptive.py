@@ -1311,6 +1311,455 @@ def complete_placement_test():
         return jsonify({'error': str(e)}), 500
 
 
+# ========== VOICE INTERACTION ENDPOINTS ==========
+
+@adaptive_bp.route('/voice/transcribe', methods=['POST'])
+def transcribe_audio():
+    """
+    Transcribe audio to text.
+
+    Request JSON:
+    {
+        "audio_base64": "base64_encoded_audio",
+        "language_hint": "en"  // optional
+    }
+
+    Response:
+    {
+        "transcription": "I think it's a credit card",
+        "confidence": 0.95,
+        "detected_language": "en",
+        "duration_ms": 2500
+    }
+    """
+    try:
+        from services import VoiceService
+
+        data = request.get_json()
+        audio_base64 = data.get('audio_base64')
+        language_hint = data.get('language_hint')
+
+        if not audio_base64:
+            return jsonify({'error': 'audio_base64 required'}), 400
+
+        service = VoiceService()
+        result = service.transcribe(audio_base64, language_hint)
+
+        if 'error' in result:
+            return jsonify({'error': result['error']}), 500
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@adaptive_bp.route('/voice/tts', methods=['POST'])
+def generate_tts():
+    """
+    Generate text-to-speech audio.
+
+    Request JSON:
+    {
+        "text": "What is a credit score?",
+        "language": "en",  // optional
+        "voice": "alloy"   // optional
+    }
+
+    Response:
+    {
+        "audio_base64": "data:audio/mp3;base64,..."
+    }
+    """
+    try:
+        from services import VoiceService
+
+        data = request.get_json()
+        text = data.get('text')
+        language = data.get('language', 'en')
+        voice = data.get('voice')
+
+        if not text:
+            return jsonify({'error': 'text required'}), 400
+
+        service = VoiceService()
+        audio_base64 = service.generate_tts(text, language, voice)
+
+        if not audio_base64:
+            return jsonify({'error': 'Failed to generate audio'}), 500
+
+        return jsonify({'audio_base64': audio_base64}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@adaptive_bp.route('/voice/tts/<item_id>', methods=['GET'])
+def get_item_tts(item_id):
+    """
+    Get or generate TTS for a learning item.
+
+    Query params:
+    - language: language code (default: 'en')
+
+    Response:
+    {
+        "audio_base64": "data:audio/mp3;base64,...",
+        "cached": false
+    }
+    """
+    try:
+        from services import VoiceService
+
+        db = get_db()
+        language = request.args.get('language', 'en')
+
+        # Get item
+        item = db.collections.learning_items.find_one({'_id': ObjectId(item_id)})
+        if not item:
+            return jsonify({'error': 'Item not found'}), 404
+
+        # Check if we have cached audio
+        # For now, generate on-demand (can add caching later)
+        question_text = item.get('content', {}).get('question', '')
+
+        if not question_text:
+            return jsonify({'error': 'No question text found'}), 400
+
+        service = VoiceService()
+        audio_base64 = service.generate_tts(question_text, language)
+
+        if not audio_base64:
+            return jsonify({'error': 'Failed to generate audio'}), 500
+
+        return jsonify({
+            'audio_base64': audio_base64,
+            'cached': False
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@adaptive_bp.route('/interactions/voice', methods=['POST'])
+def log_voice_interaction():
+    """
+    Log a voice-based interaction with semantic matching.
+
+    Request JSON:
+    {
+        "learner_id": "507f...",
+        "item_id": "507f...",
+        "session_id": "uuid",
+        "audio_base64": "base64_audio",
+        "question_type": "definition"  // optional: for threshold selection
+    }
+
+    Response:
+    {
+        "success": true,
+        "is_correct": true,
+        "transcription": "A credit score is...",
+        "matched_choice": "a",
+        "similarity_scores": {"a": 0.92, "b": 0.3, ...},
+        "confidence": {
+            "transcription": 0.95,
+            "semantic_match": 0.92,
+            "voice": 0.85
+        },
+        "misconception": {...},  // if detected
+        "skill_state": {...},
+        "xp_earned": 20,
+        "feedback": "Great job!"
+    }
+    """
+    try:
+        from services import VoiceService, SemanticMatcher, MisconceptionDetector
+
+        data = request.get_json()
+        learner_id = data.get('learner_id')
+        item_id = data.get('item_id')
+        session_id = data.get('session_id')
+        audio_base64 = data.get('audio_base64')
+        question_type = data.get('question_type', 'default')
+
+        if not all([learner_id, item_id, audio_base64]):
+            return jsonify({'error': 'learner_id, item_id, and audio_base64 required'}), 400
+
+        db = get_db()
+
+        # Get learner
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        # Get item
+        item = db.collections.learning_items.find_one({'_id': ObjectId(item_id)})
+        if not item:
+            return jsonify({'error': 'Item not found'}), 404
+
+        # Get KC for this item
+        mapping = db.collections.item_kc_mappings.find_one({'item_id': ObjectId(item_id)})
+        if not mapping:
+            return jsonify({'error': 'Item not mapped to any skill'}), 400
+
+        kc_id = str(mapping['kc_id'])
+
+        # 1. Transcribe audio
+        voice_service = VoiceService()
+        transcription_result = voice_service.transcribe(
+            audio_base64,
+            language_hint=learner.get('native_language', 'en')
+        )
+
+        if 'error' in transcription_result:
+            return jsonify({'error': f'Transcription failed: {transcription_result["error"]}'}), 500
+
+        # 2. Analyze audio confidence
+        audio_analysis = voice_service.enhanced_confidence_analysis(
+            audio_base64,
+            transcription_result['transcription']
+        )
+
+        # 3. Semantic matching
+        matcher = SemanticMatcher()
+        choices = item.get('content', {}).get('choices', {})
+        correct_answer = item.get('content', {}).get('correct_answer')
+
+        if not choices or not correct_answer:
+            return jsonify({'error': 'Item missing choices or correct answer'}), 400
+
+        match_result = matcher.match_answer(
+            transcription_result['transcription'],
+            choices,
+            correct_answer,
+            question_type
+        )
+
+        # 4. Handle ambiguous responses
+        if match_result.get('clarification_needed'):
+            return jsonify({
+                'success': False,
+                'ambiguous': True,
+                'transcription': transcription_result['transcription'],
+                'clarification_prompt': match_result['clarification_prompt'],
+                'similar_choices': match_result['similar_choices'],
+                'similarity_scores': match_result['similarity_scores']
+            }), 200
+
+        is_correct = match_result.get('is_correct', False)
+
+        # 5. Detect misconception if wrong
+        misconception = None
+        if not is_correct:
+            detector = MisconceptionDetector(db.collections)
+            misconception_result = detector.detect(
+                kc_id,
+                transcription_result['transcription'],
+                item.get('content', {}).get('explanation', ''),
+                learner.get('country_of_origin', 'US')
+            )
+
+            if misconception_result.get('misconception_detected'):
+                misconception = misconception_result
+
+                # Log misconception if it has an ID
+                if misconception_result.get('misconception_id'):
+                    detector.log_misconception(
+                        learner_id,
+                        misconception_result['misconception_id']
+                    )
+
+        # 6. Create voice response record
+        voice_response_id = db.collections.create_voice_response(
+            learner_id=learner_id,
+            kc_id=kc_id,
+            transcription=transcription_result['transcription'],
+            transcription_confidence=transcription_result['confidence'],
+            detected_language=transcription_result['detected_language'],
+            duration_ms=transcription_result['duration_ms'],
+            semantic_similarity=match_result['best_match_score'],
+            matched_choice=match_result.get('matched_choice'),
+            similarity_scores=match_result['similarity_scores'],
+            hesitation_ms=audio_analysis.get('hesitation_ms', 0),
+            speech_pace_wpm=audio_analysis.get('speech_pace_wpm', 0),
+            confidence_score=audio_analysis.get('confidence_score', 0.0),
+            filler_words_count=audio_analysis.get('filler_words_count', 0),
+            false_starts=audio_analysis.get('false_starts', 0),
+            is_correct=is_correct
+        )
+
+        # 7. Calculate response time (use audio duration as proxy)
+        response_time_ms = transcription_result['duration_ms'] + 1000  # Add thinking time
+
+        # 8. Submit answer through learning engine
+        engine = get_learning_engine()
+        learning_result = engine.submit_answer(
+            learner_id=learner_id,
+            item_id=item_id,
+            kc_id=kc_id,
+            is_correct=is_correct,
+            response_value={'voice_response_id': voice_response_id, 'transcription': transcription_result['transcription']},
+            response_time_ms=response_time_ms,
+            hint_used=False,
+            session_id=session_id
+        )
+
+        # 9. Update voice response with interaction ID
+        db.collections.voice_responses.update_one(
+            {'_id': ObjectId(voice_response_id)},
+            {'$set': {'interaction_id': learning_result['interaction_id']}}
+        )
+
+        # 10. Check for achievements
+        new_achievements = engine.check_achievements(learner_id)
+
+        # 11. Generate feedback
+        feedback = match_result.get('evaluation_reason', '')
+        if misconception:
+            feedback += f" {misconception.get('description', '')}"
+
+        return jsonify({
+            'success': True,
+            'is_correct': is_correct,
+            'transcription': transcription_result['transcription'],
+            'matched_choice': match_result.get('matched_choice'),
+            'similarity_scores': match_result['similarity_scores'],
+            'confidence': {
+                'transcription': transcription_result['confidence'],
+                'semantic_match': match_result['best_match_score'],
+                'voice': audio_analysis.get('confidence_score', 0.0)
+            },
+            'audio_analysis': {
+                'hesitation_ms': audio_analysis.get('hesitation_ms', 0),
+                'speech_pace_wpm': audio_analysis.get('speech_pace_wpm', 0),
+                'filler_words': audio_analysis.get('filler_words_count', 0)
+            },
+            'misconception': misconception,
+            'skill_state': {
+                'kc_id': kc_id,
+                'p_mastery': learning_result['p_mastery_after'],
+                'mastery_change': learning_result['mastery_change'],
+                'status': 'mastered' if learning_result['p_mastery_after'] >= 0.95 else 'in_progress',
+                'next_review_at': learning_result['next_review_date'].isoformat()
+            },
+            'xp_earned': learning_result['xp_earned'],
+            'achievements': [
+                {
+                    'achievement_id': str(ach['_id']),
+                    'name': ach['name'],
+                    'description': ach['description'],
+                    'xp_reward': ach['xp_reward']
+                }
+                for ach in new_achievements
+            ],
+            'feedback': feedback
+        }), 200
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@adaptive_bp.route('/learner/<learner_id>/misconceptions', methods=['GET'])
+def get_learner_misconceptions(learner_id):
+    """
+    Get learner's detected misconceptions.
+
+    Query params:
+    - resolved: true/false (default: false, show unresolved only)
+
+    Response:
+    {
+        "misconceptions": [
+            {
+                "misconception_id": "...",
+                "kc_id": "...",
+                "pattern_type": "confusion",
+                "description": "Confuses APR with APY",
+                "times_detected": 3,
+                "first_detected_at": "2025-01-10T...",
+                "last_detected_at": "2025-01-15T...",
+                "resolved": false,
+                "remediation": {
+                    "content": "Review the difference between...",
+                    "review_skills": ["apr-basics", "apy-basics"]
+                }
+            }
+        ]
+    }
+    """
+    try:
+        from services import MisconceptionDetector
+
+        db = get_db()
+
+        # Verify learner exists
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        resolved = request.args.get('resolved', 'false').lower() == 'true'
+
+        detector = MisconceptionDetector(db.collections)
+        misconceptions = detector.get_learner_misconceptions(learner_id, resolved)
+
+        return jsonify({
+            'misconceptions': [
+                {
+                    'misconception_id': str(m['_id']),
+                    'kc_id': str(m['kc_id']),
+                    'pattern_type': m.get('pattern_type'),
+                    'description': m.get('description'),
+                    'times_detected': m.get('times_detected', 0),
+                    'first_detected_at': m.get('first_detected_at').isoformat() if m.get('first_detected_at') else None,
+                    'last_detected_at': m.get('last_detected_at').isoformat() if m.get('last_detected_at') else None,
+                    'resolved': m.get('resolved', False),
+                    'remediation': m.get('remediation_content', {})
+                }
+                for m in misconceptions
+            ],
+            'count': len(misconceptions)
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@adaptive_bp.route('/learner/<learner_id>/misconceptions/<misconception_id>/resolve', methods=['POST'])
+def resolve_misconception(learner_id, misconception_id):
+    """
+    Mark a misconception as resolved for a learner.
+
+    Response:
+    {
+        "success": true,
+        "message": "Misconception marked as resolved"
+    }
+    """
+    try:
+        from services import MisconceptionDetector
+
+        db = get_db()
+
+        # Verify learner exists
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        detector = MisconceptionDetector(db.collections)
+        detector.mark_misconception_resolved(learner_id, misconception_id)
+
+        return jsonify({
+            'success': True,
+            'message': 'Misconception marked as resolved'
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # Health check endpoint
 @adaptive_bp.route('/health', methods=['GET'])
 def health_check():

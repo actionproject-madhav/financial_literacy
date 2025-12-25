@@ -9,6 +9,9 @@ This package provides adaptive learning algorithms:
 - LearningEngine: Unified interface to all services
 - PersonalizationService: LLM-powered content personalization
 - LLMService: Multi-provider LLM wrapper
+- VoiceService: Speech-to-text and text-to-speech
+- SemanticMatcher: Semantic answer matching with embeddings
+- MisconceptionDetector: Detect and track learning misconceptions
 """
 
 from .bkt import BayesianKnowledgeTracer, BKTParams
@@ -18,6 +21,9 @@ from .content_selector import ContentSelector
 from .learning_engine import LearningEngine
 from .personalization import PersonalizationService
 from .llm_service import LLMService, get_llm_service, generate_content
+from .voice import VoiceService
+from .semantic import SemanticMatcher
+from .misconception import MisconceptionDetector
 
 __all__ = [
     'BayesianKnowledgeTracer',
@@ -29,5 +35,8 @@ __all__ = [
     'PersonalizationService',
     'LLMService',
     'get_llm_service',
-    'generate_content'
+    'generate_content',
+    'VoiceService',
+    'SemanticMatcher',
+    'MisconceptionDetector'
 ]

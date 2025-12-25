@@ -47,6 +47,11 @@ class FinLitCollections:
         self.question_templates = db.question_templates
         self.cultural_contexts = db.cultural_contexts
         self.kc_prerequisites = db.kc_prerequisites
+
+        # Voice and misconception collections
+        self.voice_responses = db.voice_responses
+        self.misconceptions = db.misconceptions
+        self.learner_misconceptions = db.learner_misconceptions
     
     def _to_object_id(self, id_value):
         """Convert string ID to ObjectId, or return as-is if already ObjectId"""
@@ -132,6 +137,25 @@ class FinLitCollections:
             ("kc_id", ASCENDING),
             ("prerequisite_kc_id", ASCENDING)
         ], unique=True)
+
+        # Voice Responses indexes
+        self.voice_responses.create_index([("learner_id", ASCENDING)])
+        self.voice_responses.create_index([("interaction_id", ASCENDING)])
+        self.voice_responses.create_index([("kc_id", ASCENDING)])
+        self.voice_responses.create_index([("created_at", DESCENDING)])
+
+        # Misconceptions indexes
+        self.misconceptions.create_index([("kc_id", ASCENDING)])
+        self.misconceptions.create_index([("pattern_type", ASCENDING)])
+        self.misconceptions.create_index([("countries_affected", ASCENDING)])
+
+        # Learner Misconceptions indexes
+        self.learner_misconceptions.create_index([
+            ("learner_id", ASCENDING),
+            ("misconception_id", ASCENDING)
+        ], unique=True)
+        self.learner_misconceptions.create_index([("learner_id", ASCENDING)])
+        self.learner_misconceptions.create_index([("resolved", ASCENDING)])
 
         print("✅ All indexes created successfully!")
 
@@ -547,3 +571,65 @@ class FinLitCollections:
         return list(self.daily_progress.find({
             'learner_id': ObjectId(learner_id)
         }).sort('date', DESCENDING).limit(days))
+
+    # ========== VOICE RESPONSE METHODS ==========
+
+    def create_voice_response(
+        self,
+        learner_id: str,
+        kc_id: str,
+        transcription: str,
+        **kwargs
+    ) -> str:
+        """
+        Create a voice response record
+
+        Args:
+            learner_id: Learner ID
+            kc_id: Knowledge component ID
+            transcription: Transcribed text
+            **kwargs: Additional fields (audio_url, confidence, etc.)
+
+        Returns:
+            Voice response ID
+        """
+        voice_response = {
+            'learner_id': ObjectId(learner_id),
+            'kc_id': ObjectId(kc_id),
+            'interaction_id': kwargs.get('interaction_id'),
+            'audio_url': kwargs.get('audio_url'),
+            'duration_ms': kwargs.get('duration_ms', 0),
+            'transcription': transcription,
+            'transcription_confidence': kwargs.get('transcription_confidence', 0.0),
+            'detected_language': kwargs.get('detected_language', 'en'),
+            'semantic_similarity': kwargs.get('semantic_similarity', 0.0),
+            'matched_choice': kwargs.get('matched_choice'),
+            'similarity_scores': kwargs.get('similarity_scores', {}),
+            'hesitation_ms': kwargs.get('hesitation_ms', 0),
+            'speech_pace_wpm': kwargs.get('speech_pace_wpm', 0),
+            'confidence_score': kwargs.get('confidence_score', 0.0),
+            'filler_words_count': kwargs.get('filler_words_count', 0),
+            'false_starts': kwargs.get('false_starts', 0),
+            'is_correct': kwargs.get('is_correct', False),
+            'created_at': datetime.utcnow()
+        }
+        result = self.voice_responses.insert_one(voice_response)
+        return str(result.inserted_id)
+
+    def get_voice_response(self, voice_response_id: str) -> Optional[Dict]:
+        """Get voice response by ID"""
+        return self.voice_responses.find_one({'_id': ObjectId(voice_response_id)})
+
+    def update_voice_response(self, voice_response_id: str, updates: Dict) -> bool:
+        """Update voice response"""
+        result = self.voice_responses.update_one(
+            {'_id': ObjectId(voice_response_id)},
+            {'$set': updates}
+        )
+        return result.modified_count > 0
+
+    def get_learner_voice_responses(self, learner_id: str, limit: int = 50) -> List[Dict]:
+        """Get recent voice responses for a learner"""
+        return list(self.voice_responses.find({
+            'learner_id': ObjectId(learner_id)
+        }).sort('created_at', DESCENDING).limit(limit))
