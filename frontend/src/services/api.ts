@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+// Use relative URLs when using Vite proxy, or full URL if VITE_API_BASE_URL is set
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 // Generic fetch wrapper
 async function fetchApi<T>(

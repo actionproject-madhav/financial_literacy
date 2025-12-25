@@ -34,11 +34,13 @@ CORS(app,
 
 # Configure session
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your-secret-key-change-this')
-app.config['SESSION_COOKIE_SECURE'] = False  # False for localhost, True for HTTPS
+# With Vite proxy, frontend and backend appear on same origin (localhost:5173)
+app.config['SESSION_COOKIE_SECURE'] = False  # False for localhost HTTP
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # True for security
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_DOMAIN'] = None  # None for localhost (no domain restriction)
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Works fine with same-origin proxy
+app.config['SESSION_COOKIE_DOMAIN'] = None  # None for localhost
 app.config['SESSION_COOKIE_PATH'] = '/'
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 
 # Initialize database
 db = Database()

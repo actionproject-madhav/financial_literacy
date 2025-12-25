@@ -6,8 +6,6 @@ import { Card } from '../components/ui/Card';
 import { authApi, learnerApi } from '../services/api';
 import { useUserStore } from '../stores/userStore';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-
 export const AuthPage: React.FC = () => {
   const navigate = useNavigate();
   const { learnerId, setLearnerId, setUser } = useUserStore();
@@ -67,8 +65,9 @@ export const AuthPage: React.FC = () => {
 
   const handleGoogleSignIn = () => {
     setIsLoading(true);
-    // Redirect to backend OAuth endpoint
-    window.location.href = `${API_BASE}/auth/google`;
+    // Redirect to backend OAuth endpoint via proxy
+    const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+    window.location.href = `${apiBase}/auth/google`;
   };
 
   return (
