@@ -142,8 +142,8 @@ class AuthService {
       
       // Redirect immediately based on localStorage (NO BACKEND WAIT!)
       if (hasCompletedOnboarding) {
-        console.log('✅ User has completed onboarding, redirecting to dashboard...')
-        window.location.href = '/#/dashboard'
+        console.log('✅ User has completed onboarding, redirecting to learn page...')
+        window.location.href = '/#/learn'
       } else {
         console.log('⚠️ User needs to complete onboarding, redirecting to /onboarding...')
         window.location.href = '/#/onboarding'
@@ -167,36 +167,51 @@ class AuthService {
   // Sync onboarding status with backend in background (non-blocking, optional)
   private async syncOnboardingStatusWithBackend(userEmail: string): Promise<void> {
     // This runs in background - doesn't block auth flow
+    // Note: Backend creates learner during OAuth callback, but frontend uses client-side auth
+    // So we skip backend sync for now - user will be created on first backend interaction
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/user/${encodeURIComponent(userEmail)}`, {
+      // Try to get current user from session (requires backend OAuth flow)
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
         credentials: 'include',
-        signal: AbortSignal.timeout(10000) // 10 second timeout, but non-blocking
+        signal: AbortSignal.timeout(5000) // Short timeout, non-blocking
       })
       
       if (response.ok) {
-        const data = await response.json()
-        const backendOnboardingStatus = data.user?.onboarding_completed === true
-        
-        // Update localStorage if backend has different status
-        const storedUser = localStorage.getItem('user')
-        if (storedUser) {
-          try {
-            const parsed = JSON.parse(storedUser)
-            if (parsed.email === userEmail && parsed.onboarding_completed !== backendOnboardingStatus) {
-              parsed.onboarding_completed = backendOnboardingStatus
-              localStorage.setItem('user', JSON.stringify(parsed))
-              if (import.meta.env.DEV) {
-                console.log('✅ Updated localStorage with backend onboarding status:', backendOnboardingStatus)
+        const sessionUser = await response.json()
+        if (sessionUser.learner_id) {
+          // User exists in backend, check onboarding via learner API
+          const learnerResponse = await fetch(`${API_BASE_URL}/api/learners/${sessionUser.learner_id}`, {
+            credentials: 'include',
+            signal: AbortSignal.timeout(5000)
+          })
+          
+          if (learnerResponse.ok) {
+            const learner = await learnerResponse.json()
+            const backendOnboardingStatus = learner.onboarding_completed === true
+            
+            // Update localStorage if backend has different status
+            const storedUser = localStorage.getItem('user')
+            if (storedUser) {
+              try {
+                const parsed = JSON.parse(storedUser)
+                if (parsed.email === userEmail && parsed.onboarding_completed !== backendOnboardingStatus) {
+                  parsed.onboarding_completed = backendOnboardingStatus
+                  parsed.learner_id = sessionUser.learner_id
+                  localStorage.setItem('user', JSON.stringify(parsed))
+                  if (import.meta.env.DEV) {
+                    console.log('✅ Updated localStorage with backend onboarding status:', backendOnboardingStatus)
+                  }
+                }
+              } catch (e) {
+                // Invalid JSON, ignore
               }
             }
-          } catch (e) {
-            // Invalid JSON, ignore
           }
         }
       }
     } catch (error) {
       // Silently fail - this is background sync only
-      throw error
+      // Frontend auth works without backend
     }
   }
 
@@ -229,32 +244,30 @@ class AuthService {
   // Check if user has completed onboarding
   private async checkOnboardingStatus(userEmail: string): Promise<boolean> {
     try {
-      console.log(`Checking onboarding status at: ${API_BASE_URL}/auth/user/${userEmail}`)
-      
-      // Increased timeout for Render cold starts
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
-      
-      const response = await fetch(`${API_BASE_URL}/auth/user/${encodeURIComponent(userEmail)}`, {
+      // Try to get current user from session
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
         credentials: 'include',
-        signal: controller.signal
+        signal: AbortSignal.timeout(5000)
       })
       
-      clearTimeout(timeoutId)
-      
-      console.log('Onboarding check response status:', response.status)
-      
       if (response.ok) {
-        const data = await response.json()
-        console.log('Onboarding check response data:', data)
-        const isCompleted = data.user?.onboarding_completed || false
-        console.log('User onboarding completed:', isCompleted)
-        return isCompleted
-      } else {
-        console.warn('Onboarding check failed with status:', response.status)
-        // If user doesn't exist yet, they need onboarding
-      return false
+        const sessionUser = await response.json()
+        if (sessionUser.learner_id) {
+          // Get learner profile to check onboarding
+          const learnerResponse = await fetch(`${API_BASE_URL}/api/learners/${sessionUser.learner_id}`, {
+            credentials: 'include',
+            signal: AbortSignal.timeout(5000)
+          })
+          
+          if (learnerResponse.ok) {
+            const learner = await learnerResponse.json()
+            return learner.onboarding_completed === true
+          }
+        }
       }
+      
+      // If no session or learner doesn't exist, they need onboarding
+      return false
     } catch (error) {
       console.error('Error checking onboarding status:', error)
       // On error, assume user needs onboarding (safer default)
@@ -263,18 +276,23 @@ class AuthService {
   }
 
   // Load full user profile from database
-  private async loadUserProfile(userId: string): Promise<void> {
+  private async loadUserProfile(learnerId: string): Promise<void> {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/user/${userId}`, {
+      // Use learner API instead of non-existent auth/user endpoint
+      const response = await fetch(`${API_BASE_URL}/api/learners/${learnerId}`, {
         credentials: 'include'
       })
       
       if (response.ok) {
-        const data = await response.json()
-        if (data.user) {
-          // Store complete profile in localStorage
-          localStorage.setItem('user', JSON.stringify(data.user))
-          console.log(' Full user profile loaded from database')
+        const learner = await response.json()
+        // Store complete profile in localStorage
+        const storedUser = localStorage.getItem('user')
+        if (storedUser) {
+          const user = JSON.parse(storedUser)
+          user.learner_id = learnerId
+          user.onboarding_completed = learner.onboarding_completed || false
+          localStorage.setItem('user', JSON.stringify(user))
+          console.log('✅ Full user profile loaded from database')
         }
       }
     } catch (error) {

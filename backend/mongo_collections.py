@@ -157,7 +157,7 @@ class FinLitCollections:
         self.learner_misconceptions.create_index([("learner_id", ASCENDING)])
         self.learner_misconceptions.create_index([("resolved", ASCENDING)])
 
-        print("✅ All indexes created successfully!")
+        print("All indexes created successfully!")
 
     # ========== LEARNER METHODS ==========
 

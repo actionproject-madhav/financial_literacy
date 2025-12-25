@@ -1,52 +1,177 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Card } from '../components/ui/Card';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { SkillBubble } from '../components/lesson/SkillBubble';
 import { DailyGoalProgress } from '../components/gamification/DailyGoalProgress';
+import { useUserStore } from '../stores/userStore';
+import { learnerApi, adaptiveApi } from '../services/api';
 
-// Mock data - replace with actual API calls
-const skillPaths = [
-  {
-    id: 'banking',
-    name: 'Banking Basics',
-    skills: [
-      { id: 'currency', name: 'US Currency', icon: '💵', status: 'mastered' as const, level: 5 },
-      { id: 'checking', name: 'Checking', icon: '🏦', status: 'in_progress' as const, progress: 60, level: 2 },
-      { id: 'savings', name: 'Savings', icon: '💰', status: 'available' as const, level: 0 },
-      { id: 'mobile', name: 'Mobile Banking', icon: '📱', status: 'locked' as const, level: 0 },
-    ],
-  },
-  {
-    id: 'credit',
-    name: 'Credit & Debt',
-    skills: [
-      { id: 'credit-score', name: 'Credit Score', icon: '📊', status: 'available' as const, level: 0 },
-      { id: 'cards', name: 'Credit Cards', icon: '💳', status: 'locked' as const, level: 0 },
-      { id: 'building', name: 'Building Credit', icon: '📈', status: 'locked' as const, level: 0 },
-    ],
-  },
-];
+interface Skill {
+  id: string;
+  name: string;
+  icon: string;
+  status: 'locked' | 'available' | 'in_progress' | 'mastered';
+  progress?: number;
+  level: number;
+}
+
+interface SkillPath {
+  id: string;
+  name: string;
+  skills: Skill[];
+}
 
 export const LearnPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { learnerId, user, updateStreak } = useUserStore();
+  const [skillPaths, setSkillPaths] = useState<SkillPath[]>([]);
+  const [dailyProgress, setDailyProgress] = useState({ current: 0, target: 50 });
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!learnerId) {
+      navigate('/auth');
+    }
+  }, [learnerId, navigate]);
+
+  // Load learner data
+  useEffect(() => {
+    if (!learnerId) return;
+
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        // Load skills
+        const skills = await learnerApi.getSkills(learnerId);
+        
+        // Load all KCs to group by domain
+        const allKCs = await adaptiveApi.getAllKCs();
+        
+        // Group KCs by domain
+        const domainsMap = new Map<string, any[]>();
+        allKCs.forEach((kc: any) => {
+          const domain = kc.domain || 'general';
+          if (!domainsMap.has(domain)) {
+            domainsMap.set(domain, []);
+          }
+          domainsMap.get(domain)!.push(kc);
+        });
+
+        // Convert to skill paths
+        const paths: SkillPath[] = [];
+        domainsMap.forEach((kcs, domain) => {
+          const domainSkills: Skill[] = kcs.map((kc: any) => {
+            // Find matching skill state
+            const skillState = skills.find((s: any) => s.kc_id === String(kc._id));
+            
+            let status: Skill['status'] = 'locked';
+            let progress = 0;
+            let level = 0;
+
+            if (skillState) {
+              status = skillState.status || 'available';
+              progress = skillState.p_mastery ? Math.round(skillState.p_mastery * 100) : 0;
+              level = skillState.level || 0;
+            } else {
+              // Check if skill has prerequisites met
+              status = 'locked'; // Simplified - should check prerequisites
+            }
+
+            return {
+              id: String(kc._id),
+              name: kc.name || kc.kc_name || 'Unknown',
+              icon: kc.icon || '📚',
+              status,
+              progress: status === 'in_progress' ? progress : undefined,
+              level,
+            };
+          });
+
+          paths.push({
+            id: domain,
+            name: domain.charAt(0).toUpperCase() + domain.slice(1).replace('_', ' '),
+            skills: domainSkills,
+          });
+        });
+
+        setSkillPaths(paths);
+
+        // Load daily progress
+        try {
+          const progress = await learnerApi.getDailyProgress(learnerId);
+          setDailyProgress({
+            current: progress.xp_earned_today || 0,
+            target: progress.daily_goal_xp || 50,
+          });
+        } catch (error) {
+          console.warn('Could not load daily progress:', error);
+        }
+
+      } catch (error) {
+        console.error('Failed to load learn page data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [learnerId]);
+
+  const handleSkillClick = (skillId: string) => {
+    navigate(`/lesson/${skillId}`);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-duo-bg flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-duo-green mx-auto mb-4"></div>
+          <p className="text-duo-text-muted">Loading skills...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate overall progress (simplified)
+  const overallProgress = skillPaths.length > 0
+    ? skillPaths.reduce((acc, path) => {
+        const pathProgress = path.skills.reduce((sum, skill) => {
+          if (skill.status === 'mastered') return sum + 100;
+          if (skill.status === 'in_progress') return sum + (skill.progress || 0);
+          return sum;
+        }, 0) / (path.skills.length * 100) * 100;
+        return acc + pathProgress;
+      }, 0) / skillPaths.length
+    : 0;
+
   return (
     <div className="space-y-6">
       {/* Daily Goal */}
-      <DailyGoalProgress current={35} target={50} />
+      <DailyGoalProgress
+        current={dailyProgress.current}
+        target={dailyProgress.target}
+      />
 
-      {/* Current Progress Card */}
+      {/* Overall Progress Card */}
       <Card variant="elevated" padding="lg">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-bold text-duo-text">Banking Basics</h2>
-            <p className="text-sm text-duo-text-muted">Module 1 of 11</p>
+            <h2 className="text-xl font-bold text-duo-text">Overall Progress</h2>
+            <p className="text-sm text-duo-text-muted">
+              {skillPaths.length} skill path{skillPaths.length !== 1 ? 's' : ''}
+            </p>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-extrabold text-duo-green">60%</p>
+            <p className="text-2xl font-extrabold text-duo-green">
+              {Math.round(overallProgress)}%
+            </p>
             <p className="text-sm text-duo-text-muted">complete</p>
           </div>
         </div>
-        <ProgressBar value={60} max={100} variant="default" size="lg" />
+        <ProgressBar value={overallProgress} max={100} variant="default" size="lg" />
       </Card>
 
       {/* Skill Paths */}
@@ -82,7 +207,7 @@ export const LearnPage: React.FC = () => {
                     status={skill.status}
                     progress={skill.progress}
                     level={skill.level}
-                    onClick={() => console.log('Start skill:', skill.id)}
+                    onClick={() => skill.status !== 'locked' && handleSkillClick(skill.id)}
                   />
                 </motion.div>
               ))}
@@ -90,7 +215,14 @@ export const LearnPage: React.FC = () => {
           </div>
         </motion.section>
       ))}
+
+      {skillPaths.length === 0 && !isLoading && (
+        <Card variant="elevated" padding="lg">
+          <p className="text-center text-duo-text-muted">
+            No skills available. Complete onboarding to get started!
+          </p>
+        </Card>
+      )}
     </div>
   );
 };
-

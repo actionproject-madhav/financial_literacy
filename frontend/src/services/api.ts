@@ -24,20 +24,58 @@ async function fetchApi<T>(
 
 // Auth API
 export const authApi = {
-  register: (data: { email: string; name: string; country: string; visaType: string }) =>
-    fetchApi<{ learner_id: string }>('/api/auth/register', {
+  getCurrentUser: () =>
+    fetchApi<any>('/auth/me'),
+
+  logout: () =>
+    fetchApi<{ success: boolean }>('/auth/logout', {
+      method: 'POST',
+    }),
+};
+
+// Learner API
+export const learnerApi = {
+  getProfile: (learnerId: string) =>
+    fetchApi<any>(`/api/learners/${learnerId}`),
+
+  updateProfile: (learnerId: string, data: any) =>
+    fetchApi<any>(`/api/learners/${learnerId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  completeOnboarding: (data: {
+    learner_id: string;
+    native_language?: string;
+    english_proficiency?: string;
+    country_of_origin?: string;
+    immigration_status?: string;
+    visa_type?: string;
+    has_ssn?: boolean;
+    sends_remittances?: boolean;
+    financial_goals?: string[];
+    financial_experience_level?: string;
+    daily_goal_minutes?: number;
+    timezone?: string;
+  }) =>
+    fetchApi<{ success: boolean; learner_id: string }>('/api/learners/onboarding', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  login: (email: string) =>
-    fetchApi<{ learner_id: string }>('/api/auth/login', {
+  initializeSkills: (learnerId: string) =>
+    fetchApi<any>(`/api/learners/${learnerId}/skills/init`, {
       method: 'POST',
-      body: JSON.stringify({ email }),
     }),
 
-  getProfile: (learnerId: string) =>
-    fetchApi<any>(`/api/auth/profile/${learnerId}`),
+  getSkills: (learnerId: string) =>
+    fetchApi<any[]>(`/api/learners/${learnerId}/skills`),
+
+  getAchievements: (learnerId: string) =>
+    fetchApi<any[]>(`/api/learners/${learnerId}/achievements`),
+
+  getDailyProgress: (learnerId: string) =>
+    fetchApi<any>(`/api/learners/${learnerId}/daily-prog`),
 };
 
 // Adaptive Learning API
@@ -47,6 +85,12 @@ export const adaptiveApi = {
       method: 'POST',
       body: JSON.stringify({ learner_id: learnerId, session_length: sessionLength }),
     }),
+
+  getNextItem: (learnerId: string, kcId?: string) => {
+    const params = new URLSearchParams({ learner_id: learnerId });
+    if (kcId) params.append('kc_id', kcId);
+    return fetchApi<any>(`/api/adaptive/next-item?${params}`);
+  },
 
   logInteraction: (data: {
     learner_id: string;
@@ -67,37 +111,89 @@ export const adaptiveApi = {
   getProgress: (learnerId: string) =>
     fetchApi<any>(`/api/adaptive/progress/${learnerId}`),
 
+  getLearningPath: (learnerId: string) =>
+    fetchApi<any>(`/api/adaptive/learning-path/${learnerId}`),
+
+  getReviews: (learnerId: string, daysAhead = 7) =>
+    fetchApi<any>(`/api/adaptive/reviews/${learnerId}?days_ahead=${daysAhead}`),
+
+  getAnalytics: (learnerId: string) =>
+    fetchApi<any>(`/api/adaptive/analytics/${learnerId}`),
+
+  getAllKCs: () =>
+    fetchApi<any[]>('/api/adaptive/kcs'),
+
+  getKCProgress: (kcId: string, learnerId: string) =>
+    fetchApi<any>(`/api/adaptive/kcs/${kcId}/prog/${learnerId}`),
+
   getAchievements: (learnerId: string) =>
-    fetchApi<any>(`/api/adaptive/achievements/${learnerId}`),
+    fetchApi<any[]>(`/api/adaptive/achievements/${learnerId}`),
+
+  getAvailableAchievements: (learnerId: string) =>
+    fetchApi<any[]>(`/api/adaptive/achievements/${learnerId}/avail`),
+
+  checkAchievements: (learnerId: string) =>
+    fetchApi<any[]>('/api/adaptive/achievements/check', {
+      method: 'POST',
+      body: JSON.stringify({ learner_id: learnerId }),
+    }),
 };
 
-// Voice API
+// Voice API (if implemented)
 export const voiceApi = {
   getTTS: async (itemId: string, language = 'en', slow = false) => {
     const params = new URLSearchParams({ lang: language, slow: slow.toString() });
-    return fetchApi<{ audio_url: string }>(`/api/voice/tts/${itemId}?${params}`);
+    try {
+      return await fetchApi<{ audio_url: string }>(`/api/voice/tts/${itemId}?${params}`);
+    } catch (error) {
+      console.warn('Voice TTS not available:', error);
+      return null;
+    }
   },
 
-  transcribe: (audioBase64: string, languageHint?: string) =>
-    fetchApi<{
-      transcription: string;
-      confidence: number;
-      detected_language: string;
-    }>('/api/voice/transcribe', {
-      method: 'POST',
-      body: JSON.stringify({ audio_base64: audioBase64, language_hint: languageHint }),
-    }),
+  transcribe: async (audioBase64: string, languageHint?: string) => {
+    try {
+      return await fetchApi<{
+        transcription: string;
+        confidence: number;
+        detected_language: string;
+      }>('/api/voice/transcribe', {
+        method: 'POST',
+        body: JSON.stringify({ audio_base64: audioBase64, language_hint: languageHint }),
+      });
+    } catch (error) {
+      console.warn('Voice transcription not available:', error);
+      return null;
+    }
+  },
 
-  submitVoiceAnswer: (data: {
+  submitVoiceAnswer: async (data: {
     learner_id: string;
     item_id: string;
     session_id: string;
     audio_base64: string;
     language_hint?: string;
-  }) =>
-    fetchApi<any>('/api/voice/interaction', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+  }) => {
+    try {
+      return await fetchApi<any>('/api/voice/interaction', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    } catch (error) {
+      console.warn('Voice interaction not available:', error);
+      return null;
+    }
+  },
 };
 
+// Health check
+export const healthApi = {
+  checkBackend: () =>
+    fetchApi<{ status: string }>('/api/health').catch(() => null),
+
+  checkLearners: () =>
+    fetchApi<{ status: string }>('/api/learners/health').catch(() => null),
+
+  checkAdaptive: () =>
+    fetchApi<{ status: string }>('/api/adaptive/health').catch(() => null),
+};

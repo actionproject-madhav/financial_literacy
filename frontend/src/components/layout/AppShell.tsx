@@ -4,25 +4,26 @@ import { TopNav } from './TopNav';
 import { BottomNav } from './BottomNav';
 import { Sidebar } from './Sidebar';
 import { cn } from '../../utils/cn';
+import { useUserStore } from '../../stores/userStore';
 
-interface AppShellProps {
-  user?: {
-    name: string;
-    avatar?: string;
-    streak: number;
-    gems: number;
-    hearts: number;
-  };
-}
-
-export const AppShell: React.FC<AppShellProps> = ({ user }) => {
+export const AppShell: React.FC = () => {
+  const { user } = useUserStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Convert user store format to TopNav format
+  const navUser = user ? {
+    name: user.name,
+    avatar: undefined, // Add if available in user object
+    streak: user.streak,
+    gems: user.gems,
+    hearts: user.hearts,
+  } : undefined;
 
   return (
     <div className="min-h-screen bg-duo-bg">
       {/* Top Navigation */}
       <TopNav
-        user={user}
+        user={navUser}
         onMenuClick={() => setSidebarOpen(!sidebarOpen)}
       />
 

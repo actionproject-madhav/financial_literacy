@@ -4,89 +4,125 @@ import { LessonShell } from '../components/layout/LessonShell';
 import { QuestionCard } from '../components/lesson/QuestionCard';
 import { LessonComplete } from '../components/lesson/LessonComplete';
 import { FloatingXP } from '../components/effects/FloatingXP';
-import { Confetti } from '../components/effects/Confetti';
-import { useSound } from '../hooks/useSound';
-
-// Mock lesson data
-const mockLesson = {
-  id: 'checking-1',
-  title: 'Checking Accounts',
-  questions: [
-    {
-      id: 'q1',
-      question: 'What is the main purpose of a checking account?',
-      choices: [
-        { id: 'a', text: 'To earn high interest on savings' },
-        { id: 'b', text: 'To handle everyday transactions like paying bills' },
-        { id: 'c', text: 'To invest in stocks' },
-        { id: 'd', text: 'To get a loan from the bank' },
-      ],
-      correctAnswerId: 'b',
-      explanation: 'Checking accounts are designed for frequent transactions like depositing paychecks and paying bills.',
-      culturalBridge: 'In India, this is similar to a Savings Account used for daily transactions.',
-    },
-    {
-      id: 'q2',
-      question: 'What happens if you spend more money than you have in your checking account?',
-      choices: [
-        { id: 'a', text: 'Nothing, the bank covers it for free' },
-        { id: 'b', text: 'Your account gets closed immediately' },
-        { id: 'c', text: 'You may be charged an overdraft fee' },
-        { id: 'd', text: 'You automatically get a loan' },
-      ],
-      correctAnswerId: 'c',
-      explanation: 'Overdraft fees can be $35 or more per transaction. It\'s important to track your balance!',
-    },
-  ],
-};
+import { useLesson } from '../hooks/useLesson';
+import { useUserStore } from '../stores/userStore';
 
 export const LessonPage: React.FC = () => {
   const navigate = useNavigate();
   const { lessonId } = useParams();
-  const { play } = useSound();
+  const { learnerId } = useUserStore();
+  const {
+    sessionId,
+    items,
+    currentIndex,
+    currentItem,
+    score,
+    isComplete,
+    isLoading,
+    startNewLesson,
+    submitAnswer,
+    goToNextQuestion,
+    endLesson,
+  } = useLesson();
 
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [hearts, setHearts] = useState(5);
-  const [score, setScore] = useState({ correct: 0, incorrect: 0 });
   const [showXP, setShowXP] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
   const [startTime] = useState(Date.now());
+  const [responseStartTime] = useState(Date.now());
 
-  const currentQuestion = mockLesson.questions[currentIndex];
-  const totalQuestions = mockLesson.questions.length;
-
-  const handleAnswer = (isCorrect: boolean, selectedId: string) => {
-    if (isCorrect) {
-      play('correct');
-      setScore((prev) => ({ ...prev, correct: prev.correct + 1 }));
-      setShowXP(true);
-    } else {
-      play('incorrect');
-      setScore((prev) => ({ ...prev, incorrect: prev.incorrect + 1 }));
-      setHearts((prev) => Math.max(0, prev - 1));
+  // Initialize lesson on mount
+  useEffect(() => {
+    if (learnerId && !sessionId && !isLoading) {
+      // Start lesson using the hook
+      startNewLesson(lessonId).catch((error) => {
+        console.error('Failed to start lesson:', error);
+        alert('Failed to start lesson. Please try again.');
+        navigate('/learn');
+      });
     }
+  }, [learnerId, lessonId, sessionId, isLoading, navigate, startNewLesson]);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!learnerId) {
+      navigate('/auth');
+    }
+  }, [learnerId, navigate]);
+
+  // Convert backend item to question format
+  const convertItemToQuestion = (item: any) => {
+    if (!item || !item.content) return null;
+
+    const content = item.content;
+    const question = content.question || content.prompt || '';
+    const choices = (content.choices || []).map((choice: any, index: number) => ({
+      id: String.fromCharCode(65 + index), // A, B, C, D
+      text: choice.text || choice.label || choice,
+    }));
+
+    return {
+      question,
+      choices,
+      correctAnswerId: content.correct_answer_id || content.correct_choice || 'A',
+      explanation: content.explanation || content.feedback || '',
+      culturalBridge: content.cultural_bridge || '',
+    };
+  };
+
+  const currentQuestion = currentItem ? convertItemToQuestion(currentItem) : null;
+
+  const handleAnswer = async (isCorrect: boolean, selectedId: string) => {
+    if (!currentItem) return;
+
+    const responseTime = Date.now() - responseStartTime;
+
+    // Update hearts
+    if (!isCorrect) {
+      setHearts((prev) => Math.max(0, prev - 1));
+    } else {
+      setShowXP(true);
+    }
+
+    // Submit to backend
+    await submitAnswer(
+      isCorrect,
+      responseTime,
+      { selected_choice: selectedId },
+      'choice'
+    );
   };
 
   const handleContinue = () => {
     setShowXP(false);
     
-    if (currentIndex < totalQuestions - 1) {
-      setCurrentIndex((prev) => prev + 1);
-    } else {
-      // Lesson complete
-      play('levelUp');
-      setIsComplete(true);
+    if (currentIndex < items.length - 1) {
+      goToNextQuestion();
+      // Reset response timer
+      useState(Date.now());
     }
   };
 
   const handleExit = () => {
     if (window.confirm('Are you sure you want to exit? Your progress will be saved.')) {
+      endLesson();
       navigate('/learn');
     }
   };
 
-  if (isComplete) {
+  if (isLoading && !sessionId) {
+    return (
+      <div className="min-h-screen bg-duo-bg flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-duo-green mx-auto mb-4"></div>
+          <p className="text-duo-text-muted">Loading lesson...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isComplete || (items.length > 0 && currentIndex >= items.length)) {
     const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+    const totalQuestions = items.length || 1;
     const accuracy = Math.round((score.correct / totalQuestions) * 100);
     
     return (
@@ -95,19 +131,41 @@ export const LessonPage: React.FC = () => {
           xpEarned: score.correct * 10,
           accuracy,
           timeSpent,
-          streak: 5, // From user state
+          streak: 0, // Get from user store
           isNewBest: accuracy === 100,
         }}
-        onContinue={() => navigate('/learn')}
-        onReview={() => setCurrentIndex(0)}
+        onContinue={() => {
+          endLesson();
+          navigate('/learn');
+        }}
+        onReview={() => {
+          // Reset to start
+          navigate(`/lesson/${lessonId}`);
+        }}
       />
+    );
+  }
+
+  if (!currentQuestion) {
+    return (
+      <div className="min-h-screen bg-duo-bg flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-duo-text-muted">No questions available</p>
+          <button
+            onClick={() => navigate('/learn')}
+            className="mt-4 px-4 py-2 bg-duo-blue text-white rounded-lg"
+          >
+            Back to Learn
+          </button>
+        </div>
+      </div>
     );
   }
 
   return (
     <LessonShell
       currentStep={currentIndex + 1}
-      totalSteps={totalQuestions}
+      totalSteps={items.length || 1}
       hearts={hearts}
       onExit={handleExit}
     >
@@ -119,7 +177,7 @@ export const LessonPage: React.FC = () => {
         culturalBridge={currentQuestion.culturalBridge}
         onAnswer={handleAnswer}
         onContinue={handleContinue}
-        showTTS
+        showTTS={false} // Enable when TTS is ready
         onPlayAudio={() => console.log('Play TTS')}
       />
 
@@ -127,4 +185,3 @@ export const LessonPage: React.FC = () => {
     </LessonShell>
   );
 };
-

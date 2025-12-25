@@ -34,14 +34,6 @@ function App() {
     warmUpBackend()
   }, [])
 
-  // Mock user - replace with actual auth
-  const mockUser = {
-    name: 'Rajesh Kumar',
-    streak: 42,
-    gems: 1250,
-    hearts: 5,
-  };
-
   return (
     <ThemeProvider>
       <UserProvider>
@@ -55,7 +47,7 @@ function App() {
             <Route path="/lesson/:lessonId" element={<LessonPage />} />
 
             {/* Main app routes (with shell) */}
-            <Route element={<AppShell user={mockUser} />}>
+            <Route element={<AppShell />}>
               <Route path="/learn" element={<LearnPage />} />
               <Route path="/practice" element={<div>Practice Page</div>} />
               <Route path="/invest" element={<div>Invest Page</div>} />

@@ -22,16 +22,19 @@ export const useLesson = () => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const startNewLesson = useCallback(async (skillId: string) => {
+  const startNewLesson = useCallback(async (skillId?: string) => {
     if (!learnerId) return;
     
     setIsLoading(true);
     try {
-      const { session_id, items } = await adaptiveApi.startSession(learnerId);
+      const { session_id, items } = await adaptiveApi.startSession(learnerId, 10);
       startLesson(session_id, items);
-      navigate(`/lesson/${skillId}`);
+      if (skillId) {
+        navigate(`/lesson/${skillId}`);
+      }
     } catch (error) {
       console.error('Failed to start lesson:', error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
