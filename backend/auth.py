@@ -1,10 +1,9 @@
-from flask import Blueprint, request, jsonify, redirect, session, make_response
+from flask import Blueprint, request, jsonify, redirect, session, make_response, current_app
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from google_auth_oauthlib.flow import Flow
 import os
 from dotenv import load_dotenv
-from database import Database
 
 load_dotenv()
 
@@ -13,7 +12,10 @@ load_dotenv()
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 auth_bp = Blueprint('auth', __name__)
-db = Database()
+
+def get_db():
+    """Get database instance from app context"""
+    return current_app.config['DATABASE']
 
 # Google OAuth configuration
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
@@ -74,6 +76,13 @@ def google_callback():
         
         email = id_info['email']
 
+        # Get database instance
+        db = get_db()
+        
+        # Ensure database connection
+        if not db.is_connected:
+            raise Exception("Database not connected")
+        
         # Get or create learner
         learner = db.collections.get_learner_by_email(email)
 
@@ -156,6 +165,9 @@ def _initialize_learner_skills(learner_id: str):
 
     Unlocks the first 3 beginner-friendly skills that have no prerequisites.
     """
+    # Get database instance
+    db = get_db()
+    
     # Starter skills for new learners (tier 1, no prerequisites)
     starter_slugs = [
         'understanding-us-currency',

@@ -1,4 +1,4 @@
-// Use relative URLs when using Vite proxy, or full URL if VITE_API_BASE_URL is set
+// Use Vite proxy for development (relative URLs), or full URL for production
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 // Generic fetch wrapper
