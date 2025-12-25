@@ -87,31 +87,45 @@ class BudgetVoiceService:
 
     def generate_tts(self, text: str, language: str = 'en', voice: Optional[str] = None) -> Optional[str]:
         """
-        Generate TTS using Google Cloud TTS and cache to R2.
+        Generate TTS using Google Cloud TTS (if available) or OpenAI TTS (fallback).
 
         Args:
             text: Text to convert
             language: Language code
-            voice: Ignored (Google uses different voice system)
+            voice: Voice selection (for OpenAI)
 
         Returns:
             Base64 audio data URI or None
         """
         try:
-            # Generate with Google TTS
-            audio_bytes = google_tts_client.generate_speech(text, language)
-
-            # Convert to base64 data URI
-            audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
-            return f"data:audio/mp3;base64,{audio_base64}"
-
+            # Try Google TTS first (cheaper)
+            if google_tts_client.tts_client:
+                audio_bytes = google_tts_client.generate_speech(text, language)
+                audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
+                return f"data:audio/mp3;base64,{audio_base64}"
         except Exception as e:
-            print(f"TTS generation error: {e}")
-            return None
+            print(f"Google TTS failed, trying OpenAI fallback: {e}")
+
+        # Fallback to OpenAI TTS if Google not available
+        try:
+            from openai import OpenAI
+            if config.OPENAI_API_KEY:
+                client = OpenAI(api_key=config.OPENAI_API_KEY)
+                response = client.audio.speech.create(
+                    model="tts-1",
+                    voice=voice or "alloy",
+                    input=text
+                )
+                audio_base64 = base64.b64encode(response.content).decode('utf-8')
+                return f"data:audio/mp3;base64,{audio_base64}"
+        except Exception as e:
+            print(f"OpenAI TTS error: {e}")
+
+        return None
 
     def generate_tts_cached(self, text: str, item_id: str, language: str = 'en') -> Optional[str]:
         """
-        Generate TTS with R2 caching.
+        Generate TTS with R2 caching (Google TTS or OpenAI fallback).
 
         Args:
             text: Text to convert
@@ -131,13 +145,29 @@ class BudgetVoiceService:
             if cached_url:
                 return cached_url
 
-            # Generate
-            audio_bytes = google_tts_client.generate_speech(text, language)
+            # Generate (try Google first, then OpenAI)
+            audio_bytes = None
+            try:
+                if google_tts_client.tts_client:
+                    audio_bytes = google_tts_client.generate_speech(text, language)
+            except:
+                pass
 
-            # Upload to R2
-            url = r2_client.upload_tts(audio_bytes, item_id, language)
+            # Fallback to OpenAI if Google failed
+            if not audio_bytes and config.OPENAI_API_KEY:
+                from openai import OpenAI
+                client = OpenAI(api_key=config.OPENAI_API_KEY)
+                response = client.audio.speech.create(
+                    model="tts-1",
+                    voice="alloy",
+                    input=text
+                )
+                audio_bytes = response.content
 
-            return url
+            if audio_bytes:
+                # Upload to R2
+                url = r2_client.upload_tts(audio_bytes, item_id, language)
+                return url
 
         except Exception as e:
             print(f"Cached TTS error: {e}")

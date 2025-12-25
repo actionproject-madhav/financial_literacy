@@ -29,7 +29,7 @@ def download_model():
         model = SentenceTransformer(config.EMBEDDING_MODEL)
 
         print(f"✅ Model downloaded successfully")
-        print(f"Cache location: {model._model_card_data}")
+        print(f"✅ Model cached locally (will be reused on next run)")
 
         # Test the model
         print("\nTesting model...")
