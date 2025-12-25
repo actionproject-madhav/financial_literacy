@@ -1,31 +1,13 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react'
 import authService from '../services/authService'
 import apiService from '../services/apiService'
-import tradingService from '../services/tradingService'
 
 interface User {
   id: string
   email: string
   name: string
   picture?: string
-  goal?: 'save' | 'grow' | 'learn' | 'options'
-  language?: string
-  lifestyle?: string[]
-  visaStatus?: string
-  homeCountry?: string
-  portfolio: PortfolioItem[]
-  totalValue: number
-  cashBalance?: number
-  totalAccountValue?: number
-}
-
-interface PortfolioItem {
-  ticker: string
-  company: string
-  quantity: number
-  avgPrice: number
-  currentPrice: number
-  reason: string
+  onboarding_completed?: boolean
 }
 
 interface UserContextType {
@@ -53,34 +35,30 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!user) return
     
     try {
-      // Use email if available, otherwise use id
-      // ALWAYS prefer email over ID for API calls
       const userId = user.email || user.id
-      const apiUserId = user.email || userId
-      if (!userId) {
-        return
+      if (!userId) return
+      
+      const userProfile = await apiService.getUserProfile(userId)
+      
+      if (userProfile) {
+        const updatedUser: User = {
+          id: userProfile._id || userId,
+          email: userProfile.email || user.email,
+          name: userProfile.name || user.name,
+          picture: userProfile.picture || user.picture,
+          onboarding_completed: userProfile.onboarding_completed
+        }
+        
+        setUser(updatedUser)
+        localStorage.removeItem('user')
+        localStorage.setItem('user', JSON.stringify(updatedUser))
       }
-      
-      const portfolioData = await tradingService.getPortfolio(apiUserId)
-      
-      const updatedUser = {
-        ...user,
-        portfolio: portfolioData.portfolio || [],
-        totalValue: portfolioData.portfolio_value || 0,
-        cashBalance: portfolioData.cash_balance || 0,
-        totalAccountValue: portfolioData.total_account_value || (portfolioData.portfolio_value + portfolioData.cash_balance)
-      }
-      
-      setUser(updatedUser)
-      localStorage.removeItem('user') // Clear old data first
-      localStorage.setItem('user', JSON.stringify(updatedUser))
     } catch (error) {
-      // Silently fail - don't spam console
       if (import.meta.env.DEV) {
         console.error('Error refreshing user data:', error)
       }
     }
-  }, [user?.email, user?.id]) // Only depend on identifiers, not entire user object
+  }, [user])
 
   // Listen for storage changes and custom logout events
   useEffect(() => {
@@ -88,17 +66,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (e.key === 'user') {
         const currentUser = authService.getCurrentUser()
         if (currentUser) {
-          // User was added/updated - reload profile
           window.location.reload()
         } else {
-          // User was removed - clear state immediately
           setUser(null)
           setIsLoading(false)
         }
       }
     }
 
-    // Listen for custom logout event (same-tab logout)
     const handleLogout = () => {
       setUser(null)
       setIsLoading(false)
@@ -114,7 +89,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [])
 
   useEffect(() => {
-    // Check for authenticated user on app start and load full profile from database
     const loadUserProfile = async () => {
       setIsLoading(true)
       const currentUser = authService.getCurrentUser()
@@ -126,77 +100,32 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       
       try {
-        // ALWAYS prefer email over ID for user lookup
         const userId = currentUser.email || currentUser.id
         
         if (!userId) {
           setUser({
             ...currentUser,
-            portfolio: [],
-            totalValue: 0
+            onboarding_completed: false
           })
           setIsLoading(false)
           return
         }
 
-        // Try to get user profile and portfolio in parallel for faster loading
-        const lookupId = currentUser.email || userId
-        const apiUserId = currentUser.email || userId
-        
-        // Load both in parallel instead of sequentially
-        const [dbUser, portfolioData] = await Promise.allSettled([
-          apiService.getUserProfile(lookupId),
-          tradingService.getPortfolio(apiUserId).catch(() => ({ 
-            success: false,
-            portfolio: [], 
-            portfolio_value: 0,
-            cash_balance: 10000,
-            total_account_value: 10000
-          } as any))
-        ])
-        
-        // Process results
-        const userProfile = dbUser.status === 'fulfilled' ? dbUser.value : null
-        let portfolio: PortfolioItem[] = []
-        let totalValue = 0
-        let cashBalance = 10000 // Default starting cash
-        let totalAccountValue = 10000
-        
-        if (portfolioData.status === 'fulfilled') {
-          const portfolioResponse = portfolioData.value
-          portfolio = portfolioResponse.portfolio || []
-          totalValue = portfolioResponse.portfolio_value || 0
-          cashBalance = portfolioResponse.cash_balance || 10000
-          totalAccountValue = portfolioResponse.total_account_value || (totalValue + cashBalance)
-        }
+        const userProfile = await apiService.getUserProfile(userId)
         
         if (userProfile) {
-          // Build user object - portfolio ONLY from trading API, never from dbUser.portfolio
-          // CRITICAL: Always ensure email is set (required for API calls)
-          const userEmail = userProfile.email || currentUser.email || userId
           const fullUser: User = {
             id: userProfile._id || userId,
-            email: userEmail, // ALWAYS set email (required for trading API)
+            email: userProfile.email || currentUser.email || userId,
             name: userProfile.name || currentUser.name,
             picture: userProfile.picture || currentUser.picture,
-            goal: userProfile.investment_goal as User['goal'],
-            language: userProfile.language || 'en',
-            lifestyle: userProfile.lifestyle_brands || [],
-            visaStatus: userProfile.visa_status,
-            homeCountry: userProfile.home_country,
-            portfolio: portfolio, // ONLY from trading API
-            totalValue: totalValue, // ONLY from trading API
-            cashBalance: cashBalance, // From trading API
-            totalAccountValue: totalAccountValue // From trading API
+            onboarding_completed: userProfile.onboarding_completed || false
           }
           
           setUser(fullUser)
-          // Store in localStorage (but portfolio is always from trading API)
-          localStorage.removeItem('user') // Clear old data first
+          localStorage.removeItem('user')
           localStorage.setItem('user', JSON.stringify(fullUser))
         } else {
-          // If dbUser is null, still set user with currentUser data (but empty portfolio)
-          // CRITICAL: Always ensure email is set (required for API calls)
           const fallbackEmail = currentUser.email || userId
           if (!fallbackEmail) {
             setIsLoading(false)
@@ -204,26 +133,20 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
           setUser({
             ...currentUser,
-            email: fallbackEmail, // ALWAYS set email (required for trading API)
-            portfolio: portfolio, // Use portfolio from parallel call
-            totalValue: totalValue,
-            cashBalance: cashBalance,
-            totalAccountValue: totalAccountValue
+            email: fallbackEmail,
+            onboarding_completed: false
           })
         }
       } catch (error) {
-        // CRITICAL: Always ensure email is set (required for API calls)
         const fallbackEmail = currentUser.email || currentUser.id
         if (!fallbackEmail) {
           setIsLoading(false)
           return
         }
-        // No fallback - show empty portfolio if error
         setUser({
           ...currentUser,
-          email: fallbackEmail, // ALWAYS set email (required for trading API)
-          portfolio: [],
-          totalValue: 0
+          email: fallbackEmail,
+          onboarding_completed: false
         })
       } finally {
         setIsLoading(false)
@@ -233,18 +156,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loadUserProfile()
   }, [])
 
-  // Set up periodic refresh of portfolio (every 5 minutes - reduced frequency)
-  useEffect(() => {
-    if (!user) return
-    
-    const refreshInterval = setInterval(() => {
-      refreshUserData()
-    }, 5 * 60 * 1000) // 5 minutes instead of 2
-    
-    return () => clearInterval(refreshInterval)
-  }, [user, refreshUserData])
-
-  // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({
     user,
     setUser,

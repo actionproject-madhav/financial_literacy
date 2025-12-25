@@ -3,20 +3,8 @@ import { AnimatePresence } from 'framer-motion'
 import { useEffect } from 'react'
 import LandingPage from './pages/LandingPage'
 import AuthPage from './pages/AuthPage'
-import OnboardingFlow from './pages/OnboardingFlow'
-import Dashboard from './pages/Dashboard'
-import TradePage from './pages/TradePage'
-import EducationHub from './pages/EducationHub'
-import AIHub from './pages/AIHub'
-import PortfolioPage from './pages/PortfolioPage'
-import WalletPage from './pages/WalletPage'
-import ScreenerPage from './pages/ScreenerPage'
-import StockDetailPage from './pages/StockDetailPage'
 import { UserProvider } from './context/UserContext'
 import { ThemeProvider } from './context/ThemeContext'
-import { NavbarProvider } from './context/NavbarContext'
-import './styles/duolingo-education.css'
-
 
 // Backend warm-up: Ping health endpoint on app load to wake up Render free tier
 const warmUpBackend = () => {
@@ -33,7 +21,7 @@ const warmUpBackend = () => {
       // Silently ignore errors - this is just a warm-up
     })
     
-    console.log(' Backend warm-up ping sent (Render free tier cold start)')
+    console.log('✅ Backend warm-up ping sent (Render free tier cold start)')
   }
 }
 
@@ -46,29 +34,18 @@ function App() {
   return (
     <ThemeProvider>
       <UserProvider>
-        <NavbarProvider>
-          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <div className="min-h-screen bg-transparent transition-colors relative overflow-hidden">
-          <div className="relative z-10">
-            <AnimatePresence mode="wait" initial={false}>
-              <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/onboarding" element={<OnboardingFlow />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/portfolio" element={<PortfolioPage />} />
-              <Route path="/wallet" element={<WalletPage />} />
-              <Route path="/trade" element={<TradePage />} />
-              <Route path="/learn" element={<EducationHub />} />
-              <Route path="/ai-hub" element={<AIHub />} />
-              <Route path="/screener" element={<ScreenerPage />} />
-              <Route path="/stock/:symbol" element={<StockDetailPage />} />
-              </Routes>
-            </AnimatePresence>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <div className="min-h-screen bg-duo-bg transition-colors relative overflow-hidden">
+            <div className="relative z-10">
+              <AnimatePresence mode="wait" initial={false}>
+                <Routes>
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/auth" element={<AuthPage />} />
+                </Routes>
+              </AnimatePresence>
+            </div>
           </div>
-        </div>
-      </Router>
-        </NavbarProvider>
+        </Router>
       </UserProvider>
     </ThemeProvider>
   )

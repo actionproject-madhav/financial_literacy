@@ -127,13 +127,11 @@ class AuthService {
         
       // Store user in localStorage - preserve onboarding status if it exists
       localStorage.removeItem('user')
-      const userWithoutPortfolio = { 
+      const userData = { 
         ...user, 
-        portfolio: [], 
-        totalValue: 0,
         onboarding_completed: hasExistingOnboarding // Preserve onboarding status
       }
-      localStorage.setItem('user', JSON.stringify(userWithoutPortfolio))
+      localStorage.setItem('user', JSON.stringify(userData))
       localStorage.setItem('google_token', response.credential) // Store token for later backend sync
       console.log('✅ User data stored in localStorage (onboarding_completed:', hasExistingOnboarding, ')')
         
@@ -210,10 +208,9 @@ class AuthService {
       
       if (result.success && result.user) {
         console.log('✅ Backend sync successful')
-        // Update localStorage with backend user data (but remove portfolio - only from trading API)
-        const userWithoutPortfolio = { ...result.user, portfolio: [], totalValue: 0 }
+        // Update localStorage with backend user data
         localStorage.removeItem('user')
-        localStorage.setItem('user', JSON.stringify(userWithoutPortfolio))
+        localStorage.setItem('user', JSON.stringify(result.user))
         
         // Check onboarding status from backend using email
         const hasCompletedOnboarding = await this.checkOnboardingStatus(user.email)

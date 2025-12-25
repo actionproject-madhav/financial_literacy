@@ -1,13 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import Robinhood-style theme */
-@import './styles/robinhood-theme.css';
-@import './styles/education-game.css';
 
 @layer base {
   * {
@@ -60,27 +55,6 @@
 }
 
 @layer components {
-  .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95;
-  }
-
-  .btn-secondary {
-    @apply bg-white hover:bg-gray-50 text-gray-700 font-medium py-3 px-6 rounded-xl border border-gray-200 transition-all duration-200 transform hover:scale-105 active:scale-95;
-  }
-
-  .card {
-    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition-all duration-200 hover:shadow-md;
-  }
-
-  .gradient-bg {
-    @apply bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700;
-  }
-
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
   /* Custom scrollbar (Duolingo style) */
   .scrollbar-custom::-webkit-scrollbar {
     width: 8px;
@@ -115,48 +89,5 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
-  }
-}
-  .line-clamp-1 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 1;
-  }
-
-  .line-clamp-2 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-  }
-
-  .line-clamp-3 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-  }
-
-  /* Hide TradingView logo and attribution */
-  .tradingview-widget-container a,
-  .tradingview-widget-container__widget a,
-  .tradingview-widget-copyright,
-  .tv-embed-widget-wrapper__header,
-  .tv-embed-widget-wrapper__footer,
-  .tradingview-widget-container .tradingview-widget-copyright,
-  iframe[src*="tradingview"] + div,
-  .tv-widget-logo,
-  .tv-widget-logo__link,
-  .tv-widget-logo__text,
-  .tv-embed__logo,
-  .tv-embed__link {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    height: 0 !important;
-    width: 0 !important;
-    position: absolute !important;
-    left: -9999px !important;
   }
 }
