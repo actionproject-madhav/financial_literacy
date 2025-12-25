@@ -39,10 +39,12 @@ class SemanticMatcher:
     AMBIGUITY_THRESHOLD = 0.15  # If top 2 scores are within this range, it's ambiguous
 
     def __init__(self):
-        """Initialize OpenAI client"""
+        """Initialize OpenAI client with cheapest models"""
+        from config.services import config
+        
         self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-        self.embedding_model = "text-embedding-3-small"
-        self.chat_model = "gpt-4o-mini"
+        self.embedding_model = config.OPENAI_EMBEDDING_MODEL  # text-embedding-3-small (cheapest)
+        self.chat_model = config.OPENAI_CHAT_MODEL  # gpt-4o-mini (cheapest)
 
         # Cache for embeddings (item_id -> embedding)
         self._embedding_cache = {}

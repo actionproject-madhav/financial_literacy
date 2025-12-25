@@ -129,7 +129,7 @@ Return ONLY JSON: {{"is_correct": true/false, "reason": "brief explanation"}}"""
 
         try:
             response = client.chat.completions.create(
-                model='gpt-4o-mini',  # Cheapest model
+                model=config.OPENAI_CHAT_MODEL,  # gpt-4o-mini (cheapest)
                 messages=[{'role': 'user', 'content': prompt}],
                 temperature=0.1,
                 max_tokens=100
@@ -214,7 +214,7 @@ Return JSON:
 
         try:
             response = client.chat.completions.create(
-                model='gpt-4o-mini',
+                model=config.OPENAI_CHAT_MODEL,  # gpt-4o-mini (cheapest)
                 messages=[{'role': 'user', 'content': prompt}],
                 temperature=0.3,
                 max_tokens=250

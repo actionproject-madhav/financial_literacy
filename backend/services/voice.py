@@ -49,10 +49,12 @@ class VoiceService:
     }
 
     def __init__(self):
-        """Initialize OpenAI client"""
+        """Initialize OpenAI client with cheapest models"""
+        from config.services import config
+        
         self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-        self.tts_model = "tts-1"  # or tts-1-hd for higher quality
-        self.whisper_model = "whisper-1"
+        self.tts_model = config.OPENAI_TTS_MODEL  # tts-1 (cheapest)
+        self.whisper_model = config.OPENAI_WHISPER_MODEL  # whisper-1
 
     def _decode_base64_audio(self, audio_base64: str) -> bytes:
         """

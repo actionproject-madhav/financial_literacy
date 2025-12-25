@@ -21,13 +21,21 @@ from config.services import config
 try:
     from deepgram import DeepgramClient, PrerecordedOptions, FileSource
     if config.DEEPGRAM_API_KEY:
-        deepgram_client = DeepgramClient(config.DEEPGRAM_API_KEY)
+        # New SDK uses api_key parameter
+        deepgram_client = DeepgramClient(api_key=config.DEEPGRAM_API_KEY)
     else:
         deepgram_client = None
         print("⚠️  DEEPGRAM_API_KEY not set")
 except ImportError:
     deepgram_client = None
     print("⚠️  deepgram-sdk not installed. Run: pip install deepgram-sdk")
+except TypeError:
+    # Fallback for older SDK versions
+    try:
+        deepgram_client = DeepgramClient(config.DEEPGRAM_API_KEY)
+    except:
+        deepgram_client = None
+        print("⚠️  Deepgram client initialization failed")
 
 
 # Language mapping for Deepgram

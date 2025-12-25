@@ -200,8 +200,10 @@ Respond in JSON format:
     "remediation_suggestion": "what content would help correct this"
 }}"""
 
+            from config.services import config
+            
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=config.OPENAI_CHAT_MODEL,  # gpt-4o-mini (cheapest)
                 messages=[
                     {"role": "system", "content": "You are a learning science expert analyzing student misconceptions."},
                     {"role": "user", "content": prompt}
@@ -433,8 +435,10 @@ Respond in JSON format:
 
 What common misconception do these answers reveal? Provide a concise description (1-2 sentences)."""
 
+            from config.services import config
+            
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=config.OPENAI_CHAT_MODEL,  # gpt-4o-mini (cheapest)
                 messages=[
                     {"role": "system", "content": "You are a learning science expert."},
                     {"role": "user", "content": prompt}

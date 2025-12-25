@@ -127,7 +127,12 @@ def test_deepgram():
         # Test Deepgram directly
         from deepgram import DeepgramClient
         
-        client = DeepgramClient(config.DEEPGRAM_API_KEY)
+        # Try new API first (api_key parameter)
+        try:
+            client = DeepgramClient(api_key=config.DEEPGRAM_API_KEY)
+        except TypeError:
+            # Fallback to old API
+            client = DeepgramClient(config.DEEPGRAM_API_KEY)
         
         print(f"✅ Deepgram Client Initialized")
         print(f"   API Key: {config.DEEPGRAM_API_KEY[:10]}...{config.DEEPGRAM_API_KEY[-4:]}")

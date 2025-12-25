@@ -48,13 +48,16 @@ class LLMService:
     def _initialize_openai(self):
         """Initialize OpenAI client"""
         try:
-            import openai
+            from openai import OpenAI
+            from config.services import config
+            
             api_key = os.getenv('OPENAI_API_KEY')
             if not api_key:
                 raise ValueError("OPENAI_API_KEY not set in environment")
-            openai.api_key = api_key
-            self._client = openai
-            print(f"✅ LLM Service initialized with OpenAI")
+            
+            self._client = OpenAI(api_key=api_key)
+            model = config.OPENAI_CHAT_MODEL
+            print(f"✅ LLM Service initialized with OpenAI ({model})")
         except ImportError:
             raise ImportError("openai package not installed. Run: pip install openai")
 
@@ -107,11 +110,17 @@ class LLMService:
             raise ValueError(f"Unsupported provider: {self.provider}")
 
     def _generate_openai(self, prompt: str, max_tokens: int, temperature: float) -> str:
-        """Generate with OpenAI"""
+        """Generate with OpenAI using cheapest model"""
         try:
-            model = os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo')
-
-            response = self._client.ChatCompletion.create(
+            from config.services import config
+            from openai import OpenAI
+            
+            # Use cheapest model from config
+            model = config.OPENAI_CHAT_MODEL  # gpt-4o-mini (cheapest)
+            
+            client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+            
+            response = client.chat.completions.create(
                 model=model,
                 messages=[
                     {"role": "system", "content": "You are a helpful financial literacy tutor for immigrants learning about US finance."},

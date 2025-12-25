@@ -112,7 +112,7 @@ class BudgetVoiceService:
             if config.OPENAI_API_KEY:
                 client = OpenAI(api_key=config.OPENAI_API_KEY)
                 response = client.audio.speech.create(
-                    model="tts-1",
+                    model=config.OPENAI_TTS_MODEL,  # tts-1 (cheapest)
                     voice=voice or "alloy",
                     input=text
                 )
@@ -158,7 +158,7 @@ class BudgetVoiceService:
                 from openai import OpenAI
                 client = OpenAI(api_key=config.OPENAI_API_KEY)
                 response = client.audio.speech.create(
-                    model="tts-1",
+                    model=config.OPENAI_TTS_MODEL,  # tts-1 (cheapest)
                     voice="alloy",
                     input=text
                 )
