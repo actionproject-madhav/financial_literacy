@@ -1,0 +1,2 @@
+export { DuolingoIcon } from './DuolingoIcon';
+

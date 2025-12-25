@@ -152,7 +152,8 @@ export const LessonPage: React.FC = () => {
     }
   };
 
-  if (isLoading && !sessionId) {
+  // Don't show loading if we have mock data
+  if (isLoading && !sessionId && mockItems.length === 0) {
     return (
       <div className="min-h-screen bg-duo-bg flex items-center justify-center">
         <div className="text-center">
