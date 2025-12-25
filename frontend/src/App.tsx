@@ -7,7 +7,7 @@ import { LessonPage } from './pages/LessonPage';
 import { LearnPage } from './pages/LearnPage';
 import { ProfilePage } from './pages/ProfilePage';
 import LandingPage from './pages/LandingPage';
-import AuthPage from './pages/AuthPage';
+import { AuthPage } from './pages/AuthPage';
 
 // Backend warm-up: Ping health endpoint on app load to wake up Render free tier
 const warmUpBackend = () => {
