@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, redirect, session, make_response, make_response
+from flask import Blueprint, request, jsonify, redirect, session, make_response
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from google_auth_oauthlib.flow import Flow
@@ -7,6 +7,10 @@ from dotenv import load_dotenv
 from database import Database
 
 load_dotenv()
+
+# Allow insecure transport for localhost development (HTTP instead of HTTPS)
+# This is safe for localhost only - DO NOT use in production
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 auth_bp = Blueprint('auth', __name__)
 db = Database()
