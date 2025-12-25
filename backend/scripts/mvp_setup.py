@@ -132,18 +132,18 @@ def main():
     print("SETUP SUMMARY")
     print("="*50)
 
-    if all_configured and embeddings_ok and r2_ok:
+    if all_configured and embeddings_ok and supabase_ok:
         print("\n🎉 MVP READY!")
         print("\nYour setup:")
         print("✅ Deepgram STT (no card)")
         print("✅ Local Embeddings (100% free)")
-        print("✅ Cloudflare R2 (no card)")
+        print("✅ Supabase Storage (no card)")
         print("✅ OpenAI TTS + LLM (you have it)")
 
         print("\nCost breakdown:")
         print("- STT: ~$0.43 per 100 voice answers (Deepgram)")
         print("- Embeddings: $0.00 (local)")
-        print("- Storage: $0.00 for first 10GB (R2)")
+        print("- Storage: $0.00 for first 1GB (Supabase)")
         print("- TTS: ~$0.75 per 100 questions (OpenAI)")
         print("\nTotal: ~$1.18 per 100 interactions")
         print("vs Premium: ~$2.20 per 100 interactions")
@@ -161,8 +161,8 @@ def main():
             print("- Some services not configured (see above)")
         if not embeddings_ok:
             print("- Local embeddings not working")
-        if not r2_ok:
-            print("- R2 not working")
+        if not supabase_ok:
+            print("- Supabase Storage not working")
 
         print("\nFix the issues above and run this script again.")
 

@@ -139,8 +139,11 @@ def get_tts_url(item_id: str, language: str = 'en') -> Optional[str]:
         bucket_name = config.SUPABASE_BUCKET_NAME
         
         # Check if file exists by trying to list it
-        files = supabase_client.storage.from_(bucket_name).list(path=f"tts/{item_id}/")
-        file_exists = any(f.get('name') == f"{language}.mp3" for f in files)
+        try:
+            files = supabase_client.storage.from_(bucket_name).list(path=f"tts/{item_id}/")
+            file_exists = any(f.get('name') == f"{language}.mp3" for f in files if isinstance(f, dict))
+        except:
+            file_exists = False
         
         if file_exists:
             public_url = supabase_client.storage.from_(bucket_name).get_public_url(file_path)
@@ -172,9 +175,14 @@ def delete_audio(url: str) -> bool:
         public_prefix = f"{config.SUPABASE_URL}/storage/v1/object/public/{bucket_name}/"
         
         if public_prefix not in url:
-            return False
-        
-        file_path = url.replace(public_prefix, "")
+            # Try alternative URL format
+            public_prefix2 = f"/storage/v1/object/public/{bucket_name}/"
+            if public_prefix2 in url:
+                file_path = url.split(public_prefix2)[1]
+            else:
+                return False
+        else:
+            file_path = url.replace(public_prefix, "")
         
         result = supabase_client.storage.from_(bucket_name).remove([file_path])
         return True
@@ -206,13 +214,13 @@ def list_files(prefix: str = '', max_keys: int = 100) -> List[Dict]:
         
         result = []
         for file_info in files[:max_keys]:
-            if file_info.get('name'):  # Skip directories
+            if isinstance(file_info, dict) and file_info.get('name'):  # Skip directories
                 file_path = f"{prefix}{file_info['name']}" if prefix else file_info['name']
                 public_url = supabase_client.storage.from_(bucket_name).get_public_url(file_path)
                 
                 result.append({
                     'key': file_path,
-                    'size': file_info.get('metadata', {}).get('size', 0),
+                    'size': file_info.get('metadata', {}).get('size', 0) if isinstance(file_info.get('metadata'), dict) else 0,
                     'last_modified': file_info.get('updated_at', datetime.now()),
                     'url': public_url
                 })

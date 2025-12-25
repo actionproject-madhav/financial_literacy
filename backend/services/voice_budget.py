@@ -34,7 +34,7 @@ class BudgetVoiceService:
 
     def __init__(self):
         if not BUDGET_AVAILABLE:
-            raise RuntimeError("Budget services not available. Install: deepgram-sdk, google-cloud-texttospeech, boto3")
+            raise RuntimeError("Budget services not available. Install: deepgram-sdk, google-cloud-texttospeech, supabase")
 
     def transcribe(self, audio_base64: str, language_hint: Optional[str] = None) -> Dict:
         """

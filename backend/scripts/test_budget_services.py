@@ -133,7 +133,7 @@ def main():
     results = {
         'Deepgram': test_deepgram(),
         'Google TTS': test_google_tts(),
-        'R2 Storage': test_r2(),
+        'Supabase Storage': test_supabase(),
         'Local Embeddings': test_local_embeddings()
     }
 
