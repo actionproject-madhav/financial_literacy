@@ -77,12 +77,12 @@ class Database:
     def initialize_indexes(self):
         """Create all database indexes"""
         if not self._ensure_connection():
-            print("❌ Cannot create indexes - database not connected")
+            print(" Cannot create indexes - database not connected")
             return False
 
         try:
             self.collections.create_indexes()
             return True
         except Exception as e:
-            print(f"❌ Error creating indexes: {e}")
+            print(f" Error creating indexes: {e}")
             return False

@@ -24,12 +24,12 @@ def seed_sample_data():
         return
 
     # Create indexes first
-    print("\n📊 Creating indexes...")
+    print("\n Creating indexes...")
     db.initialize_indexes()
 
     collections = db.collections
 
-    print("\n👤 Creating sample learners...")
+    print("\n Creating sample learners...")
 
     # Sample learners
     learners = []
@@ -62,7 +62,7 @@ def seed_sample_data():
     raj = collections.get_learner_by_email("raj.patel@example.com")
     if raj:
         learner2_id = str(raj['_id'])
-        print(f"  ⚠️  Learner already exists: Raj Patel ({learner2_id})")
+        print(f"    Learner already exists: Raj Patel ({learner2_id})")
     else:
         learner2_id = collections.create_learner(
             email="raj.patel@example.com",

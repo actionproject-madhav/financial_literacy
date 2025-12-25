@@ -115,11 +115,11 @@ def test_supabase():
 def test_deepgram():
     """Test Deepgram STT"""
     print("\n" + "="*60)
-    print("3️⃣  TESTING DEEPGRAM (STT)")
+    print("3️  TESTING DEEPGRAM (STT)")
     print("="*60)
     
     if not config.DEEPGRAM_API_KEY:
-        print("❌ Deepgram API key not configured")
+        print(" Deepgram API key not configured")
         print("   Required: DEEPGRAM_API_KEY")
         return False
     
@@ -134,28 +134,28 @@ def test_deepgram():
             # Fallback to old API
             client = DeepgramClient(config.DEEPGRAM_API_KEY)
         
-        print(f"✅ Deepgram Client Initialized")
+        print(f" Deepgram Client Initialized")
         print(f"   API Key: {config.DEEPGRAM_API_KEY[:10]}...{config.DEEPGRAM_API_KEY[-4:]}")
-        print(f"✅ Deepgram API Key Valid")
+        print(f" Deepgram API Key Valid")
         return True
             
     except ImportError:
-        print("❌ deepgram-sdk not installed")
+        print(" deepgram-sdk not installed")
         print("   Run: pip install deepgram-sdk")
         return False
     except Exception as e:
-        print(f"❌ Deepgram Error: {e}")
+        print(f" Deepgram Error: {e}")
         return False
 
 
 def test_openai():
     """Test OpenAI API"""
     print("\n" + "="*60)
-    print("4️⃣  TESTING OPENAI")
+    print("4️ TESTING OPENAI")
     print("="*60)
     
     if not config.OPENAI_API_KEY:
-        print("❌ OpenAI API key not configured")
+        print(" OpenAI API key not configured")
         print("   Required: OPENAI_API_KEY")
         return False
     
@@ -168,30 +168,30 @@ def test_openai():
         print("Testing OpenAI API...")
         response = client.models.list()
         
-        print(f"✅ OpenAI Connected")
+        print(f" OpenAI Connected")
         print(f"   API Key: {config.OPENAI_API_KEY[:10]}...{config.OPENAI_API_KEY[-4:]}")
         print(f"   Available models: {len(response.data)} models")
         
         # Test TTS availability
         try:
             # Just verify TTS endpoint exists (don't make actual call)
-            print(f"✅ TTS endpoint available")
+            print(f" TTS endpoint available")
         except:
             pass
         
         return True
         
     except ImportError:
-        print("❌ openai package not installed")
+        print(" openai package not installed")
         print("   Run: pip install openai")
         return False
     except Exception as e:
         error_msg = str(e)
         if "401" in error_msg or "Invalid" in error_msg:
-            print(f"❌ OpenAI API Key Invalid")
+            print(f" OpenAI API Key Invalid")
             print(f"   Error: {error_msg}")
         else:
-            print(f"❌ OpenAI Error: {error_msg}")
+            print(f" OpenAI Error: {error_msg}")
         return False
 
 
@@ -208,7 +208,7 @@ def test_local_embeddings():
         print("Generating test embedding...")
         emb = local_embeddings.get_embedding("test sentence")
         
-        print(f"✅ Local Embeddings Working")
+        print(f" Local Embeddings Working")
         print(f"   Model: {config.EMBEDDING_MODEL}")
         print(f"   Embedding dimensions: {len(emb)}")
         
@@ -228,11 +228,11 @@ def test_local_embeddings():
         return True
         
     except ImportError as e:
-        print(f"❌ Missing dependencies: {e}")
+        print(f"s Missing dependencies: {e}")
         print("   Run: pip install sentence-transformers torch scipy")
         return False
     except Exception as e:
-        print(f"❌ Local Embeddings Error: {e}")
+        print(f" Local Embeddings Error: {e}")
         print("   Run: python scripts/download_embedding_model.py")
         return False
 
