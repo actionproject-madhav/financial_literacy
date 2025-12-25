@@ -30,12 +30,17 @@ export const TopNav: React.FC<TopNavProps> = ({
     <header
       className={cn(
         'sticky top-0 z-40',
-        'bg-white border-b border-duo-border',
-        'px-4 py-3',
+        'bg-white border-b-2 border-[#E5E5E5]', // Duolingo exact border
+        'h-[70px]', // Duolingo exact height
+        'px-4 sm:px-5', // Duolingo padding
         className
       )}
+      style={{ 
+        background: 'rgb(255, 255, 255)',
+        borderBottom: '2px solid rgb(229, 229, 229)'
+      }}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <div className="max-w-7xl mx-auto flex items-center justify-between h-full">
         {/* Left: Logo/Menu */}
         <div className="flex items-center gap-4">
           <IconButton
@@ -48,11 +53,11 @@ export const TopNav: React.FC<TopNavProps> = ({
             <Menu className="w-6 h-6" />
           </IconButton>
 
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-duo-green rounded-duo-lg flex items-center justify-center">
-              <span className="text-white font-extrabold text-xl">$</span>
+          <Link to="/" className="flex items-center gap-3">
+            <div className="w-[42px] h-[42px] bg-[#58CC02] rounded-[16px] flex items-center justify-center shadow-[0_4px_0_#46A302]">
+              <span className="text-white font-bold text-2xl">$</span>
             </div>
-            <span className="hidden sm:block text-xl font-extrabold text-duo-green">
+            <span className="hidden sm:block text-[23px] font-bold text-[#4B4B4B]" style={{ fontFamily: 'var(--font-primary)' }}>
               FinLit
             </span>
           </Link>

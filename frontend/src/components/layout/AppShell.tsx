@@ -32,8 +32,8 @@ export const AppShell: React.FC = () => {
         <Sidebar />
 
         {/* Main Content */}
-        <main className="flex-1 min-h-[calc(100vh-64px)] pb-20 lg:pb-0">
-          <div className="max-w-3xl mx-auto px-4 py-6">
+        <main className="flex-1 min-h-[calc(100vh-70px)] pb-20 lg:pb-0" style={{ background: 'rgb(240, 240, 240)' }}>
+          <div className="max-w-3xl mx-auto px-4 sm:px-5 py-6">
             <Outlet />
           </div>
         </main>

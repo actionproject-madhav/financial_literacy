@@ -22,8 +22,15 @@ export const BottomNav: React.FC = () => {
   const location = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-duo-border lg:hidden">
-      <div className="flex items-center justify-around px-2 py-2">
+    <nav 
+      className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t-2 border-[#E5E5E5] lg:hidden"
+      style={{ 
+        background: 'rgb(255, 255, 255)',
+        borderTop: '2px solid rgb(229, 229, 229)',
+        padding: '16px' // Duolingo exact padding
+      }}
+    >
+      <div className="flex items-center justify-around">
         {navItems.map((item) => {
           const isActive = location.pathname.startsWith(item.path);
 
@@ -31,20 +38,12 @@ export const BottomNav: React.FC = () => {
             <NavLink
               key={item.path}
               to={item.path}
-              className="relative flex flex-col items-center gap-1 px-3 py-2"
+              className="relative flex flex-col items-center gap-1 px-3 py-2 flex-1"
             >
-              {isActive && (
-                <motion.div
-                  layoutId="bottomNavIndicator"
-                  className="absolute inset-0 bg-duo-blue-tint rounded-duo-lg"
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                />
-              )}
-              
               <span
                 className={cn(
                   'relative z-10 transition-colors',
-                  isActive ? 'text-duo-blue' : 'text-duo-text-muted'
+                  isActive ? 'text-[#1CB0F6]' : 'text-[#737373]' // Duolingo exact colors
                 )}
               >
                 {item.icon}
@@ -52,8 +51,8 @@ export const BottomNav: React.FC = () => {
               
               <span
                 className={cn(
-                  'relative z-10 text-xs font-bold transition-colors',
-                  isActive ? 'text-duo-blue' : 'text-duo-text-muted'
+                  'relative z-10 text-[13px] font-bold transition-colors uppercase tracking-[0.04em]', // Duolingo exact typography
+                  isActive ? 'text-[#1CB0F6]' : 'text-[#737373]'
                 )}
               >
                 {item.label}

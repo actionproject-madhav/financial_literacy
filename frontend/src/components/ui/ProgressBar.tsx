@@ -27,27 +27,27 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
 
   const variantStyles = {
     default: {
-      track: 'bg-duo-border',
-      fill: 'bg-duo-green',
+      track: 'bg-[#E5E5E5]', // Duolingo exact gray
+      fill: 'bg-[#58CC02]', // Duolingo exact green
     },
     xp: {
-      track: 'bg-duo-purple-tint',
+      track: 'bg-[#F3E5FF]', // Duolingo purple tint
       fill: 'bg-gradient-to-r from-[#8549BA] to-[#CE82FF]',
     },
     streak: {
-      track: 'bg-orange-100',
+      track: 'bg-[#FFF0D5]', // Orange tint
       fill: 'bg-gradient-to-r from-[#FF9600] to-[#FFC800]',
     },
     skill: {
-      track: 'bg-duo-border',
-      fill: 'bg-duo-blue',
+      track: 'bg-[#E5E5E5]',
+      fill: 'bg-[#1CB0F6]', // Duolingo exact blue
     },
   };
 
   const sizeStyles = {
-    sm: 'h-2',
-    md: 'h-3',
-    lg: 'h-4',
+    sm: 'h-2 rounded-full', // Duolingo rounded-full
+    md: 'h-3 rounded-full',
+    lg: 'h-4 rounded-full',
   };
 
   return (

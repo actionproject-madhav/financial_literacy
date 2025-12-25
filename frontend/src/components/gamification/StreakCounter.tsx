@@ -19,9 +19,9 @@ export const StreakCounter: React.FC<StreakCounterProps> = ({
   className,
 }) => {
   const sizeConfig = {
-    sm: { icon: 20, text: 'text-lg', padding: 'px-2 py-1' },
-    md: { icon: 24, text: 'text-xl', padding: 'px-3 py-1.5' },
-    lg: { icon: 32, text: 'text-2xl', padding: 'px-4 py-2' },
+    sm: { icon: 18, text: 'text-[15px]', padding: 'px-3 py-1', gap: 'gap-1' }, // Duolingo exact sizes
+    md: { icon: 20, text: 'text-[17px]', padding: 'px-3 py-1.5', gap: 'gap-1.5' },
+    lg: { icon: 24, text: 'text-[19px]', padding: 'px-4 py-2', gap: 'gap-2' },
   };
 
   const config = sizeConfig[size];
@@ -29,9 +29,10 @@ export const StreakCounter: React.FC<StreakCounterProps> = ({
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-duo-lg',
-        isActive ? 'bg-orange-50' : 'bg-gray-100',
+        'inline-flex items-center rounded-[12px]', // Duolingo uses 12px
+        isActive ? 'bg-[#FFF0D5]' : 'bg-[#F7F7F7]', // Duolingo exact colors
         config.padding,
+        config.gap,
         className
       )}
     >
@@ -54,21 +55,21 @@ export const StreakCounter: React.FC<StreakCounterProps> = ({
           size={config.icon}
           className={cn(
             'transition-colors',
-            isActive ? 'text-duo-orange fill-duo-orange' : 'text-gray-400'
+            isActive ? 'text-[#FF9600] fill-[#FF9600]' : 'text-[#737373]' // Duolingo exact orange
           )}
         />
       </motion.div>
       <span
         className={cn(
-          'font-extrabold',
+          'font-bold', // Duolingo uses bold, not extrabold
           config.text,
-          isActive ? 'text-duo-orange' : 'text-gray-400'
+          isActive ? 'text-[#FF9600]' : 'text-[#737373]' // Duolingo exact colors
         )}
       >
         {days}
       </span>
       {showLabel && (
-        <span className="text-sm font-semibold text-duo-text-muted ml-1">
+        <span className="text-[13px] font-bold text-[#737373] ml-1">
           day streak
         </span>
       )}

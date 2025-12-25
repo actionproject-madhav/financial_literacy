@@ -1,0 +1,319 @@
+/**
+ * Duolingo-style Global Styles
+ * Extracted from actual Duolingo CSS patterns
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
+
+/* CSS Variables - Duolingo Color System */
+:root {
+  /* Primary Colors - Based on Duolingo's actual usage */
+  --color-macaw: 28, 156, 246; /* #1C9CF6 - Primary blue */
+  --color-owl: 88, 204, 2; /* #58CC02 - Primary green (signature) */
+  --color-iguana: 88, 204, 2; /* #58CC02 - Light green */
+  --color-whale: 24, 144, 214; /* #1890D6 - Dark blue */
+  --color-tree-frog: 70, 163, 2; /* #46A302 - Dark green (shadow) */
+  
+  /* Surfaces */
+  --color-snow: 255, 255, 255; /* #FFFFFF */
+  --color-swan: 229, 229, 229; /* #E5E5E5 */
+  --color-cloud: 240, 240, 240; /* #F0F0F0 */
+  --color-cloud-light: 247, 247, 247; /* #F7F7F7 */
+  
+  /* Text Colors */
+  --color-black-text: 75, 75, 75; /* #4B4B4B */
+  --color-wolf: 75, 75, 75; /* #4B4B4B - Dark text */
+  --color-hare: 115, 115, 115; /* #737373 - Muted text */
+  --color-eel: 0, 0, 0; /* #000000 - Black */
+  
+  /* Accent Colors */
+  --color-fire-ant: 255, 75, 75; /* #FF4B4B - Red */
+  --color-cardinal: 234, 43, 43; /* #EA2B2B - Dark red */
+  --color-banana: 255, 200, 0; /* #FFC800 - Yellow */
+  --color-kiwi: 88, 204, 2; /* #58CC02 - Green */
+  
+  /* Special Colors */
+  --color-blue-jay: 24, 144, 214; /* #1890D6 - Border blue */
+  --color-polar: 240, 248, 255; /* #F0F8FF - Light blue tint */
+  
+  /* Spacing - Duolingo uses: 4px, 8px, 12px, 16px, 20px, 24px, 32px, 40px, 48px, 64px, 96px */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-base: 16px;
+  --spacing-lg: 20px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 40px;
+  --spacing-4xl: 48px;
+  --spacing-5xl: 64px;
+  --spacing-6xl: 96px;
+  
+  /* Border Radius - Duolingo uses: 6px, 8px, 12px, 16px */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+  
+  /* Typography - Duolingo uses din-round, but we'll use Nunito as fallback */
+  --font-primary: 'Nunito', 'din-round', system-ui, -apple-system, sans-serif;
+  --font-feather: 'Nunito', 'feather', system-ui, sans-serif;
+  
+  /* Font Sizes - Based on Duolingo patterns */
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-md: 16px;
+  --text-lg: 17px;
+  --text-xl: 19px;
+  --text-2xl: 23px;
+  --text-3xl: 25px;
+  --text-4xl: 32px;
+  --text-5xl: 36px;
+  --text-6xl: 48px;
+  --text-7xl: 64px;
+  
+  /* Line Heights */
+  --leading-tight: 1.2;
+  --leading-normal: 1.4;
+  --leading-relaxed: 1.5;
+  --leading-loose: 1.75;
+  
+  /* Button heights */
+  --button-height-sm: 44px;
+  --button-height-md: 48px;
+  --button-height-lg: 58px;
+  
+  /* Shadows - Duolingo 3D button effect */
+  --shadow-button-green: 0 4px 0 rgb(var(--color-tree-frog));
+  --shadow-button-blue: 0 4px 0 rgb(var(--color-whale));
+  --shadow-button-red: 0 4px 0 rgb(var(--color-cardinal));
+  --shadow-button-gray: 0 4px 0 rgb(var(--color-swan));
+}
+
+/* Base Reset - Duolingo style */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-family: var(--font-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-y: scroll;
+  touch-action: manipulation;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: rgb(var(--color-cloud));
+  color: rgb(var(--color-black-text));
+  font-family: var(--font-primary);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  font-weight: 500;
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Typography - Duolingo patterns */
+h1 {
+  font-size: var(--text-4xl);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  margin: 0 0 50px;
+  color: rgb(var(--color-black-text));
+}
+
+h2 {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  line-height: 26px;
+  margin: 0 0 25px;
+  color: rgb(var(--color-black-text));
+}
+
+h3 {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+
+h4 {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: rgb(var(--color-black-text));
+}
+
+h5 {
+  font-size: var(--text-base);
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+
+h6 {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  margin: 0;
+  color: rgb(var(--color-hare));
+  text-transform: uppercase;
+}
+
+p {
+  margin: 0 0 18px;
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+}
+
+strong {
+  font-weight: 700;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Selection */
+::selection {
+  background-color: rgba(var(--color-macaw), 0.2);
+  color: rgb(var(--color-macaw));
+}
+
+/* Focus */
+:focus-visible {
+  outline: 2px solid rgb(var(--color-blue-jay));
+  outline-offset: 2px;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Button Base Styles - Duolingo 3D Button Pattern */
+button {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  font-family: var(--font-primary);
+  font-weight: 700;
+  border: none;
+  outline: none;
+  transition: filter 0.2s;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Input styles */
+input[type="checkbox"] {
+  -webkit-appearance: none;
+  background: rgb(var(--color-snow));
+  border: 2px solid rgb(var(--color-swan));
+  border-radius: 5px;
+  cursor: pointer;
+  height: 20px;
+  margin: 0;
+  position: relative;
+  width: 20px;
+}
+
+input[type="checkbox"]:checked {
+  border-color: rgb(var(--color-macaw));
+}
+
+input[type="checkbox"]:checked::after {
+  border-bottom: 3px solid rgb(var(--color-macaw));
+  border-left: 3px solid rgb(var(--color-macaw));
+  content: "";
+  height: 35%;
+  left: 25%;
+  position: absolute;
+  top: 31%;
+  transform: rotate(-45deg);
+  width: 55%;
+}
+
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="text"],
+input[type="url"] {
+  -webkit-appearance: none;
+  box-shadow: none;
+  font-family: var(--font-primary);
+}
+
+input::placeholder {
+  color: rgb(var(--color-hare));
+  font-weight: 500;
+  opacity: 1;
+}
+
+/* Scrollbar - Duolingo style */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(var(--color-cloud));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--color-swan));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(213, 213, 213);
+}
+
+/* Utility Classes */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Duolingo-specific utility classes */
+.duo-button-3d {
+  position: relative;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.duo-button-3d:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: none !important;
+}
+
+.duo-button-3d:active:not(:disabled)::after {
+  display: none;
+}
+

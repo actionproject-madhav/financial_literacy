@@ -30,7 +30,7 @@ export const useVoiceRecorder = (): UseVoiceRecorderReturn => {
 
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
-  const timerInterval = useRef<NodeJS.Timeout | null>(null);
+  const timerInterval = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stream = useRef<MediaStream | null>(null);
 
   const startRecording = useCallback(async () => {
@@ -151,6 +151,10 @@ export const useVoiceRecorder = (): UseVoiceRecorderReturn => {
     }
 
     return new Promise((resolve, reject) => {
+      if (!state.audioBlob) {
+        reject(new Error('No audio blob available'));
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64 = reader.result as string;

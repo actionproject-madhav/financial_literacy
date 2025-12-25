@@ -50,11 +50,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
         to={item.path}
         onClick={onClose}
         className={cn(
-          'relative flex items-center gap-3 px-4 py-3 rounded-duo-lg',
-          'font-semibold transition-colors',
+          'relative flex items-center gap-3 px-4 py-3 rounded-[12px]', // Duolingo uses 12px for nav items
+          'font-bold text-[15px] transition-colors', // Duolingo exact font
           isActive
-            ? 'text-duo-blue bg-duo-blue-tint'
-            : 'text-duo-text-muted hover:bg-gray-100'
+            ? 'text-[#1CB0F6] bg-[#DDF4FF]' // Duolingo exact colors
+            : 'text-[#737373] hover:bg-[#F7F7F7]'
         )}
       >
         {isActive && (
@@ -81,17 +81,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
     <aside
       className={cn(
         'hidden lg:flex flex-col',
-        'w-64 h-screen sticky top-0',
-        'bg-white border-r border-duo-border',
-        'py-6 px-4'
+        'w-[256px] h-screen sticky top-0', // Duolingo exact width
+        'bg-white border-r-2 border-[#E5E5E5]', // Duolingo exact border
+        'py-6 px-5' // Duolingo exact padding
       )}
+      style={{ 
+        background: 'rgb(255, 255, 255)',
+        borderRight: '2px solid rgb(229, 229, 229)'
+      }}
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 mb-8">
-        <div className="w-12 h-12 bg-duo-green rounded-duo-xl flex items-center justify-center">
-          <span className="text-white font-extrabold text-2xl">$</span>
+        <div className="w-[42px] h-[42px] bg-[#58CC02] rounded-[16px] flex items-center justify-center shadow-[0_4px_0_#46A302]">
+          <span className="text-white font-bold text-2xl">$</span>
         </div>
-        <span className="text-2xl font-extrabold text-duo-green">FinLit</span>
+        <span className="text-[23px] font-bold text-[#4B4B4B]">FinLit</span>
       </div>
 
       {/* Main Nav */}

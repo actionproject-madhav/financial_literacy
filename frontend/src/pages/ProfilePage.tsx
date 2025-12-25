@@ -38,7 +38,7 @@ const mockUser = {
 
 export const ProfilePage: React.FC = () => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5"> {/* Duolingo uses 20px (5 * 4px) spacing */}
       {/* Profile Header */}
       <Card variant="elevated" padding="lg">
         <div className="flex items-start justify-between mb-4">
@@ -50,10 +50,10 @@ export const ProfilePage: React.FC = () => {
               size="xl"
             />
             <div>
-              <h1 className="text-2xl font-extrabold text-duo-text">
+              <h1 className="text-[23px] font-bold text-[#4B4B4B]" style={{ lineHeight: '32px' }}>
                 {mockUser.name}
               </h1>
-              <p className="text-duo-text-muted">{mockUser.email}</p>
+              <p className="text-[15px] text-[#737373]" style={{ lineHeight: '24px', marginTop: '8px' }}>{mockUser.email}</p>
               <div className="flex items-center gap-2 mt-1">
                 <Badge variant="info" size="sm">{mockUser.country}</Badge>
                 <Badge variant="xp" size="sm">{mockUser.visaType} Visa</Badge>
@@ -72,7 +72,7 @@ export const ProfilePage: React.FC = () => {
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-duo-border">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t-2 border-[#E5E5E5]">
           <div className="text-center">
             <StreakCounter days={mockUser.stats.streak} size="md" />
             <p className="text-xs text-duo-text-muted mt-1">Day Streak</p>
@@ -82,16 +82,16 @@ export const ProfilePage: React.FC = () => {
             <p className="text-xs text-duo-text-muted mt-1">Total XP</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-extrabold text-duo-green">
+            <p className="text-[23px] font-bold text-[#58CC02]" style={{ lineHeight: '32px' }}>
               {mockUser.stats.lessonsCompleted}
             </p>
-            <p className="text-xs text-duo-text-muted mt-1">Lessons</p>
+            <p className="text-[13px] text-[#737373] mt-1 font-bold">Lessons</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-extrabold text-duo-yellow">
+            <p className="text-[23px] font-bold text-[#FFC800]" style={{ lineHeight: '32px' }}>
               {mockUser.stats.skillsMastered}
             </p>
-            <p className="text-xs text-duo-text-muted mt-1">Skills Mastered</p>
+            <p className="text-[13px] text-[#737373] mt-1 font-bold">Skills Mastered</p>
           </div>
         </div>
       </Card>
@@ -100,12 +100,12 @@ export const ProfilePage: React.FC = () => {
       <Card variant="elevated" padding="lg">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="font-bold text-duo-text">Level {mockUser.stats.currentLevel}</h2>
-            <p className="text-sm text-duo-text-muted">Financial Explorer</p>
+            <h2 className="font-bold text-[#4B4B4B] text-[17px]" style={{ lineHeight: '24px' }}>Level {mockUser.stats.currentLevel}</h2>
+            <p className="text-[15px] text-[#737373] mt-1">Financial Explorer</p>
           </div>
           <div className="text-right">
-            <p className="font-bold text-duo-blue">{mockUser.stats.levelProgress}%</p>
-            <p className="text-sm text-duo-text-muted">to next level</p>
+            <p className="font-bold text-[#1CB0F6] text-[17px]" style={{ lineHeight: '24px' }}>{mockUser.stats.levelProgress}%</p>
+            <p className="text-[15px] text-[#737373] mt-1">to next level</p>
           </div>
         </div>
         <ProgressBar
@@ -119,7 +119,7 @@ export const ProfilePage: React.FC = () => {
       {/* Achievements */}
       <Card variant="elevated" padding="lg">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-duo-text">Achievements</h2>
+          <h2 className="font-bold text-[#4B4B4B] text-[19px]" style={{ lineHeight: '25px' }}>Achievements</h2>
           <Button variant="ghost" size="sm" rightIcon={<ChevronRight className="w-4 h-4" />}>
             See All
           </Button>
@@ -150,12 +150,12 @@ export const ProfilePage: React.FC = () => {
         ].map((item, index) => (
           <button
             key={item.path}
-            className={`w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors ${
-              index !== 0 ? 'border-t border-duo-border' : ''
+            className={`w-full flex items-center justify-between p-5 hover:bg-[#F7F7F7] transition-colors ${
+              index !== 0 ? 'border-t-2 border-[#E5E5E5]' : ''
             }`}
           >
-            <span className="font-semibold text-duo-text">{item.label}</span>
-            <ChevronRight className="w-5 h-5 text-duo-text-muted" />
+            <span className="font-bold text-[#4B4B4B] text-[15px]">{item.label}</span>
+            <ChevronRight className="w-5 h-5 text-[#737373]" />
           </button>
         ))}
       </Card>
