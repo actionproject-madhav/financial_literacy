@@ -25,22 +25,23 @@ export const DailyGoalProgress: React.FC<DailyGoalProgressProps> = ({
           <div
             className={cn(
               'p-1.5 rounded-full',
-              isComplete ? 'bg-duo-green' : 'bg-duo-blue-tint'
+              isComplete ? 'bg-[#58CC02]' : 'bg-[#DDF4FF]'
             )}
           >
             {isComplete ? (
               <Check size={18} className="text-white" />
             ) : (
-              <Target size={18} className="text-duo-blue" />
+              <Target size={18} className="text-[#1CB0F6]" />
             )}
           </div>
-          <span className="font-bold text-duo-text">Daily Goal</span>
+          <span className="font-bold text-[#4B4B4B] text-[15px]">Daily Goal</span>
         </div>
         <span
           className={cn(
-            'font-extrabold',
-            isComplete ? 'text-duo-green' : 'text-duo-blue'
+            'font-bold text-[17px]',
+            isComplete ? 'text-[#58CC02]' : 'text-[#1CB0F6]'
           )}
+          style={{ lineHeight: '24px' }}
         >
           {current}/{target} XP
         </span>
@@ -57,9 +58,10 @@ export const DailyGoalProgress: React.FC<DailyGoalProgressProps> = ({
         <motion.p
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-sm text-duo-green font-semibold mt-2 text-center"
+          className="text-[15px] text-[#58CC02] font-bold mt-2 text-center"
+          style={{ lineHeight: '24px' }}
         >
-          🎉 Goal complete! Great work!
+          Goal complete! Great work!
         </motion.p>
       )}
     </div>

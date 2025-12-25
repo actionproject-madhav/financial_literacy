@@ -25,7 +25,7 @@ export const LessonProgressBar: React.FC<LessonProgressBarProps> = ({
   return (
     <div
       className={cn(
-        'flex items-center gap-4 px-4 py-3 bg-white border-b border-duo-border',
+        'flex items-center gap-4 px-5 py-3 bg-white border-b-2 border-[#E5E5E5]', // Duolingo exact
         className
       )}
     >
@@ -40,9 +40,9 @@ export const LessonProgressBar: React.FC<LessonProgressBarProps> = ({
       </IconButton>
 
       {/* Progress Bar */}
-      <div className="flex-1 h-4 bg-duo-border rounded-full overflow-hidden">
+      <div className="flex-1 h-4 bg-[#E5E5E5] rounded-full overflow-hidden">
         <motion.div
-          className="h-full bg-duo-green rounded-full"
+          className="h-full bg-[#58CC02] rounded-full"
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.3, ease: 'easeOut' }}

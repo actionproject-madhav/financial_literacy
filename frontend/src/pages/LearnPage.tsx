@@ -7,6 +7,7 @@ import { SkillBubble } from '../components/lesson/SkillBubble';
 import { DailyGoalProgress } from '../components/gamification/DailyGoalProgress';
 import { useUserStore } from '../stores/userStore';
 import { learnerApi, adaptiveApi } from '../services/api';
+import { mockSkillPaths, mockDailyProgress } from '../data/mockData';
 
 interface Skill {
   id: string;
@@ -112,12 +113,22 @@ export const LearnPage: React.FC = () => {
 
       } catch (error) {
         console.error('Failed to load learn page data:', error);
+        // Fallback to mock data if API fails
+        setSkillPaths(mockSkillPaths);
+        setDailyProgress(mockDailyProgress);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadData();
+    if (learnerId) {
+      loadData();
+    } else {
+      // Use mock data if not authenticated
+      setSkillPaths(mockSkillPaths);
+      setDailyProgress(mockDailyProgress);
+      setIsLoading(false);
+    }
   }, [learnerId]);
 
   const handleSkillClick = (skillId: string) => {
@@ -148,7 +159,7 @@ export const LearnPage: React.FC = () => {
     : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5"> {/* Duolingo uses 20px (5 * 4px) spacing between sections */}
       {/* Daily Goal */}
       <DailyGoalProgress
         current={dailyProgress.current}
@@ -159,16 +170,16 @@ export const LearnPage: React.FC = () => {
       <Card variant="elevated" padding="lg">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-bold text-duo-text">Overall Progress</h2>
-            <p className="text-sm text-duo-text-muted">
+            <h2 className="text-[19px] font-bold text-[#4B4B4B]" style={{ lineHeight: '25px' }}>Overall Progress</h2>
+            <p className="text-[15px] text-[#737373] mt-1">
               {skillPaths.length} skill path{skillPaths.length !== 1 ? 's' : ''}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-extrabold text-duo-green">
+            <p className="text-[23px] font-bold text-[#58CC02]" style={{ lineHeight: '32px' }}>
               {Math.round(overallProgress)}%
             </p>
-            <p className="text-sm text-duo-text-muted">complete</p>
+            <p className="text-[15px] text-[#737373] mt-1">complete</p>
           </div>
         </div>
         <ProgressBar value={overallProgress} max={100} variant="default" size="lg" />
@@ -182,7 +193,7 @@ export const LearnPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: pathIndex * 0.1 }}
         >
-          <h3 className="text-lg font-bold text-duo-text mb-4 px-2">
+          <h3 className="text-[17px] font-bold text-[#4B4B4B] mb-5 px-2" style={{ lineHeight: '24px' }}>
             {path.name}
           </h3>
 

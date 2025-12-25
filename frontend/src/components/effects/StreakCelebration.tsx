@@ -33,7 +33,7 @@ export const StreakCelebration: React.FC<StreakCelebrationProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/50 z-[324] flex items-center justify-center p-4" // Duolingo exact z-index
             onClick={onClose}
           >
             <motion.div
@@ -41,13 +41,13 @@ export const StreakCelebration: React.FC<StreakCelebrationProps> = ({
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-duo-2xl p-8 max-w-sm w-full text-center relative"
+              className="bg-white rounded-[16px] p-8 max-w-sm w-full text-center relative" // Duolingo exact
             >
               <button
                 onClick={onClose}
                 className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full"
               >
-                <X className="w-5 h-5 text-duo-text-muted" />
+                <X className="w-5 h-5 text-[#737373]" /> {/* Duolingo exact */}
               </button>
 
               <motion.div
@@ -58,16 +58,16 @@ export const StreakCelebration: React.FC<StreakCelebrationProps> = ({
                 transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 1 }}
                 className="inline-block mb-4"
               >
-                <div className="w-24 h-24 bg-gradient-to-br from-duo-orange to-duo-yellow rounded-full flex items-center justify-center">
+                <div className="w-24 h-24 bg-gradient-to-br from-[#FF9600] to-[#FFC800] rounded-full flex items-center justify-center"> {/* Duolingo exact */}
                   <Flame className="w-14 h-14 text-white fill-white" />
                 </div>
               </motion.div>
 
-              <h2 className="text-4xl font-extrabold text-duo-orange mb-2">
+              <h2 className="text-[32px] font-bold text-[#FF9600] mb-2" style={{ lineHeight: '40px' }}> {/* Duolingo exact */}
                 {streakDays} Day Streak!
               </h2>
               
-              <p className="text-lg text-duo-text mb-6">
+              <p className="text-[17px] text-[#4B4B4B] mb-6" style={{ lineHeight: '24px' }}> {/* Duolingo exact */}
                 {getMilestoneMessage(streakDays)}
               </p>
 

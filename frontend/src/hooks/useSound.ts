@@ -18,24 +18,48 @@ export const useSound = () => {
   const enabledRef = useRef(true);
 
   useEffect(() => {
-    // Preload sounds
+    // Preload sounds (silently fail if files don't exist)
     Object.entries(SOUNDS).forEach(([name, url]) => {
-      soundsRef.current[name] = new Howl({
-        src: [url],
-        preload: true,
-        volume: 0.5,
-      });
+      try {
+        const howl = new Howl({
+          src: [url],
+          preload: true,
+          volume: 0.5,
+        });
+        
+        // Only add if sound loads successfully
+        howl.on('loaderror', () => {
+          // Silently ignore missing sound files
+          console.debug(`Sound file not found: ${url}`);
+        });
+        
+        soundsRef.current[name] = howl;
+      } catch (error) {
+        // Silently ignore sound loading errors
+        console.debug(`Failed to load sound: ${name}`, error);
+      }
     });
 
     return () => {
       // Cleanup
-      Object.values(soundsRef.current).forEach((sound) => sound.unload());
+      Object.values(soundsRef.current).forEach((sound) => {
+        try {
+          sound.unload();
+        } catch (error) {
+          // Ignore cleanup errors
+        }
+      });
     };
   }, []);
 
   const play = useCallback((name: SoundName) => {
     if (enabledRef.current && soundsRef.current[name]) {
-      soundsRef.current[name].play();
+      try {
+        soundsRef.current[name].play();
+      } catch (error) {
+        // Silently ignore sound play errors
+        console.debug(`Failed to play sound: ${name}`, error);
+      }
     }
   }, []);
 

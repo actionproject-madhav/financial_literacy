@@ -25,17 +25,17 @@ export const GemDisplay: React.FC<GemDisplayProps> = ({
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-1 rounded-full',
-        'bg-duo-blue-tint',
+        'inline-flex items-center gap-2 rounded-full', // Duolingo uses 8px gap
+        'bg-[#DDF4FF]', // Duolingo exact blue tint
         config.padding,
         className
       )}
     >
       <Gem
         size={config.icon}
-        className="text-duo-blue"
+        className="text-[#1CB0F6]" // Duolingo exact blue
       />
-      <span className={cn('font-bold text-duo-blue', config.text)}>
+      <span className={cn('font-bold text-[#1CB0F6]', config.text)}>
         {amount.toLocaleString()}
       </span>
     </div>

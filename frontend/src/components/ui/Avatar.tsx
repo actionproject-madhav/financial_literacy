@@ -19,10 +19,10 @@ export const Avatar: React.FC<AvatarProps> = ({
   const [imgError, setImgError] = React.useState(false);
 
   const sizeStyles = {
-    sm: 'w-8 h-8 text-xs',
-    md: 'w-10 h-10 text-sm',
-    lg: 'w-12 h-12 text-base',
-    xl: 'w-16 h-16 text-lg',
+    sm: 'w-8 h-8 text-xs', // 32px
+    md: 'w-10 h-10 text-sm', // 40px - Duolingo standard
+    lg: 'w-12 h-12 text-base', // 48px
+    xl: 'w-16 h-16 text-lg', // 64px
   };
 
   const showFallback = !src || imgError;
@@ -30,8 +30,8 @@ export const Avatar: React.FC<AvatarProps> = ({
   return (
     <div
       className={cn(
-        'relative rounded-full overflow-hidden bg-duo-blue-tint',
-        'flex items-center justify-center font-bold text-duo-blue',
+        'relative rounded-full overflow-hidden bg-[#DDF4FF]', // Duolingo exact blue tint
+        'flex items-center justify-center font-bold text-[#1CB0F6]', // Duolingo exact blue
         'border-2 border-white shadow-sm',
         sizeStyles[size],
         className

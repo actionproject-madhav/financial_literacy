@@ -19,7 +19,7 @@ export const LessonShell: React.FC<LessonShellProps> = ({
   children,
 }) => {
   return (
-    <div className="min-h-screen bg-duo-bg flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ background: 'rgb(240, 240, 240)' }}>
       {/* Progress Bar */}
       <LessonProgressBar
         current={currentStep}
@@ -29,7 +29,7 @@ export const LessonShell: React.FC<LessonShellProps> = ({
       />
 
       {/* Content */}
-      <div className="flex-1 flex flex-col max-w-xl mx-auto w-full px-4 py-6">
+      <div className="flex-1 flex flex-col max-w-xl mx-auto w-full px-5 py-6" style={{ background: 'rgb(240, 240, 240)' }}> {/* Duolingo uses 20px padding */}
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}

@@ -29,7 +29,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   return (
     <header
       className={cn(
-        'sticky top-0 z-40',
+        'sticky top-0 z-[2]', // Duolingo exact z-index
         'bg-white border-b-2 border-[#E5E5E5]', // Duolingo exact border
         'h-[70px]', // Duolingo exact height
         'px-4 sm:px-5', // Duolingo padding
@@ -50,7 +50,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             onClick={onMenuClick}
             className="lg:hidden"
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="w-5 h-5" /> {/* Duolingo uses 20px icons in nav */}
           </IconButton>
 
           <Link to="/" className="flex items-center gap-3">
@@ -65,7 +65,7 @@ export const TopNav: React.FC<TopNavProps> = ({
 
         {/* Right: Stats & Profile */}
         {user && (
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-4"> {/* Duolingo uses 16px gap consistently */}
             <StreakCounter days={user.streak} size="sm" />
             
             <div className="hidden sm:block">
@@ -77,10 +77,10 @@ export const TopNav: React.FC<TopNavProps> = ({
             <IconButton
               aria-label="Notifications"
               variant="ghost"
-              size="md"
+              size="sm" // Duolingo uses smaller icon buttons in nav
               className="hidden sm:flex"
             >
-              <Bell className="w-5 h-5" />
+              <Bell className="w-5 h-5" /> {/* Duolingo uses 20px icons */}
             </IconButton>
 
             <Avatar

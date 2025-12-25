@@ -47,8 +47,8 @@ export const HeartsDisplay: React.FC<HeartsDisplayProps> = ({
               className={cn(
                 'transition-colors',
                 isFilled
-                  ? 'text-duo-red fill-duo-red'
-                  : 'text-gray-300 fill-gray-200'
+                  ? 'text-[#FF4B4B] fill-[#FF4B4B]' // Duolingo exact red
+                  : 'text-[#E5E5E5] fill-[#F7F7F7]' // Duolingo exact gray
               )}
             />
           </motion.div>

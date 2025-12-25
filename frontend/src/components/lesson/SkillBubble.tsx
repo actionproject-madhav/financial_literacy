@@ -42,17 +42,17 @@ export const SkillBubble: React.FC<SkillBubbleProps> = ({
     },
     available: {
       bg: 'bg-white',
-      border: 'border-duo-border',
-      text: 'text-duo-text',
+      border: 'border-[#E5E5E5]', // Duolingo exact
+      text: 'text-[#4B4B4B]',
     },
     in_progress: {
       bg: 'bg-white',
-      border: 'border-duo-blue',
-      text: 'text-duo-blue',
+      border: 'border-[#1CB0F6]', // Duolingo exact blue
+      text: 'text-[#1CB0F6]',
     },
     mastered: {
-      bg: 'bg-duo-yellow',
-      border: 'border-duo-yellow',
+      bg: 'bg-[#FFC800]', // Duolingo exact yellow
+      border: 'border-[#FFC800]',
       text: 'text-white',
     },
   };
@@ -64,8 +64,9 @@ export const SkillBubble: React.FC<SkillBubbleProps> = ({
   return (
     <motion.button
       onClick={status !== 'locked' ? onClick : undefined}
-      whileHover={status !== 'locked' ? { scale: 1.05 } : {}}
-      whileTap={status !== 'locked' ? { scale: 0.95 } : {}}
+      whileHover={status !== 'locked' ? { scale: 1.08 } : {}} // Duolingo: slightly more pronounced hover
+      whileTap={status !== 'locked' ? { scale: 0.92, y: 2 } : {}} // Duolingo: press down effect
+      transition={{ duration: 0.15, ease: 'easeOut' }} // Slightly slower for skill bubbles
       disabled={status === 'locked'}
       className={cn(
         'flex flex-col items-center gap-2',
@@ -135,7 +136,7 @@ export const SkillBubble: React.FC<SkillBubbleProps> = ({
               'w-6 h-6 rounded-full',
               'flex items-center justify-center',
               'text-xs font-bold',
-              'bg-duo-green text-white',
+              'bg-[#58CC02] text-white', // Duolingo exact green
               'border-2 border-white'
             )}
           >

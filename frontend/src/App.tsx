@@ -6,6 +6,9 @@ import { AppShell } from './components/layout/AppShell';
 import { LessonPage } from './pages/LessonPage';
 import { LearnPage } from './pages/LearnPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { ShopPage } from './pages/ShopPage';
+import { LeaderboardPage } from './pages/LeaderboardPage';
+import { SettingsPage } from './pages/SettingsPage';
 import LandingPage from './pages/LandingPage';
 import { AuthPage } from './pages/AuthPage';
 
@@ -37,7 +40,12 @@ function App() {
   return (
     <ThemeProvider>
       <UserProvider>
-        <HashRouter>
+        <HashRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<LandingPage />} />
@@ -51,10 +59,10 @@ function App() {
               <Route path="/learn" element={<LearnPage />} />
               <Route path="/practice" element={<div>Practice Page</div>} />
               <Route path="/invest" element={<div>Invest Page</div>} />
-              <Route path="/leaderboard" element={<div>Leaderboard Page</div>} />
+              <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/shop" element={<div>Shop Page</div>} />
-              <Route path="/settings/*" element={<div>Settings Page</div>} />
+              <Route path="/shop" element={<ShopPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
             </Route>
 
             {/* Default redirect */}

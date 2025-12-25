@@ -24,32 +24,32 @@ export const ChoiceButton: React.FC<ChoiceButtonProps> = ({
 }) => {
   const stateStyles: Record<ChoiceState, string> = {
     default: `
-      bg-white border-duo-border border-b-[6px]
-      hover:bg-duo-blue-tint hover:border-duo-border-focus
+      bg-white border-[#E5E5E5] border-b-[6px]
+      hover:bg-[#DDF4FF] hover:border-[#1CB0F6]
       active:border-b-2 active:translate-y-1
     `,
     selected: `
-      bg-duo-blue-tint border-duo-blue border-b-[6px]
+      bg-[#DDF4FF] border-[#1CB0F6] border-b-[6px]
     `,
     correct: `
-      bg-[#D7FFB8] border-duo-green border-b-[6px]
+      bg-[#D7FFB8] border-[#58CC02] border-b-[6px]
     `,
     incorrect: `
-      bg-duo-red-tint border-duo-red border-b-2
+      bg-[#FFDFE0] border-[#FF4B4B] border-b-2
       animate-shake
     `,
     disabled: `
-      bg-gray-50 border-duo-border border-b-2
+      bg-[#F7F7F7] border-[#E5E5E5] border-b-2
       opacity-60 cursor-not-allowed
     `,
   };
 
   const indexColors: Record<ChoiceState, string> = {
-    default: 'bg-duo-border text-duo-text-muted',
-    selected: 'bg-duo-blue text-white',
-    correct: 'bg-duo-green text-white',
-    incorrect: 'bg-duo-red text-white',
-    disabled: 'bg-duo-border text-duo-text-subtle',
+    default: 'bg-[#E5E5E5] text-[#737373]',
+    selected: 'bg-[#1CB0F6] text-white',
+    correct: 'bg-[#58CC02] text-white',
+    incorrect: 'bg-[#FF4B4B] text-white',
+    disabled: 'bg-[#E5E5E5] text-[#AFAFAF]',
   };
 
   const isDisabled = disabled || state === 'disabled';
@@ -58,24 +58,24 @@ export const ChoiceButton: React.FC<ChoiceButtonProps> = ({
   return (
     <motion.button
       onClick={isDisabled ? undefined : onClick}
-      whileTap={isDisabled ? {} : { scale: 0.98 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+      whileTap={isDisabled ? {} : { scale: 0.98, y: 1 }} // Duolingo: subtle press with translateY
+      transition={{ duration: 0.1, ease: 'easeOut' }} // Fast 100ms
       disabled={isDisabled}
       className={cn(
-        'w-full p-4 rounded-duo-lg border-2',
-        'text-left font-semibold text-duo-text',
+        'w-full p-4 rounded-[16px] border-2', // Duolingo exact
+        'text-left font-bold text-[#4B4B4B] text-[15px]', // Duolingo exact
         'transition-all duration-100',
         'flex items-center gap-3',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-duo-border-focus',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#84D8FF] focus-visible:ring-offset-2',
         stateStyles[state]
       )}
     >
       {showIndex && index !== undefined && (
         <span
           className={cn(
-            'flex-shrink-0 w-8 h-8 rounded-lg',
+            'flex-shrink-0 w-8 h-8 rounded-[8px]', // Duolingo uses 8px for index badges
             'flex items-center justify-center',
-            'text-sm font-bold uppercase',
+            'text-[13px] font-bold uppercase', // Duolingo exact
             'transition-colors duration-150',
             indexColors[state]
           )}

@@ -11,11 +11,11 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { path: '/learn', label: 'Learn', icon: <Home className="w-6 h-6" /> },
-  { path: '/practice', label: 'Practice', icon: <GraduationCap className="w-6 h-6" /> },
-  { path: '/invest', label: 'Invest', icon: <TrendingUp className="w-6 h-6" /> },
-  { path: '/leaderboard', label: 'Leagues', icon: <Trophy className="w-6 h-6" /> },
-  { path: '/profile', label: 'Profile', icon: <User className="w-6 h-6" /> },
+  { path: '/learn', label: 'Learn', icon: <Home className="w-5 h-5" /> }, // Duolingo uses 20px icons in bottom nav
+  { path: '/practice', label: 'Practice', icon: <GraduationCap className="w-5 h-5" /> },
+  { path: '/invest', label: 'Invest', icon: <TrendingUp className="w-5 h-5" /> },
+  { path: '/leaderboard', label: 'Leagues', icon: <Trophy className="w-5 h-5" /> },
+  { path: '/profile', label: 'Profile', icon: <User className="w-5 h-5" /> },
 ];
 
 export const BottomNav: React.FC = () => {
@@ -23,7 +23,7 @@ export const BottomNav: React.FC = () => {
 
   return (
     <nav 
-      className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t-2 border-[#E5E5E5] lg:hidden"
+      className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t-2 border-[#E5E5E5] lg:hidden" // Duolingo exact z-index
       style={{ 
         background: 'rgb(255, 255, 255)',
         borderTop: '2px solid rgb(229, 229, 229)',
@@ -38,7 +38,7 @@ export const BottomNav: React.FC = () => {
             <NavLink
               key={item.path}
               to={item.path}
-              className="relative flex flex-col items-center gap-1 px-3 py-2 flex-1"
+              className="relative flex flex-col items-center gap-1 px-2 py-2 flex-1" // Duolingo uses tighter padding
             >
               <span
                 className={cn(

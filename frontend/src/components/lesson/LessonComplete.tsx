@@ -40,16 +40,16 @@ export const LessonComplete: React.FC<LessonCompleteProps> = ({
   };
 
   const getGrade = (accuracy: number) => {
-    if (accuracy >= 100) return { label: 'Perfect!', color: 'text-duo-yellow', stars: 3 };
-    if (accuracy >= 80) return { label: 'Great!', color: 'text-duo-green', stars: 2 };
-    if (accuracy >= 60) return { label: 'Good', color: 'text-duo-blue', stars: 1 };
-    return { label: 'Keep practicing', color: 'text-duo-text-muted', stars: 0 };
+    if (accuracy >= 100) return { label: 'Perfect!', color: 'text-[#FFC800]', stars: 3 };
+    if (accuracy >= 80) return { label: 'Great!', color: 'text-[#58CC02]', stars: 2 };
+    if (accuracy >= 60) return { label: 'Good', color: 'text-[#1CB0F6]', stars: 1 };
+    return { label: 'Keep practicing', color: 'text-[#737373]', stars: 0 };
   };
 
   const grade = getGrade(stats.accuracy);
 
   return (
-    <div className="min-h-screen bg-duo-bg flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: 'rgb(240, 240, 240)' }}>
       {showConfetti && (
         <ConfettiExplosion
           force={0.8}

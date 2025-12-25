@@ -15,13 +15,13 @@ export const Badge: React.FC<BadgeProps> = ({
   className,
 }) => {
   const variantStyles = {
-    default: 'bg-duo-border text-duo-text',
-    success: 'bg-[#D7FFB8] text-duo-green',
-    danger: 'bg-duo-red-tint text-duo-red',
-    warning: 'bg-yellow-100 text-duo-orange',
-    info: 'bg-duo-blue-tint text-duo-blue',
-    xp: 'bg-duo-purple-tint text-duo-purple',
-    streak: 'bg-orange-100 text-duo-orange',
+    default: 'bg-[#E5E5E5] text-[#4B4B4B]', // Duolingo exact
+    success: 'bg-[#D7FFB8] text-[#58CC02]',
+    danger: 'bg-[#FFDFE0] text-[#FF4B4B]',
+    warning: 'bg-[#FFF4CC] text-[#FF9600]',
+    info: 'bg-[#DDF4FF] text-[#1CB0F6]',
+    xp: 'bg-[#F3E5FF] text-[#8549BA]',
+    streak: 'bg-[#FFF0D5] text-[#FF9600]',
   };
 
   const sizeStyles = {

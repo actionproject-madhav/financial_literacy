@@ -28,7 +28,7 @@ export const XPDisplay: React.FC<XPDisplayProps> = ({
     <motion.div
       className={cn(
         'inline-flex items-center gap-1 rounded-full',
-        'bg-duo-purple-tint',
+        'bg-[#F3E5FF]', // Duolingo exact purple tint
         config.padding,
         className
       )}
@@ -37,9 +37,9 @@ export const XPDisplay: React.FC<XPDisplayProps> = ({
     >
       <Zap
         size={config.icon}
-        className="text-duo-purple fill-duo-purple"
+        className="text-[#8549BA] fill-[#8549BA]" // Duolingo exact purple
       />
-      <span className={cn('font-bold text-duo-purple', config.text)}>
+      <span className={cn('font-bold text-[#8549BA]', config.text)}> {/* Duolingo exact purple */}
         {amount.toLocaleString()} XP
       </span>
     </motion.div>
@@ -61,7 +61,7 @@ export const XPGain: React.FC<XPGainProps> = ({ amount, onComplete }) => {
       onAnimationComplete={onComplete}
       className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50"
     >
-      <div className="flex items-center gap-2 bg-duo-purple text-white px-6 py-3 rounded-duo-xl shadow-lg">
+      <div className="flex items-center gap-2 bg-[#8549BA] text-white px-6 py-3 rounded-[16px] shadow-lg"> {/* Duolingo exact */}
         <Zap size={28} className="fill-white" />
         <span className="text-2xl font-extrabold">+{amount} XP</span>
       </div>

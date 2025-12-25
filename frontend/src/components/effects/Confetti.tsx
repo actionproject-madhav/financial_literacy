@@ -32,7 +32,7 @@ export const Confetti: React.FC<ConfettiProps> = ({
   if (!isExploding) return null;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
+    <div className="fixed inset-0 pointer-events-none z-[324] flex items-center justify-center"> {/* Duolingo exact z-index */}
       <ConfettiExplosion
         force={0.8}
         duration={duration}

@@ -6,6 +6,7 @@ import { LessonComplete } from '../components/lesson/LessonComplete';
 import { FloatingXP } from '../components/effects/FloatingXP';
 import { useLesson } from '../hooks/useLesson';
 import { useUserStore } from '../stores/userStore';
+import { mockQuestions } from '../data/mockData';
 
 export const LessonPage: React.FC = () => {
   const navigate = useNavigate();
@@ -29,15 +30,35 @@ export const LessonPage: React.FC = () => {
   const [showXP, setShowXP] = useState(false);
   const [startTime] = useState(Date.now());
   const [responseStartTime] = useState(Date.now());
+  const [useMockData, setUseMockData] = useState(false);
+  const [mockItems, setMockItems] = useState<any[]>([]);
+  const [mockCurrentIndex, setMockCurrentIndex] = useState(0);
+  const [mockScore, setMockScore] = useState({ correct: 0, incorrect: 0 });
 
   // Initialize lesson on mount
   useEffect(() => {
+    // Always try mock data first for now (until backend is fully connected)
+    const questions = mockQuestions[lessonId || ''] || mockQuestions['default'];
+    const mockItemsData = questions.map((q, idx) => ({
+      id: `mock-${idx}`,
+      item_id: `mock-item-${idx}`,
+      kc_id: lessonId || 'default',
+      content: {
+        question: q.question,
+        choices: q.choices.map(c => ({ text: c.text })),
+        correct_answer_id: q.correctAnswerId,
+        explanation: q.explanation,
+        cultural_bridge: q.culturalBridge,
+      },
+    }));
+    setMockItems(mockItemsData);
+    setUseMockData(true);
+
+    // Optionally try backend if learnerId exists
     if (learnerId && !sessionId && !isLoading) {
-      // Start lesson using the hook
       startNewLesson(lessonId).catch((error) => {
-        console.error('Failed to start lesson:', error);
-        alert('Failed to start lesson. Please try again.');
-        navigate('/learn');
+        console.error('Failed to start lesson, using mock data:', error);
+        // Mock data already set above
       });
     }
   }, [learnerId, lessonId, sessionId, isLoading, navigate, startNewLesson]);
@@ -69,10 +90,18 @@ export const LessonPage: React.FC = () => {
     };
   };
 
-  const currentQuestion = currentItem ? convertItemToQuestion(currentItem) : null;
+  // Use mock data if available
+  const effectiveItems = useMockData ? mockItems : items;
+  const effectiveCurrentIndex = useMockData ? mockCurrentIndex : currentIndex;
+  const effectiveCurrentItem = useMockData 
+    ? mockItems[mockCurrentIndex] 
+    : currentItem;
+  const effectiveScore = useMockData ? mockScore : score;
+
+  const currentQuestion = effectiveCurrentItem ? convertItemToQuestion(effectiveCurrentItem) : null;
 
   const handleAnswer = async (isCorrect: boolean, selectedId: string) => {
-    if (!currentItem) return;
+    if (!effectiveCurrentItem) return;
 
     const responseTime = Date.now() - responseStartTime;
 
@@ -83,22 +112,35 @@ export const LessonPage: React.FC = () => {
       setShowXP(true);
     }
 
-    // Submit to backend
-    await submitAnswer(
-      isCorrect,
-      responseTime,
-      { selected_choice: selectedId },
-      'choice'
-    );
+    // Update score
+    if (useMockData) {
+      if (isCorrect) {
+        setMockScore(prev => ({ ...prev, correct: prev.correct + 1 }));
+      } else {
+        setMockScore(prev => ({ ...prev, incorrect: prev.incorrect + 1 }));
+      }
+    } else {
+      // Submit to backend
+      await submitAnswer(
+        isCorrect,
+        responseTime,
+        { selected_choice: selectedId },
+        'choice'
+      );
+    }
   };
 
   const handleContinue = () => {
     setShowXP(false);
     
-    if (currentIndex < items.length - 1) {
-      goToNextQuestion();
-      // Reset response timer
-      useState(Date.now());
+    if (useMockData) {
+      if (mockCurrentIndex < mockItems.length - 1) {
+        setMockCurrentIndex(prev => prev + 1);
+      }
+    } else {
+      if (currentIndex < items.length - 1) {
+        goToNextQuestion();
+      }
     }
   };
 
@@ -120,27 +162,36 @@ export const LessonPage: React.FC = () => {
     );
   }
 
-  if (isComplete || (items.length > 0 && currentIndex >= items.length)) {
+  const isLessonComplete = useMockData 
+    ? mockCurrentIndex >= mockItems.length 
+    : (isComplete || (items.length > 0 && currentIndex >= items.length));
+
+  if (isLessonComplete) {
     const timeSpent = Math.floor((Date.now() - startTime) / 1000);
-    const totalQuestions = items.length || 1;
-    const accuracy = Math.round((score.correct / totalQuestions) * 100);
+    const totalQuestions = effectiveItems.length || 1;
+    const accuracy = Math.round((effectiveScore.correct / totalQuestions) * 100);
     
     return (
       <LessonComplete
         stats={{
-          xpEarned: score.correct * 10,
+          xpEarned: effectiveScore.correct * 10,
           accuracy,
           timeSpent,
           streak: 0, // Get from user store
           isNewBest: accuracy === 100,
         }}
         onContinue={() => {
-          endLesson();
+          if (!useMockData) endLesson();
           navigate('/learn');
         }}
         onReview={() => {
           // Reset to start
-          navigate(`/lesson/${lessonId}`);
+          if (useMockData) {
+            setMockCurrentIndex(0);
+            setMockScore({ correct: 0, incorrect: 0 });
+          } else {
+            navigate(`/lesson/${lessonId}`);
+          }
         }}
       />
     );
@@ -164,8 +215,8 @@ export const LessonPage: React.FC = () => {
 
   return (
     <LessonShell
-      currentStep={currentIndex + 1}
-      totalSteps={items.length || 1}
+      currentStep={effectiveCurrentIndex + 1}
+      totalSteps={effectiveItems.length || 1}
       hearts={hearts}
       onExit={handleExit}
     >

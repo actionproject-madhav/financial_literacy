@@ -76,7 +76,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       <Card variant="elevated" padding="lg" className="mb-6">
         <div className="flex items-start gap-3">
           <div className="flex-1">
-            <p className="text-xl font-bold text-duo-text leading-relaxed">
+            <p className="text-[19px] font-bold text-[#4B4B4B] leading-[28px]">
               {question}
             </p>
           </div>
@@ -87,9 +87,9 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               size="md"
             >
               {isAudioLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin text-duo-blue" />
+                <Loader2 className="w-5 h-5 animate-spin text-[#1CB0F6]" />
               ) : (
-                <Volume2 className="w-5 h-5 text-duo-blue" />
+                <Volume2 className="w-5 h-5 text-[#1CB0F6]" />
               )}
             </IconButton>
           )}
@@ -119,26 +119,27 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             className={cn(
-              'p-4 rounded-duo-xl mb-4',
-              isCorrect ? 'bg-[#D7FFB8]' : 'bg-duo-red-tint'
+              'p-4 rounded-[16px] mb-4',
+              isCorrect ? 'bg-[#D7FFB8]' : 'bg-[#FFDFE0]'
             )}
           >
             <p
               className={cn(
-                'font-bold text-lg mb-2',
-                isCorrect ? 'text-duo-green' : 'text-duo-red'
+                'font-bold text-[17px] mb-2',
+                isCorrect ? 'text-[#58CC02]' : 'text-[#FF4B4B]'
               )}
+              style={{ lineHeight: '24px' }}
             >
-              {isCorrect ? '🎉 Correct!' : '❌ Not quite'}
+              {isCorrect ? 'Correct!' : 'Not quite'}
             </p>
             
             {explanation && !isCorrect && (
-              <p className="text-duo-text text-sm mb-2">{explanation}</p>
+              <p className="text-[#4B4B4B] text-[15px] mb-2" style={{ lineHeight: '24px' }}>{explanation}</p>
             )}
             
             {culturalBridge && (
-              <p className="text-duo-text-muted text-sm italic">
-                💡 {culturalBridge}
+              <p className="text-[#737373] text-[15px] italic" style={{ lineHeight: '24px' }}>
+                {culturalBridge}
               </p>
             )}
           </motion.div>

@@ -60,16 +60,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
         {isActive && (
           <motion.div
             layoutId="sidebarIndicator"
-            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-duo-blue rounded-r-full"
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#1CB0F6] rounded-r-full" // Duolingo exact blue
             transition={{ type: 'spring', stiffness: 500, damping: 30 }}
           />
         )}
         
-        <span className={isActive ? 'text-duo-blue' : ''}>{item.icon}</span>
+        <span className={isActive ? 'text-[#1CB0F6]' : ''}>{item.icon}</span>
         <span>{item.label}</span>
         
         {item.badge && (
-          <span className="ml-auto px-2 py-0.5 text-xs font-bold bg-duo-green text-white rounded-full">
+          <span className="ml-auto px-2 py-0.5 text-[13px] font-bold bg-[#58CC02] text-white rounded-full">
             {item.badge}
           </span>
         )}
@@ -106,7 +106,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
       </nav>
 
       {/* Divider */}
-      <div className="h-px bg-duo-border my-4" />
+      <div className="h-px bg-[#E5E5E5] my-4" /> {/* Duolingo exact border */}
 
       {/* Secondary Nav */}
       <nav className="space-y-1">

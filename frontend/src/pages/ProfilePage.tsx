@@ -10,8 +10,10 @@ import { ProgressBar } from '../components/ui/ProgressBar';
 import { StreakCounter } from '../components/gamification/StreakCounter';
 import { XPDisplay } from '../components/gamification/XPDisplay';
 import { AchievementBadge } from '../components/gamification/AchievementBadge';
+import { mockUser as mockDataUser } from '../data/mockData';
+import { useUserStore } from '../stores/userStore';
 
-// Mock user data
+// Extended mock user data for profile page
 const mockUser = {
   name: 'Rajesh Kumar',
   email: 'rajesh@example.com',
@@ -37,6 +39,25 @@ const mockUser = {
 };
 
 export const ProfilePage: React.FC = () => {
+  const { user: storeUser } = useUserStore();
+  
+  // Use store user or fallback to mock
+  const displayUser = storeUser || {
+    name: mockDataUser.name,
+    email: mockDataUser.email,
+    country: mockDataUser.country,
+    visaType: mockDataUser.visaType,
+  };
+
+  // Merge with mock stats
+  const userData = {
+    ...mockUser,
+    name: displayUser.name,
+    email: displayUser.email,
+    country: displayUser.country,
+    visaType: displayUser.visaType,
+  };
+
   return (
     <div className="space-y-5"> {/* Duolingo uses 20px (5 * 4px) spacing */}
       {/* Profile Header */}
@@ -44,19 +65,19 @@ export const ProfilePage: React.FC = () => {
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-4">
             <Avatar
-              src={mockUser.avatar || undefined}
-              alt={mockUser.name}
-              fallback={mockUser.name.charAt(0)}
+              src={userData.avatar || undefined}
+              alt={userData.name}
+              fallback={userData.name.charAt(0)}
               size="xl"
             />
             <div>
               <h1 className="text-[23px] font-bold text-[#4B4B4B]" style={{ lineHeight: '32px' }}>
-                {mockUser.name}
+                {userData.name}
               </h1>
-              <p className="text-[15px] text-[#737373]" style={{ lineHeight: '24px', marginTop: '8px' }}>{mockUser.email}</p>
+              <p className="text-[15px] text-[#737373]" style={{ lineHeight: '24px', marginTop: '8px' }}>{userData.email}</p>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="info" size="sm">{mockUser.country}</Badge>
-                <Badge variant="xp" size="sm">{mockUser.visaType} Visa</Badge>
+                <Badge variant="info" size="sm">{userData.country}</Badge>
+                <Badge variant="xp" size="sm">{userData.visaType} Visa</Badge>
               </div>
             </div>
           </div>
@@ -72,24 +93,24 @@ export const ProfilePage: React.FC = () => {
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t-2 border-[#E5E5E5]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 pt-5 border-t-2 border-[#E5E5E5]"> {/* Duolingo uses 20px gaps */}
           <div className="text-center">
-            <StreakCounter days={mockUser.stats.streak} size="md" />
+            <StreakCounter days={userData.stats.streak} size="md" />
             <p className="text-xs text-duo-text-muted mt-1">Day Streak</p>
           </div>
           <div className="text-center">
-            <XPDisplay amount={mockUser.stats.totalXP} size="md" />
+            <XPDisplay amount={userData.stats.totalXP} size="md" />
             <p className="text-xs text-duo-text-muted mt-1">Total XP</p>
           </div>
           <div className="text-center">
             <p className="text-[23px] font-bold text-[#58CC02]" style={{ lineHeight: '32px' }}>
-              {mockUser.stats.lessonsCompleted}
+              {userData.stats.lessonsCompleted}
             </p>
             <p className="text-[13px] text-[#737373] mt-1 font-bold">Lessons</p>
           </div>
           <div className="text-center">
             <p className="text-[23px] font-bold text-[#FFC800]" style={{ lineHeight: '32px' }}>
-              {mockUser.stats.skillsMastered}
+              {userData.stats.skillsMastered}
             </p>
             <p className="text-[13px] text-[#737373] mt-1 font-bold">Skills Mastered</p>
           </div>
@@ -100,16 +121,16 @@ export const ProfilePage: React.FC = () => {
       <Card variant="elevated" padding="lg">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="font-bold text-[#4B4B4B] text-[17px]" style={{ lineHeight: '24px' }}>Level {mockUser.stats.currentLevel}</h2>
+            <h2 className="font-bold text-[#4B4B4B] text-[17px]" style={{ lineHeight: '24px' }}>Level {userData.stats.currentLevel}</h2>
             <p className="text-[15px] text-[#737373] mt-1">Financial Explorer</p>
           </div>
           <div className="text-right">
-            <p className="font-bold text-[#1CB0F6] text-[17px]" style={{ lineHeight: '24px' }}>{mockUser.stats.levelProgress}%</p>
+            <p className="font-bold text-[#1CB0F6] text-[17px]" style={{ lineHeight: '24px' }}>{userData.stats.levelProgress}%</p>
             <p className="text-[15px] text-[#737373] mt-1">to next level</p>
           </div>
         </div>
         <ProgressBar
-          value={mockUser.stats.levelProgress}
+          value={userData.stats.levelProgress}
           max={100}
           variant="xp"
           size="lg"
@@ -126,7 +147,7 @@ export const ProfilePage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-          {mockUser.achievements.map((achievement) => (
+          {userData.achievements.map((achievement) => (
             <AchievementBadge
               key={achievement.id}
               icon={achievement.icon}

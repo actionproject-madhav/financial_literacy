@@ -71,7 +71,7 @@ export const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-duo-bg flex items-center justify-center p-6">
+    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: 'rgb(240, 240, 240)' }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -84,14 +84,14 @@ export const AuthPage: React.FC = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-            className="w-20 h-20 bg-duo-green rounded-duo-2xl flex items-center justify-center mx-auto mb-4 shadow-duo-green"
+            className="w-20 h-20 bg-[#58CC02] rounded-[16px] flex items-center justify-center mx-auto mb-4 shadow-[0_4px_0_#46A302]"
           >
-            <span className="text-white font-extrabold text-4xl">$</span>
+            <span className="text-white font-bold text-4xl">$</span>
           </motion.div>
-          <h1 className="text-4xl font-extrabold text-duo-text mb-2">
+          <h1 className="text-[32px] font-bold text-[#4B4B4B] mb-2" style={{ lineHeight: '40px' }}>
             FinLit
           </h1>
-          <p className="text-lg text-duo-text-muted">
+          <p className="text-[17px] text-[#737373]" style={{ lineHeight: '24px' }}>
             Master US Financial Literacy
           </p>
         </div>
@@ -99,10 +99,10 @@ export const AuthPage: React.FC = () => {
         {/* Auth Card */}
         <Card variant="elevated" padding="lg" className="mb-6">
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-extrabold text-duo-text mb-2">
+            <h2 className="text-[23px] font-bold text-[#4B4B4B] mb-2" style={{ lineHeight: '32px' }}>
               Welcome!
             </h2>
-            <p className="text-duo-text-muted">
+            <p className="text-[15px] text-[#737373]" style={{ lineHeight: '24px' }}>
               Sign in to start your financial literacy journey
             </p>
           </div>
@@ -140,55 +140,55 @@ export const AuthPage: React.FC = () => {
 
           {/* Divider */}
           <div className="flex items-center my-6">
-            <div className="flex-1 border-t border-duo-border"></div>
-            <span className="px-4 text-sm text-duo-text-muted font-medium">
+            <div className="flex-1 border-t-2 border-[#E5E5E5]"></div>
+            <span className="px-4 text-[13px] text-[#737373] font-bold uppercase tracking-[0.04em]">
               or
             </span>
-            <div className="flex-1 border-t border-duo-border"></div>
+            <div className="flex-1 border-t-2 border-[#E5E5E5]"></div>
           </div>
 
           {/* Benefits */}
-          <div className="space-y-3">
+          <div className="space-y-4"> {/* Duolingo uses 16px spacing */}
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-duo-green rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div className="w-6 h-6 bg-[#58CC02] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                 <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               <div>
-                <p className="font-semibold text-duo-text">Learn at your own pace</p>
-                <p className="text-sm text-duo-text-muted">Adaptive lessons tailored to you</p>
+                <p className="font-bold text-[#4B4B4B] text-[15px]" style={{ lineHeight: '24px' }}>Learn at your own pace</p>
+                <p className="text-[13px] text-[#737373] mt-1" style={{ lineHeight: '20px' }}>Adaptive lessons tailored to you</p>
               </div>
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-duo-green rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div className="w-6 h-6 bg-[#58CC02] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                 <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               <div>
-                <p className="font-semibold text-duo-text">Cultural context included</p>
-                <p className="text-sm text-duo-text-muted">Understand US finance from your background</p>
+                <p className="font-bold text-[#4B4B4B] text-[15px]" style={{ lineHeight: '24px' }}>Cultural context included</p>
+                <p className="text-[13px] text-[#737373] mt-1" style={{ lineHeight: '20px' }}>Understand US finance from your background</p>
               </div>
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-duo-green rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div className="w-6 h-6 bg-[#58CC02] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                 <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               <div>
-                <p className="font-semibold text-duo-text">Track your progress</p>
-                <p className="text-sm text-duo-text-muted">Earn XP, maintain streaks, unlock achievements</p>
+                <p className="font-bold text-[#4B4B4B] text-[15px]" style={{ lineHeight: '24px' }}>Track your progress</p>
+                <p className="text-[13px] text-[#737373] mt-1" style={{ lineHeight: '20px' }}>Earn XP, maintain streaks, unlock achievements</p>
               </div>
             </div>
           </div>
         </Card>
 
         {/* Footer */}
-        <p className="text-center text-sm text-duo-text-muted">
+        <p className="text-center text-[13px] text-[#737373] mt-6" style={{ lineHeight: '20px' }}>
           By continuing, you agree to our Terms of Service and Privacy Policy
         </p>
       </motion.div>
