@@ -24,7 +24,7 @@ const LandingPage = () => {
 
   useEffect(() => {
     if (!isLoading && user) {
-      navigate('/dashboard')
+      navigate('/learn')
     }
   }, [user, isLoading, navigate])
 

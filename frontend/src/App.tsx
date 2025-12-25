@@ -1,10 +1,13 @@
-import { HashRouter as Router, Routes, Route } from 'react-router-dom'
-import { AnimatePresence } from 'framer-motion'
-import { useEffect } from 'react'
-import LandingPage from './pages/LandingPage'
-import AuthPage from './pages/AuthPage'
-import { UserProvider } from './context/UserContext'
-import { ThemeProvider } from './context/ThemeContext'
+import React, { useEffect } from 'react';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { UserProvider } from './context/UserContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { AppShell } from './components/layout/AppShell';
+import { LessonPage } from './pages/LessonPage';
+import { LearnPage } from './pages/LearnPage';
+import { ProfilePage } from './pages/ProfilePage';
+import LandingPage from './pages/LandingPage';
+import AuthPage from './pages/AuthPage';
 
 // Backend warm-up: Ping health endpoint on app load to wake up Render free tier
 const warmUpBackend = () => {
@@ -31,24 +34,44 @@ function App() {
     warmUpBackend()
   }, [])
 
+  // Mock user - replace with actual auth
+  const mockUser = {
+    name: 'Rajesh Kumar',
+    streak: 42,
+    gems: 1250,
+    hearts: 5,
+  };
+
   return (
     <ThemeProvider>
       <UserProvider>
-        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <div className="min-h-screen bg-duo-bg transition-colors relative overflow-hidden">
-            <div className="relative z-10">
-              <AnimatePresence mode="wait" initial={false}>
-                <Routes>
-                  <Route path="/" element={<LandingPage />} />
-                  <Route path="/auth" element={<AuthPage />} />
-                </Routes>
-              </AnimatePresence>
-            </div>
-          </div>
-        </Router>
+        <HashRouter>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/auth" element={<AuthPage />} />
+
+            {/* Lesson routes (no shell) */}
+            <Route path="/lesson/:lessonId" element={<LessonPage />} />
+
+            {/* Main app routes (with shell) */}
+            <Route element={<AppShell user={mockUser} />}>
+              <Route path="/learn" element={<LearnPage />} />
+              <Route path="/practice" element={<div>Practice Page</div>} />
+              <Route path="/invest" element={<div>Invest Page</div>} />
+              <Route path="/leaderboard" element={<div>Leaderboard Page</div>} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/shop" element={<div>Shop Page</div>} />
+              <Route path="/settings/*" element={<div>Settings Page</div>} />
+            </Route>
+
+            {/* Default redirect */}
+            <Route path="*" element={<Navigate to="/learn" replace />} />
+          </Routes>
+        </HashRouter>
       </UserProvider>
     </ThemeProvider>
-  )
+  );
 }
 
-export default App
+export default App;
