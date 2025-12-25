@@ -35,40 +35,37 @@ export const LessonPage: React.FC = () => {
   const [mockCurrentIndex, setMockCurrentIndex] = useState(0);
   const [mockScore, setMockScore] = useState({ correct: 0, incorrect: 0 });
 
-  // Initialize lesson on mount
+  // Initialize lesson on mount - ALWAYS use mock data
   useEffect(() => {
-    // Always try mock data first for now (until backend is fully connected)
+    // Load mock questions immediately
     const questions = mockQuestions[lessonId || ''] || mockQuestions['default'];
-    const mockItemsData = questions.map((q, idx) => ({
-      id: `mock-${idx}`,
-      item_id: `mock-item-${idx}`,
-      kc_id: lessonId || 'default',
-      content: {
-        question: q.question,
-        choices: q.choices.map(c => ({ text: c.text })),
-        correct_answer_id: q.correctAnswerId,
-        explanation: q.explanation,
-        cultural_bridge: q.culturalBridge,
-      },
-    }));
-    setMockItems(mockItemsData);
-    setUseMockData(true);
-
-    // Optionally try backend if learnerId exists
-    if (learnerId && !sessionId && !isLoading) {
-      startNewLesson(lessonId).catch((error) => {
-        console.error('Failed to start lesson, using mock data:', error);
-        // Mock data already set above
-      });
+    
+    if (questions.length > 0) {
+      const mockItemsData = questions.map((q, idx) => ({
+        id: `mock-${idx}`,
+        item_id: `mock-item-${idx}`,
+        kc_id: lessonId || 'default',
+        content: {
+          question: q.question,
+          choices: q.choices.map(c => ({ text: c.text })),
+          correct_answer_id: q.correctAnswerId,
+          explanation: q.explanation,
+          cultural_bridge: q.culturalBridge,
+        },
+      }));
+      setMockItems(mockItemsData);
+      setUseMockData(true);
+      setMockCurrentIndex(0);
+      setMockScore({ correct: 0, incorrect: 0 });
     }
-  }, [learnerId, lessonId, sessionId, isLoading, navigate, startNewLesson]);
+  }, [lessonId]);
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!learnerId) {
-      navigate('/auth');
-    }
-  }, [learnerId, navigate]);
+  // Remove auth redirect - allow mock data to work without auth
+  // useEffect(() => {
+  //   if (!learnerId) {
+  //     navigate('/auth');
+  //   }
+  // }, [learnerId, navigate]);
 
   // Convert backend item to question format
   const convertItemToQuestion = (item: any) => {
@@ -112,21 +109,25 @@ export const LessonPage: React.FC = () => {
       setShowXP(true);
     }
 
-    // Update score
+    // Update score immediately
     if (useMockData) {
       if (isCorrect) {
         setMockScore(prev => ({ ...prev, correct: prev.correct + 1 }));
       } else {
         setMockScore(prev => ({ ...prev, incorrect: prev.incorrect + 1 }));
       }
-    } else {
-      // Submit to backend
-      await submitAnswer(
-        isCorrect,
-        responseTime,
-        { selected_choice: selectedId },
-        'choice'
-      );
+    } else if (sessionId) {
+      // Submit to backend only if we have a session
+      try {
+        await submitAnswer(
+          isCorrect,
+          responseTime,
+          { selected_choice: selectedId },
+          'choice'
+        );
+      } catch (error) {
+        console.error('Failed to submit answer:', error);
+      }
     }
   };
 
