@@ -89,7 +89,7 @@ def google_callback():
             # Get the created learner
             learner = db.collections.get_learner_by_email(email)
             is_new_user = True
-            else:
+        else:
             learner_id = str(learner['_id'])
             is_new_user = False
 
@@ -129,9 +129,14 @@ def google_callback():
 @auth_bp.route('/me', methods=['GET'])
 def get_current_user():
     """Get current authenticated user"""
+    print(f"🔍 /auth/me called. Session keys: {list(session.keys())}")
+    print(f"🔍 Session contents: {dict(session)}")
+    
     if 'user' not in session:
+        print("⚠️  No 'user' key in session")
         return jsonify({'error': 'Not authenticated'}), 401
     
+    print(f"✅ Returning user: {session['user']['email']}")
     return jsonify(session['user'])
 
 @auth_bp.route('/logout', methods=['POST'])
@@ -171,10 +176,10 @@ def _initialize_learner_skills(learner_id: str):
                 )
                 print(f"  ✓ Initialized: {skill['name']}")
                 initialized_count += 1
-        else:
+            else:
                 print(f"  ⚠️  Skill not found: {slug}")
-            
-    except Exception as e:
+
+        except Exception as e:
             print(f"  ❌ Error initializing {slug}: {e}")
 
     print(f"✅ Initialized {initialized_count}/{len(starter_slugs)} starter skills")
