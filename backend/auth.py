@@ -42,12 +42,12 @@ def google_auth():
     if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
         return jsonify({'error': 'OAuth not configured'}), 500
     
-    flow = create_flow()
-    authorization_url, state = flow.authorization_url(
-        access_type='offline',
-        include_granted_scopes='true'
-    )
-    session['state'] = state
+        flow = create_flow()
+        authorization_url, state = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='true'
+        )
+        session['state'] = state
     return redirect(authorization_url)
 
 @auth_bp.route('/google/callback', methods=['GET'])
@@ -56,14 +56,14 @@ def google_callback():
     try:
         flow = create_flow()
         flow.fetch_token(authorization_response=request.url)
-
+        
         credentials = flow.credentials
         id_info = id_token.verify_oauth2_token(
             credentials.id_token,
             google_requests.Request(),
             GOOGLE_CLIENT_ID
         )
-
+        
         email = id_info['email']
 
         # Get or create learner
@@ -85,7 +85,7 @@ def google_callback():
             # Get the created learner
             learner = db.collections.get_learner_by_email(email)
             is_new_user = True
-        else:
+            else:
             learner_id = str(learner['_id'])
             is_new_user = False
 
@@ -100,11 +100,12 @@ def google_callback():
         }
 
         # Redirect to frontend (onboarding if new user)
+        # Use hash-based routing for frontend
         if is_new_user:
-            return redirect(f"{FRONTEND_URL}/onboarding")
+            return redirect(f"{FRONTEND_URL}/#/onboarding")
         else:
-            return redirect(FRONTEND_URL)
-
+            return redirect(f"{FRONTEND_URL}/#/learn")
+        
     except Exception as e:
         print(f"OAuth error: {e}")
         return redirect(f"{FRONTEND_URL}?error=auth_failed")
@@ -154,10 +155,10 @@ def _initialize_learner_skills(learner_id: str):
                 )
                 print(f"  ✓ Initialized: {skill['name']}")
                 initialized_count += 1
-            else:
+        else:
                 print(f"  ⚠️  Skill not found: {slug}")
-
-        except Exception as e:
+            
+    except Exception as e:
             print(f"  ❌ Error initializing {slug}: {e}")
 
     print(f"✅ Initialized {initialized_count}/{len(starter_slugs)} starter skills")
