@@ -60,38 +60,38 @@ def test_google_tts():
         return False
 
 
-def test_r2():
-    """Test Cloudflare R2"""
-    print("\n=== Testing Cloudflare R2 ===")
+def test_supabase():
+    """Test Supabase Storage"""
+    print("\n=== Testing Supabase Storage ===")
 
-    if not all([config.R2_ACCOUNT_ID, config.R2_ACCESS_KEY_ID, config.R2_SECRET_ACCESS_KEY]):
-        print("❌ R2 credentials not set")
+    if not all([config.SUPABASE_URL, config.SUPABASE_SERVICE_KEY]):
+        print("❌ Supabase credentials not set")
         return False
 
     try:
-        from services import r2_client
+        from services import supabase_client
 
-        print("Testing R2 connection...")
+        print("Testing Supabase connection...")
 
         # Test upload
         test_data = b"test audio data"
-        url = r2_client.upload_audio(test_data, folder='test', extension='txt')
+        url = supabase_client.upload_audio(test_data, folder='test', extension='txt')
 
         print(f"✅ Upload successful: {url}")
 
         # Test list
-        files = r2_client.list_files(prefix='test/', max_keys=5)
+        files = supabase_client.list_files(prefix='test/', max_keys=5)
         print(f"✅ Found {len(files)} test files")
 
         # Cleanup
         if url:
-            r2_client.delete_audio(url)
+            supabase_client.delete_audio(url)
             print("✅ Cleanup successful")
 
         return True
 
     except Exception as e:
-        print(f"❌ R2 test failed: {e}")
+        print(f"❌ Supabase test failed: {e}")
         return False
 
 

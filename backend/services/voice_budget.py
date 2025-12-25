@@ -2,7 +2,7 @@
 Complete Voice Service - Budget-Aware Version
 
 Automatically uses budget or premium services based on config.USE_BUDGET_SERVICES:
-- Budget: Deepgram (STT), Google TTS, R2 (storage)
+- Budget: Deepgram (STT), Google TTS, Supabase Storage
 - Premium: OpenAI Whisper, OpenAI TTS
 
 Can be imported as drop-in replacement for original voice.py
@@ -16,7 +16,7 @@ from config.services import config
 
 # Import budget services
 try:
-    from services import deepgram_client, google_tts_client, r2_client
+    from services import deepgram_client, google_tts_client, supabase_client
     BUDGET_AVAILABLE = True
 except ImportError:
     BUDGET_AVAILABLE = False
@@ -57,9 +57,9 @@ class BudgetVoiceService:
         # Transcribe with Deepgram
         result = deepgram_client.transcribe_from_base64(audio_base64, language_hint)
 
-        # Upload to R2 if configured
+        # Upload to Supabase if configured
         audio_url = None
-        if r2_client.r2_client:
+        if supabase_client.supabase_client:
             try:
                 # Decode audio for upload
                 if ',' in audio_base64:
@@ -68,9 +68,9 @@ class BudgetVoiceService:
                     audio_data = audio_base64
 
                 audio_bytes = base64.b64decode(audio_data)
-                audio_url = r2_client.upload_audio(audio_bytes)
+                audio_url = supabase_client.upload_audio(audio_bytes)
             except Exception as e:
-                print(f"R2 upload warning: {e}")
+                print(f"Supabase upload warning: {e}")
 
         # Analyze confidence from audio
         confidence_analysis = self._analyze_audio_from_base64(audio_base64)
@@ -125,7 +125,7 @@ class BudgetVoiceService:
 
     def generate_tts_cached(self, text: str, item_id: str, language: str = 'en') -> Optional[str]:
         """
-        Generate TTS with R2 caching (Google TTS or OpenAI fallback).
+        Generate TTS with Supabase caching (Google TTS or OpenAI fallback).
 
         Args:
             text: Text to convert
@@ -135,13 +135,13 @@ class BudgetVoiceService:
         Returns:
             Public URL to cached audio or None
         """
-        if not r2_client.r2_client:
+        if not supabase_client.supabase_client:
             # Fall back to non-cached version
             return self.generate_tts(text, language)
 
         try:
             # Check cache
-            cached_url = r2_client.get_tts_url(item_id, language)
+            cached_url = supabase_client.get_tts_url(item_id, language)
             if cached_url:
                 return cached_url
 
@@ -165,8 +165,8 @@ class BudgetVoiceService:
                 audio_bytes = response.content
 
             if audio_bytes:
-                # Upload to R2
-                url = r2_client.upload_tts(audio_bytes, item_id, language)
+                # Upload to Supabase
+                url = supabase_client.upload_tts(audio_bytes, item_id, language)
                 return url
 
         except Exception as e:

@@ -26,12 +26,11 @@ class ServiceConfig:
     GOOGLE_TTS_API_KEY = os.getenv('GOOGLE_TTS_API_KEY')
     GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 
-    # Cloudflare R2 (Storage) - Free egress vs AWS S3
-    R2_ACCOUNT_ID = os.getenv('R2_ACCOUNT_ID')
-    R2_ACCESS_KEY_ID = os.getenv('R2_ACCESS_KEY_ID')
-    R2_SECRET_ACCESS_KEY = os.getenv('R2_SECRET_ACCESS_KEY')
-    R2_BUCKET_NAME = os.getenv('R2_BUCKET_NAME', 'finlit-audio')
-    R2_PUBLIC_URL = os.getenv('R2_PUBLIC_URL')  # e.g., https://pub-xxx.r2.dev
+    # Supabase Storage - Free 1GB storage, 2GB bandwidth/month (no card required)
+    SUPABASE_URL = os.getenv('SUPABASE_URL')
+    SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY')
+    SUPABASE_SERVICE_KEY = os.getenv('SUPABASE_SERVICE_KEY')
+    SUPABASE_BUCKET_NAME = os.getenv('SUPABASE_BUCKET_NAME', 'finlit-audio')
 
     # Local embeddings model (free)
     EMBEDDING_MODEL = 'all-MiniLM-L6-v2'  # Fast, good quality, runs locally
@@ -67,14 +66,14 @@ class ServiceConfig:
             if not (cls.GOOGLE_TTS_API_KEY or cls.GOOGLE_APPLICATION_CREDENTIALS):
                 required.append('GOOGLE_TTS_API_KEY or GOOGLE_APPLICATION_CREDENTIALS')
 
-            # R2 storage
-            if not (cls.R2_ACCESS_KEY_ID and cls.R2_SECRET_ACCESS_KEY):
-                required.append('R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY')
+            # Supabase storage
+            if not (cls.SUPABASE_URL and cls.SUPABASE_SERVICE_KEY):
+                required.append('SUPABASE_URL and SUPABASE_SERVICE_KEY')
 
             if required:
                 raise ValueError(f"Budget mode enabled but missing: {', '.join(required)}")
 
-            print("✅ Using BUDGET services (Deepgram, Google TTS, R2, Local Embeddings)")
+            print("✅ Using BUDGET services (Deepgram, Google TTS, Supabase Storage, Local Embeddings)")
         else:
             # Premium mode validation
             if not cls.OPENAI_API_KEY:
@@ -87,14 +86,12 @@ class ServiceConfig:
     @classmethod
     def get_storage_config(cls):
         """Get storage configuration based on mode"""
-        if cls.USE_BUDGET_SERVICES and cls.R2_ACCESS_KEY_ID:
+        if cls.USE_BUDGET_SERVICES and cls.SUPABASE_URL and cls.SUPABASE_SERVICE_KEY:
             return {
-                'type': 'r2',
-                'account_id': cls.R2_ACCOUNT_ID,
-                'access_key': cls.R2_ACCESS_KEY_ID,
-                'secret_key': cls.R2_SECRET_ACCESS_KEY,
-                'bucket': cls.R2_BUCKET_NAME,
-                'public_url': cls.R2_PUBLIC_URL
+                'type': 'supabase',
+                'url': cls.SUPABASE_URL,
+                'service_key': cls.SUPABASE_SERVICE_KEY,
+                'bucket': cls.SUPABASE_BUCKET_NAME
             }
         elif cls.AWS_ACCESS_KEY_ID:
             return {

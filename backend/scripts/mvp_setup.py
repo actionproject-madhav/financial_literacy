@@ -4,7 +4,7 @@ MVP Setup - No Credit Card Required
 Sets up budget services using only free services (no card needed):
 - Deepgram STT ($200 free credit, no card)
 - Local Embeddings (100% free)
-- Cloudflare R2 (10GB free, no card)
+- Supabase Storage (1GB free, no card)
 - OpenAI TTS (fallback, you already have it)
 """
 
@@ -24,7 +24,7 @@ def check_services():
     services = {
         'Deepgram (STT)': bool(config.DEEPGRAM_API_KEY),
         'OpenAI (TTS/LLM)': bool(config.OPENAI_API_KEY),
-        'Cloudflare R2 (Storage)': bool(config.R2_ACCESS_KEY_ID and config.R2_SECRET_ACCESS_KEY),
+        'Supabase Storage': bool(config.SUPABASE_URL and config.SUPABASE_SERVICE_KEY),
         'Local Embeddings': True  # Always available after download
     }
 
@@ -45,9 +45,9 @@ def check_services():
         if 'OpenAI' in str(missing):
             print("2. Get API key from https://platform.openai.com")
             print("   Add OPENAI_API_KEY to .env")
-        if 'Cloudflare' in str(missing):
-            print("3. Sign up at https://dash.cloudflare.com (no card)")
-            print("   Create R2 bucket, add credentials to .env")
+        if 'Supabase' in str(missing):
+            print("3. Sign up at https://supabase.com (no card)")
+            print("   Create project, create 'finlit-audio' bucket, add credentials to .env")
     else:
         print("\n🎉 All MVP services configured!")
 
@@ -87,24 +87,24 @@ def test_embeddings():
         return False
 
 
-def test_r2():
-    """Test R2 connection"""
-    print("\n=== Testing Cloudflare R2 ===\n")
+def test_supabase():
+    """Test Supabase Storage connection"""
+    print("\n=== Testing Supabase Storage ===\n")
 
-    if not config.R2_ACCESS_KEY_ID:
-        print("⚠️  R2 not configured")
+    if not config.SUPABASE_URL or not config.SUPABASE_SERVICE_KEY:
+        print("⚠️  Supabase not configured")
         return False
 
     try:
-        from services import r2_client
+        from services import supabase_client
 
         # Test upload
         test_data = b"mvp test"
-        url = r2_client.upload_audio(test_data, folder='mvp-test', extension='txt')
+        url = supabase_client.upload_audio(test_data, folder='mvp-test', extension='txt')
         print(f"✅ Upload works: {url}")
 
         # Cleanup
-        r2_client.delete_audio(url)
+        supabase_client.delete_audio(url)
         print("✅ Delete works")
 
         return True
@@ -125,8 +125,8 @@ def main():
     # Test embeddings
     embeddings_ok = test_embeddings()
 
-    # Test R2 (if configured)
-    r2_ok = test_r2() if config.R2_ACCESS_KEY_ID else True
+    # Test Supabase (if configured)
+    supabase_ok = test_supabase() if config.SUPABASE_URL else True
 
     print("\n" + "="*50)
     print("SETUP SUMMARY")
