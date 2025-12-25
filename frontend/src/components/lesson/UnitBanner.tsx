@@ -1,5 +1,5 @@
 import React from 'react';
-import { NotebookText } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/Button';
 
@@ -22,7 +22,7 @@ export const UnitBanner: React.FC<UnitBannerProps> = ({ title, description }) =>
           variant="secondary"
           className="hidden border-2 border-b-4 active:border-b-2 xl:flex"
         >
-          <NotebookText className="mr-2" />
+          <BookOpen className="mr-2" />
           Continue
         </Button>
       </Link>

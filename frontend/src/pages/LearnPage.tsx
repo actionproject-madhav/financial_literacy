@@ -1,35 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Card } from '../components/ui/Card';
-import { ProgressBar } from '../components/ui/ProgressBar';
-import { SkillBubble } from '../components/lesson/SkillBubble';
+import { Unit } from '../components/lesson/Unit';
 import { DailyGoalProgress } from '../components/gamification/DailyGoalProgress';
 import { useUserStore } from '../stores/userStore';
 import { learnerApi, adaptiveApi } from '../services/api';
 import { mockSkillPaths, mockDailyProgress } from '../data/mockData';
 
-interface Skill {
+interface Lesson {
   id: string;
   name: string;
   icon: string;
-  status: 'locked' | 'available' | 'in_progress' | 'mastered';
+  completed: boolean;
   progress?: number;
-  level: number;
 }
 
-interface SkillPath {
+interface UnitData {
   id: string;
-  name: string;
-  skills: Skill[];
+  order: number;
+  title: string;
+  description: string;
+  lessons: Lesson[];
 }
 
 export const LearnPage: React.FC = () => {
   const navigate = useNavigate();
-  const { learnerId, user, updateStreak } = useUserStore();
-  const [skillPaths, setSkillPaths] = useState<SkillPath[]>([]);
+  const { learnerId, user } = useUserStore();
+  const [units, setUnits] = useState<UnitData[]>([]);
   const [dailyProgress, setDailyProgress] = useState({ current: 0, target: 50 });
   const [isLoading, setIsLoading] = useState(true);
+  const [activeLesson, setActiveLesson] = useState<{ id: string; unit?: { id: string } }>();
+  const [activeLessonPercentage, setActiveLessonPercentage] = useState(0);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -47,10 +47,10 @@ export const LearnPage: React.FC = () => {
       try {
         // Load skills
         const skills = await learnerApi.getSkills(learnerId);
-        
+
         // Load all KCs to group by domain
         const allKCs = await adaptiveApi.getAllKCs();
-        
+
         // Group KCs by domain
         const domainsMap = new Map<string, any[]>();
         allKCs.forEach((kc: any) => {
@@ -61,44 +61,55 @@ export const LearnPage: React.FC = () => {
           domainsMap.get(domain)!.push(kc);
         });
 
-        // Convert to skill paths
-        const paths: SkillPath[] = [];
+        // Convert to units with lessons
+        const unitsData: UnitData[] = [];
+        let orderIndex = 0;
+
         domainsMap.forEach((kcs, domain) => {
-          const domainSkills: Skill[] = kcs.map((kc: any) => {
+          const domainLessons: Lesson[] = kcs.map((kc: any) => {
             // Find matching skill state
             const skillState = skills.find((s: any) => s.kc_id === String(kc._id));
-            
-            let status: Skill['status'] = 'locked';
+
+            let completed = false;
             let progress = 0;
-            let level = 0;
 
             if (skillState) {
-              status = skillState.status || 'available';
+              completed = skillState.status === 'mastered';
               progress = skillState.p_mastery ? Math.round(skillState.p_mastery * 100) : 0;
-              level = skillState.level || 0;
-            } else {
-              // Check if skill has prerequisites met
-              status = 'locked'; // Simplified - should check prerequisites
             }
 
             return {
               id: String(kc._id),
               name: kc.name || kc.kc_name || 'Unknown',
               icon: kc.icon || '📚',
-              status,
-              progress: status === 'in_progress' ? progress : undefined,
-              level,
+              completed,
+              progress,
             };
           });
 
-          paths.push({
+          unitsData.push({
             id: domain,
-            name: domain.charAt(0).toUpperCase() + domain.slice(1).replace('_', ' '),
-            skills: domainSkills,
+            order: orderIndex++,
+            title: domain.charAt(0).toUpperCase() + domain.slice(1).replace('_', ' '),
+            description: `Learn essential ${domain.replace('_', ' ')} concepts`,
+            lessons: domainLessons,
           });
         });
 
-        setSkillPaths(paths);
+        setUnits(unitsData);
+
+        // Find the first incomplete lesson as active
+        for (const unit of unitsData) {
+          const incompleteLesson = unit.lessons.find((lesson) => !lesson.completed);
+          if (incompleteLesson) {
+            setActiveLesson({
+              id: incompleteLesson.id,
+              unit: { id: unit.id },
+            });
+            setActiveLessonPercentage(incompleteLesson.progress || 0);
+            break;
+          }
+        }
 
         // Load daily progress
         try {
@@ -114,7 +125,20 @@ export const LearnPage: React.FC = () => {
       } catch (error) {
         console.error('Failed to load learn page data:', error);
         // Fallback to mock data if API fails
-        setSkillPaths(mockSkillPaths);
+        const mockUnits: UnitData[] = mockSkillPaths.map((path, index) => ({
+          id: path.id,
+          order: index,
+          title: path.name,
+          description: `Learn essential ${path.name.toLowerCase()} concepts`,
+          lessons: path.skills.map((skill) => ({
+            id: skill.id,
+            name: skill.name,
+            icon: skill.icon,
+            completed: skill.status === 'mastered',
+            progress: skill.progress || 0,
+          })),
+        }));
+        setUnits(mockUnits);
         setDailyProgress(mockDailyProgress);
       } finally {
         setIsLoading(false);
@@ -125,115 +149,74 @@ export const LearnPage: React.FC = () => {
       loadData();
     } else {
       // Use mock data if not authenticated
-      setSkillPaths(mockSkillPaths);
+      const mockUnits: UnitData[] = mockSkillPaths.map((path, index) => ({
+        id: path.id,
+        order: index,
+        title: path.name,
+        description: `Learn essential ${path.name.toLowerCase()} concepts`,
+        lessons: path.skills.map((skill) => ({
+          id: skill.id,
+          name: skill.name,
+          icon: skill.icon,
+          completed: skill.status === 'mastered',
+          progress: skill.progress || 0,
+        })),
+      }));
+      setUnits(mockUnits);
       setDailyProgress(mockDailyProgress);
       setIsLoading(false);
     }
   }, [learnerId]);
 
-  const handleSkillClick = (skillId: string) => {
-    navigate(`/lesson/${skillId}`);
-  };
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-duo-bg flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-duo-bg">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-duo-green mx-auto mb-4"></div>
-          <p className="text-duo-text-muted">Loading skills...</p>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-duo-green"></div>
+          <p className="text-duo-text-muted">Loading your path...</p>
         </div>
       </div>
     );
   }
 
-  // Calculate overall progress (simplified)
-  const overallProgress = skillPaths.length > 0
-    ? skillPaths.reduce((acc, path) => {
-        const pathProgress = path.skills.reduce((sum, skill) => {
-          if (skill.status === 'mastered') return sum + 100;
-          if (skill.status === 'in_progress') return sum + (skill.progress || 0);
-          return sum;
-        }, 0) / (path.skills.length * 100) * 100;
-        return acc + pathProgress;
-      }, 0) / skillPaths.length
-    : 0;
-
   return (
-    <div className="space-y-5"> {/* Duolingo uses 20px (5 * 4px) spacing between sections */}
-      {/* Daily Goal */}
-      <DailyGoalProgress
-        current={dailyProgress.current}
-        target={dailyProgress.target}
-      />
+    <div className="flex flex-row-reverse gap-12 px-6 max-w-[1140px] mx-auto">
+      {/* Sticky Sidebar */}
+      <div className="sticky top-6 hidden lg:block h-fit w-[360px] flex-none">
+        <DailyGoalProgress current={dailyProgress.current} target={dailyProgress.target} />
+      </div>
 
-      {/* Overall Progress Card */}
-      <Card variant="elevated" padding="lg">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-[19px] font-bold text-[#4B4B4B]" style={{ lineHeight: '25px' }}>Overall Progress</h2>
-            <p className="text-[15px] text-[#737373] mt-1">
-              {skillPaths.length} skill path{skillPaths.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-[23px] font-bold text-[#58CC02]" style={{ lineHeight: '32px' }}>
-              {Math.round(overallProgress)}%
-            </p>
-            <p className="text-[15px] text-[#737373] mt-1">complete</p>
-          </div>
+      {/* Main Content */}
+      <div className="flex-1 py-8">
+        {/* Mobile Daily Goal */}
+        <div className="mb-8 lg:hidden">
+          <DailyGoalProgress current={dailyProgress.current} target={dailyProgress.target} />
         </div>
-        <ProgressBar value={overallProgress} max={100} variant="default" size="lg" />
-      </Card>
 
-      {/* Skill Paths */}
-      {skillPaths.map((path, pathIndex) => (
-        <motion.section
-          key={path.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: pathIndex * 0.1 }}
-        >
-          <h3 className="text-[17px] font-bold text-[#4B4B4B] mb-5 px-2" style={{ lineHeight: '24px' }}>
-            {path.name}
-          </h3>
+        {/* Units */}
+        <div className="space-y-8">
+          {units.map((unit) => (
+            <Unit
+              key={unit.id}
+              id={unit.id}
+              order={unit.order}
+              title={unit.title}
+              description={unit.description}
+              lessons={unit.lessons}
+              activeLesson={activeLesson}
+              activeLessonPercentage={activeLessonPercentage}
+            />
+          ))}
+        </div>
 
-          {/* Skill Path with connecting line */}
-          <div className="relative">
-            {/* Connecting line */}
-            <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-duo-border -translate-x-1/2 z-0" />
-
-            {/* Skills */}
-            <div className="relative z-10 flex flex-col items-center gap-4">
-              {path.skills.map((skill, skillIndex) => (
-                <motion.div
-                  key={skill.id}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: pathIndex * 0.1 + skillIndex * 0.05 }}
-                  className={skillIndex % 2 === 0 ? 'self-start ml-8' : 'self-end mr-8'}
-                >
-                  <SkillBubble
-                    name={skill.name}
-                    icon={skill.icon}
-                    status={skill.status}
-                    progress={skill.progress}
-                    level={skill.level}
-                    onClick={() => skill.status !== 'locked' && handleSkillClick(skill.id)}
-                  />
-                </motion.div>
-              ))}
-            </div>
+        {units.length === 0 && !isLoading && (
+          <div className="rounded-xl border-2 border-slate-200 bg-white p-12 text-center">
+            <p className="text-slate-500">
+              No learning paths available. Complete onboarding to get started!
+            </p>
           </div>
-        </motion.section>
-      ))}
-
-      {skillPaths.length === 0 && !isLoading && (
-        <Card variant="elevated" padding="lg">
-          <p className="text-center text-duo-text-muted">
-            No skills available. Complete onboarding to get started!
-          </p>
-        </Card>
-      )}
+        )}
+      </div>
     </div>
   );
 };

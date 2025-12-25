@@ -51,7 +51,7 @@ export const LeaderboardPage: React.FC = () => {
   const currentUserName = user?.name || 'You';
   const mockLeaderboard = getMockLeaderboard(currentUserName);
 
-  const timeframes = [
+  const timeframes: Array<{ id: 'week' | 'month' | 'all'; label: string }> = [
     { id: 'week', label: 'This Week' },
     { id: 'month', label: 'This Month' },
     { id: 'all', label: 'All Time' },
