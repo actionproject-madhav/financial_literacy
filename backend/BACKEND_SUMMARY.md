@@ -223,7 +223,7 @@ backend/
 
 ---
 
-## 🧠 Services & Algorithms
+##  Services & Algorithms
 
 ### Adaptive Learning Algorithms
 
@@ -292,47 +292,47 @@ backend/
 
 ---
 
-## 🌐 External Integrations
+##  External Integrations
 
-### ✅ Verified Working (December 2025)
+###  Verified Working (December 2025)
 
 1. **MongoDB Atlas**
-   - Status: ✅ Connected
+   - Status:  Connected
    - Database: `receipt_scanner`
    - Collections: 15 initialized
    - Data: 41 KCs, 7 learners
 
 2. **Supabase Storage**
-   - Status: ✅ Connected
+   - Status:  Connected
    - Bucket: `finlit-audio`
-   - Upload/Delete: ✅ Working
-   - Public URLs: ✅ Generated
+   - Upload/Delete:  Working
+   - Public URLs: Generated
 
 3. **Deepgram (STT)**
-   - Status: ✅ Configured
+   - Status:  Configured
    - Model: Latest SDK
    - Cost: $0.0043/min
-   - API Key: ✅ Valid
+   - API Key: Valid
 
 4. **OpenAI**
-   - Status: ✅ Connected
+   - Status:  Connected
    - Models: Cheapest configured
      - TTS: `tts-1` ($0.015/1K chars)
      - Chat: `gpt-4o-mini` ($0.15/$0.60 per 1M tokens)
      - Embeddings: `text-embedding-3-small` ($0.02/1M tokens)
-   - API Key: ✅ Valid
+   - API Key:  Valid
    - Models Available: 120
 
 5. **Local Embeddings**
-   - Status: ✅ Working
+   - Status:  Working
    - Model: `all-MiniLM-L6-v2`
    - Dimensions: 384
    - Cost: FREE
 
 6. **API Server**
-   - Status: ✅ Running
-   - Health: ✅ OK
-   - Endpoints: ✅ Responding
+   - Status:  Running
+   - Health:  OK
+   - Endpoints:  Responding
 
 ### Optional Services
 
@@ -341,26 +341,26 @@ backend/
 
 ---
 
-## ✅ Testing & Verification
+##  Testing & Verification
 
 ### Service Health Checks
 ```bash
 python scripts/test_all_services.py
 ```
-**Status:** ✅ All required services passing
+**Status:**  All required services passing
 
 ### Full System Test
 ```bash
 python -m scripts.test_full_loop
 ```
-**Status:** ✅ End-to-end flow working
+**Status:**  End-to-end flow working
 
 ### Manual Testing
-- ✅ Database seeding: Working
-- ✅ API endpoints: Responding
-- ✅ Adaptive algorithms: Functional
-- ✅ Voice endpoints: Ready (when tested)
-- ✅ Achievement system: Triggering correctly
+-  Database seeding: Working
+-  API endpoints: Responding
+-  Adaptive algorithms: Functional
+-  Voice endpoints: Ready (when tested)
+-  Achievement system: Triggering correctly
 
 ---
 
