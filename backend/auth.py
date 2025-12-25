@@ -42,13 +42,17 @@ def google_auth():
     if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
         return jsonify({'error': 'OAuth not configured'}), 500
     
+    try:
         flow = create_flow()
         authorization_url, state = flow.authorization_url(
             access_type='offline',
             include_granted_scopes='true'
         )
         session['state'] = state
-    return redirect(authorization_url)
+        return redirect(authorization_url)
+    except Exception as e:
+        print(f"OAuth initiation error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @auth_bp.route('/google/callback', methods=['GET'])
 def google_callback():
@@ -85,7 +89,7 @@ def google_callback():
             # Get the created learner
             learner = db.collections.get_learner_by_email(email)
             is_new_user = True
-            else:
+        else:
             learner_id = str(learner['_id'])
             is_new_user = False
 
@@ -108,7 +112,9 @@ def google_callback():
         
     except Exception as e:
         print(f"OAuth error: {e}")
-        return redirect(f"{FRONTEND_URL}?error=auth_failed")
+        import traceback
+        traceback.print_exc()
+        return redirect(f"{FRONTEND_URL}/#/auth?error=auth_failed")
 
 @auth_bp.route('/me', methods=['GET'])
 def get_current_user():
@@ -155,10 +161,10 @@ def _initialize_learner_skills(learner_id: str):
                 )
                 print(f"  ✓ Initialized: {skill['name']}")
                 initialized_count += 1
-        else:
+            else:
                 print(f"  ⚠️  Skill not found: {slug}")
-            
-    except Exception as e:
+
+        except Exception as e:
             print(f"  ❌ Error initializing {slug}: {e}")
 
     print(f"✅ Initialized {initialized_count}/{len(starter_slugs)} starter skills")
