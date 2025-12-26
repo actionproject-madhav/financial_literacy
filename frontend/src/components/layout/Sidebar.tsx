@@ -1,120 +1,89 @@
-import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import {
-  Home,
-  GraduationCap,
-  Trophy,
-  User,
-  TrendingUp,
-  Settings,
-  HelpCircle,
-  ShoppingBag,
-} from 'lucide-react';
-import { cn } from '../../utils/cn';
+import { Link, useLocation } from 'react-router-dom'
+import { LogOut, HelpCircle } from 'lucide-react'
+import { useUserStore } from '../../stores/userStore'
+import { cn } from '../../utils/cn'
+import { useState } from 'react'
 
-interface SidebarProps {
-  isOpen?: boolean;
-  onClose?: () => void;
-}
+export const Sidebar = () => {
+  const location = useLocation()
+  const { logout } = useUserStore()
+  const [isOpen, setIsOpen] = useState(false)
 
-interface NavItem {
-  path: string;
-  label: string;
-  icon: React.ReactNode;
-  badge?: string | number;
-}
+  const isMobile = window.innerWidth < 1024;
 
-const mainNavItems: NavItem[] = [
-  { path: '/learn', label: 'Learn', icon: <Home className="w-5 h-5" /> },
-  { path: '/practice', label: 'Practice', icon: <GraduationCap className="w-5 h-5" /> },
-  { path: '/invest', label: 'Invest', icon: <TrendingUp className="w-5 h-5" /> },
-  { path: '/leaderboard', label: 'Leaderboards', icon: <Trophy className="w-5 h-5" /> },
-  { path: '/shop', label: 'Shop', icon: <ShoppingBag className="w-5 h-5" />, badge: 'NEW' },
-];
+  // Using custom SVGs from public folder
+  const menuItems = [
+    { icon: '/home-pixel.svg', label: 'Home', path: '/learn' },
+    { icon: '/leaderboard.svg', label: 'Leaderboard', path: '/leaderboard' },
+    { icon: '/quest.svg', label: 'Quests', path: '/quests' },
+    { icon: '/shop.svg', label: 'Shop', path: '/shop' },
+    { icon: '/profile.svg', label: 'Profile', path: '/profile' },
+    { icon: '/setting.svg', label: 'Settings', path: '/settings' },
+  ]
 
-const secondaryNavItems: NavItem[] = [
-  { path: '/profile', label: 'Profile', icon: <User className="w-5 h-5" /> },
-  { path: '/settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
-  { path: '/help', label: 'Help', icon: <HelpCircle className="w-5 h-5" /> },
-];
-
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
-  const location = useLocation();
-
-  const NavItemComponent = ({ item }: { item: NavItem }) => {
-    const isActive = location.pathname.startsWith(item.path);
-
-    return (
-      <NavLink
-        to={item.path}
-        onClick={onClose}
-        className={cn(
-          'relative flex items-center gap-3 px-4 py-3 rounded-[12px]', // Duolingo uses 12px for nav items
-          'font-bold text-[15px] transition-colors', // Duolingo exact font
-          isActive
-            ? 'text-[#1CB0F6] bg-[#DDF4FF]' // Duolingo exact colors
-            : 'text-[#737373] hover:bg-[#F7F7F7]'
-        )}
-      >
-        {isActive && (
-          <motion.div
-            layoutId="sidebarIndicator"
-            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#1CB0F6] rounded-r-full" // Duolingo exact blue
-            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-          />
-        )}
-        
-        <span className={isActive ? 'text-[#1CB0F6]' : ''}>{item.icon}</span>
-        <span>{item.label}</span>
-        
-        {item.badge && (
-          <span className="ml-auto px-2 py-0.5 text-[13px] font-bold bg-[#58CC02] text-white rounded-full">
-            {item.badge}
-          </span>
-        )}
-      </NavLink>
-    );
-  };
-
-  return (
-    <aside
-      className={cn(
-        'hidden lg:flex flex-col',
-        'w-[256px] h-screen sticky top-0', // Duolingo exact width
-        'bg-white border-r-2 border-[#E5E5E5]', // Duolingo exact border
-        'py-6 px-5' // Duolingo exact padding
-      )}
-      style={{ 
-        background: 'rgb(255, 255, 255)',
-        borderRight: '2px solid rgb(229, 229, 229)'
-      }}
-    >
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-4 mb-8">
-        <div className="w-[42px] h-[42px] bg-[#58CC02] rounded-[16px] flex items-center justify-center shadow-[0_4px_0_#46A302]">
-          <span className="text-white font-bold text-2xl">$</span>
-        </div>
-        <span className="text-[23px] font-bold text-[#4B4B4B]">FinLit</span>
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full bg-white border-r border-gray-200">
+      <div className="p-8 pb-4">
+        <Link to="/learn" className="flex items-center gap-3">
+          <div className="bg-[#58CC02] p-2 rounded-xl">
+            <span className="text-white font-bold text-xl">$</span>
+          </div>
+          <h1 className="text-2xl font-bold text-[#58CC02] tracking-tight">FinLit</h1>
+        </Link>
       </div>
 
-      {/* Main Nav */}
-      <nav className="flex-1 space-y-1">
-        {mainNavItems.map((item) => (
-          <NavItemComponent key={item.path} item={item} />
-        ))}
+      <nav className="flex-1 px-4 py-4 space-y-0 overflow-y-auto">
+        {menuItems.map((item) => {
+          const isActive = location.pathname === item.path ||
+            (item.path !== '/' && location.pathname.startsWith(item.path)) ||
+            (item.path === '/learn' && location.pathname.startsWith('/section'))
+
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={cn(
+                "flex items-center gap-4 px-4 py-2 rounded-xl transition-all duration-200 group uppercase tracking-widest text-sm font-bold border-2",
+                isActive
+                  ? "bg-sky-100 text-sky-500 border-sky-300"
+                  : "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-900 border-transparent"
+              )}
+            >
+              <img
+                src={item.icon}
+                alt={item.label}
+                className="w-8 h-8 object-contain"
+              />
+              <span>{item.label}</span>
+            </Link>
+          )
+        })}
       </nav>
 
-      {/* Divider */}
-      <div className="h-px bg-[#E5E5E5] my-4" /> {/* Duolingo exact border */}
+      <div className="p-4 border-t border-gray-100">
+        <Link to="/help" className="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-gray-900 font-bold text-sm uppercase tracking-widest transition-colors rounded-xl hover:bg-gray-100">
+          <HelpCircle className="w-5 h-5" strokeWidth={2.5} />
+          <span>Help</span>
+        </Link>
+        <button
+          onClick={() => {
+            logout();
+            window.location.href = '/auth';
+          }}
+          className="w-full flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-red-500 font-bold text-sm uppercase tracking-widest transition-colors rounded-xl hover:bg-red-50"
+        >
+          <LogOut className="w-5 h-5" strokeWidth={2.5} />
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+  )
 
-      {/* Secondary Nav */}
-      <nav className="space-y-1">
-        {secondaryNavItems.map((item) => (
-          <NavItemComponent key={item.path} item={item} />
-        ))}
-      </nav>
-    </aside>
-  );
-};
-
+  return (
+    <>
+      <aside className="hidden lg:flex flex-col w-64 fixed inset-y-0 left-0 z-50 bg-white">
+        <SidebarContent />
+      </aside>
+    </>
+  )
+}

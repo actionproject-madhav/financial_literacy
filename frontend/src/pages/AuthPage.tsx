@@ -18,7 +18,7 @@ export const AuthPage: React.FC = () => {
         const sessionUser = await authApi.getCurrentUser();
         if (sessionUser && sessionUser.learner_id) {
           setLearnerId(sessionUser.learner_id);
-          
+
           // Load full learner profile
           try {
             const learner = await learnerApi.getProfile(sessionUser.learner_id);
@@ -32,7 +32,7 @@ export const AuthPage: React.FC = () => {
               hearts: 5,
               gems: 0,
             });
-            
+
             // Redirect based on onboarding status
             if (!learner.onboarding_completed || sessionUser.is_new_user) {
               navigate('/onboarding');
@@ -184,6 +184,35 @@ export const AuthPage: React.FC = () => {
                 <p className="text-[13px] text-[#737373] mt-1" style={{ lineHeight: '20px' }}>Earn XP, maintain streaks, unlock achievements</p>
               </div>
             </div>
+          </div>
+
+          {/* Skip for now - DEV ONLY */}
+          <div className="mt-6 pt-6 border-t-2 border-[#E5E5E5]">
+            <Button
+              variant="secondary"
+              size="lg"
+              fullWidth
+              onClick={() => {
+                // Set up demo user for testing
+                setLearnerId('demo-user-123');
+                setUser({
+                  name: 'Demo User',
+                  email: 'demo@test.com',
+                  country: 'US',
+                  visaType: 'F-1',
+                  streak: 0,
+                  totalXp: 0,
+                  hearts: 5,
+                  gems: 0,
+                });
+                navigate('/learn');
+              }}
+            >
+              Skip for now (Testing)
+            </Button>
+            <p className="text-[11px] text-[#AFAFAF] text-center mt-2">
+              ⚠️ Development mode only
+            </p>
           </div>
         </Card>
 

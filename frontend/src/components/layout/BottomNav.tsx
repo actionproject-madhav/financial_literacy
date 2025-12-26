@@ -22,9 +22,9 @@ export const BottomNav: React.FC = () => {
   const location = useLocation();
 
   return (
-    <nav 
+    <nav
       className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t-2 border-[#E5E5E5] lg:hidden" // Duolingo exact z-index
-      style={{ 
+      style={{
         background: 'rgb(255, 255, 255)',
         borderTop: '2px solid rgb(229, 229, 229)',
         padding: '16px' // Duolingo exact padding
@@ -48,7 +48,7 @@ export const BottomNav: React.FC = () => {
               >
                 {item.icon}
               </span>
-              
+
               <span
                 className={cn(
                   'relative z-10 text-[13px] font-bold transition-colors uppercase tracking-[0.04em]', // Duolingo exact typography
