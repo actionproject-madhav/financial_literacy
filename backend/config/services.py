@@ -26,6 +26,9 @@ class ServiceConfig:
     GOOGLE_TTS_API_KEY = os.getenv('GOOGLE_TTS_API_KEY')
     GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 
+    # ElevenLabs TTS - High-quality, natural voices
+    ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
+
     # Supabase Storage - Free 1GB storage, 2GB bandwidth/month (no card required)
     SUPABASE_URL = os.getenv('SUPABASE_URL')
     SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY')

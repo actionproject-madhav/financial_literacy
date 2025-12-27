@@ -1,110 +1,135 @@
-import * as React from 'react';
-import { Slot } from '@radix-ui/react-slot';
-import { cva, type VariantProps } from 'class-variance-authority';
+import React from 'react';
+import { motion, HTMLMotionProps } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
-const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-[16px] text-sm font-bold ring-offset-background transition-all duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-duo-border-focus focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 uppercase tracking-wide',
-  {
-    variants: {
-      variant: {
-        default:
-          'bg-duo-surface text-duo-text border-duo-border border-2 border-b-4 shadow-duo-gray hover:bg-[#F7F7F7] active:border-b-2 active:translate-y-[2px] active:shadow-none',
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+export type ButtonSize = 'sm' | 'md' | 'lg' | 'xl';
 
-        // Duolingo-style variants with 3D effects
-        locked:
-          'bg-neutral-200 text-duo-text-subtle border-neutral-400 border-2 border-b-4 cursor-not-allowed opacity-60',
-
-        primary:
-          'bg-duo-blue text-white border-2 border-b-4 border-duo-blue-shadow shadow-duo-blue hover:bg-duo-blue-hover active:border-b-2 active:translate-y-[2px] active:shadow-none',
-        primaryOutline:
-          'bg-duo-surface text-duo-blue border-2 border-duo-blue hover:bg-duo-blue-tint',
-
-        secondary:
-          'bg-duo-green text-white border-2 border-b-4 border-duo-green-shadow shadow-duo-green hover:bg-duo-green-hover active:border-b-2 active:translate-y-[2px] active:shadow-none',
-        secondaryOutline:
-          'bg-duo-surface text-duo-green border-2 border-duo-green hover:bg-[#D7FFB8]',
-
-        danger:
-          'bg-duo-red text-white border-2 border-b-4 border-duo-red-dark shadow-duo-red hover:brightness-110 active:border-b-2 active:translate-y-[2px] active:shadow-none',
-        dangerOutline:
-          'bg-duo-surface text-duo-red border-2 border-duo-red hover:bg-duo-red-tint',
-
-        super:
-          'bg-duo-purple text-white border-2 border-b-4 border-duo-purple-light shadow-[0_4px_0_#CE82FF] hover:brightness-110 active:border-b-2 active:translate-y-[2px] active:shadow-none',
-        superOutline:
-          'bg-duo-surface text-duo-purple border-2 border-duo-purple hover:bg-duo-purple-tint',
-
-        ghost:
-          'bg-transparent text-duo-text-muted border-transparent border-0 hover:bg-[#F7F7F7]',
-
-        sidebar:
-          'bg-transparent text-duo-text-muted border-2 border-transparent hover:bg-[#F7F7F7] transition-none',
-        sidebarOutline:
-          'bg-duo-blue-tint text-duo-blue border-duo-blue border-2 hover:bg-[#C4E9FF] transition-none',
-
-        // Legacy variant for backward compatibility
-        outline:
-          'bg-duo-surface text-duo-blue border-2 border-duo-border hover:bg-[#F7F7F7]',
-      },
-      size: {
-        default: 'h-[48px] px-5 text-[15px]',
-        sm: 'h-[44px] px-4 text-[15px]',
-        md: 'h-[48px] px-5 text-[15px]', // Alias for default
-        lg: 'h-[50px] px-6 text-[17px]',
-        xl: 'h-[58px] px-8 text-[17px]', // Extra large size
-        icon: 'h-10 w-10',
-
-        // Duolingo custom size
-        rounded: 'rounded-full',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
-      size: 'default',
-    },
-  }
-);
-
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean;
-  fullWidth?: boolean;
+interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'size'> {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  isLoading?: boolean;
+  isDisabled?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
-  isDisabled?: boolean;
-  isLoading?: boolean;
+  fullWidth?: boolean;
+  children: React.ReactNode;
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, fullWidth, leftIcon, rightIcon, isDisabled, isLoading, children, disabled, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'button';
-    const isButtonDisabled = disabled || isDisabled || isLoading;
+const variantStyles: Record<ButtonVariant, string> = {
+  primary: `
+    bg-[#58CC02] text-white font-bold
+    border-0
+    shadow-[0_4px_0_#46A302]
+    hover:brightness-110
+    active:shadow-none active:translate-y-[4px]
+    relative
+  `,
+  secondary: `
+    bg-[#1CB0F6] text-white font-bold
+    border-0
+    shadow-[0_4px_0_#1899D6]
+    hover:brightness-110
+    active:shadow-none active:translate-y-[4px]
+    relative
+  `,
+  outline: `
+    bg-white text-[#1CB0F6] font-bold
+    border-2 border-[#E5E5E5]
+    shadow-[0_4px_0_#E5E5E5]
+    hover:bg-[#F7F7F7] hover:border-[#1899D6]
+    active:shadow-none active:translate-y-[4px]
+    relative
+  `,
+  ghost: `
+    bg-transparent text-[#1CB0F6] font-bold
+    border-0 shadow-none
+    hover:bg-[#DDF4FF]
+    active:bg-[#DDF4FF]
+  `,
+  danger: `
+    bg-[#FF4B4B] text-white font-bold
+    border-0
+    shadow-[0_4px_0_#EA2B2B]
+    hover:brightness-110
+    active:shadow-none active:translate-y-[4px]
+    relative
+  `,
+};
+
+const sizeStyles: Record<ButtonSize, string> = {
+  sm: 'px-5 py-0 text-[15px] rounded-[16px] h-[44px]', // Duolingo exact: 44px height, 15px text
+  md: 'px-5 py-0 text-[15px] rounded-[16px] h-[48px]', // Duolingo exact: 48px height, 15px text
+  lg: 'px-5 py-0 text-[17px] rounded-[16px] h-[58px]', // Duolingo exact: 58px height, 17px text
+  xl: 'px-6 py-0 text-[19px] rounded-[16px] h-[64px]', // Extended size
+};
+
+const disabledStyles = `
+  bg-[#E5E5E5] text-[#AFAFAF]
+  shadow-none cursor-not-allowed
+  hover:bg-[#E5E5E5]
+`;
+
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      variant = 'primary',
+      size = 'md',
+      isLoading = false,
+      isDisabled = false,
+      leftIcon,
+      rightIcon,
+      fullWidth = false,
+      children,
+      className,
+      ...props
+    },
+    ref
+  ) => {
+    const disabled = isDisabled || isLoading;
 
     return (
-      <Comp
-        className={cn(
-          buttonVariants({ variant, size, className }),
-          fullWidth && 'w-full',
-        )}
+      <motion.button
         ref={ref}
-        disabled={isButtonDisabled}
+        whileTap={disabled ? {} : { scale: 0.98, y: 1 }} // Duolingo: subtle scale + tiny translate
+        transition={{ duration: 0.1, ease: 'easeOut' }} // Duolingo: very fast 100ms
+        disabled={disabled}
+        className={cn(
+          // Base styles - Duolingo exact
+          'inline-flex items-center justify-center gap-3', // Duolingo uses 12px (gap-3) for button icons
+          'font-bold uppercase tracking-[0.04em]', // Duolingo uses uppercase with letter-spacing
+          'transition-all duration-100 ease-out', // 100ms transitions
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#84D8FF] focus-visible:ring-offset-2',
+          
+          // Size
+          sizeStyles[size],
+          
+          // Variant (or disabled)
+          disabled ? disabledStyles : variantStyles[variant],
+          
+          // Full width
+          fullWidth && 'w-full',
+          
+          className
+        )}
         {...props}
       >
-        {isLoading && (
-          <svg className="mr-2 h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
+        {isLoading ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin text-current" />
+            <span>Loading...</span>
+          </>
+        ) : (
+          <>
+            {leftIcon && <span className="flex-shrink-0">{leftIcon}</span>}
+            <span>{children}</span>
+            {rightIcon && <span className="flex-shrink-0">{rightIcon}</span>}
+          </>
         )}
-        {!isLoading && leftIcon && <span className="mr-2 flex-shrink-0">{leftIcon}</span>}
-        {children}
-        {!isLoading && rightIcon && <span className="ml-2 flex-shrink-0">{rightIcon}</span>}
-      </Comp>
+      </motion.button>
     );
   }
 );
-Button.displayName = 'Button';
 
-export { Button, buttonVariants };
+Button.displayName = 'Button';

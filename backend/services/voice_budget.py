@@ -16,7 +16,7 @@ from config.services import config
 
 # Import budget services
 try:
-    from services import deepgram_client, google_tts_client, supabase_client
+    from services import deepgram_client, google_tts_client, supabase_client, elevenlabs_client
     BUDGET_AVAILABLE = True
 except ImportError:
     BUDGET_AVAILABLE = False
@@ -87,7 +87,7 @@ class BudgetVoiceService:
 
     def generate_tts(self, text: str, language: str = 'en', voice: Optional[str] = None) -> Optional[str]:
         """
-        Generate TTS using Google Cloud TTS (if available) or OpenAI TTS (fallback).
+        Generate TTS using ElevenLabs (if available), Google Cloud TTS, or OpenAI TTS (fallback).
 
         Args:
             text: Text to convert
@@ -97,8 +97,17 @@ class BudgetVoiceService:
         Returns:
             Base64 audio data URI or None
         """
+        # Try ElevenLabs first (best quality)
         try:
-            # Try Google TTS first (cheaper)
+            if elevenlabs_client.elevenlabs_client:
+                audio_bytes = elevenlabs_client.generate_speech(text, language)
+                audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
+                return f"data:audio/mp3;base64,{audio_base64}"
+        except Exception as e:
+            print(f"ElevenLabs TTS failed, trying Google TTS fallback: {e}")
+
+        # Fallback to Google TTS (cheaper)
+        try:
             if google_tts_client.tts_client:
                 audio_bytes = google_tts_client.generate_speech(text, language)
                 audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
@@ -106,7 +115,7 @@ class BudgetVoiceService:
         except Exception as e:
             print(f"Google TTS failed, trying OpenAI fallback: {e}")
 
-        # Fallback to OpenAI TTS if Google not available
+        # Fallback to OpenAI TTS if others not available
         try:
             from openai import OpenAI
             if config.OPENAI_API_KEY:
@@ -125,7 +134,7 @@ class BudgetVoiceService:
 
     def generate_tts_cached(self, text: str, item_id: str, language: str = 'en') -> Optional[str]:
         """
-        Generate TTS with Supabase caching (Google TTS or OpenAI fallback).
+        Generate TTS with Supabase caching (ElevenLabs, Google TTS, or OpenAI fallback).
 
         Args:
             text: Text to convert
@@ -145,15 +154,25 @@ class BudgetVoiceService:
             if cached_url:
                 return cached_url
 
-            # Generate (try Google first, then OpenAI)
+            # Generate (try ElevenLabs first, then Google, then OpenAI)
             audio_bytes = None
-            try:
-                if google_tts_client.tts_client:
-                    audio_bytes = google_tts_client.generate_speech(text, language)
-            except:
-                pass
 
-            # Fallback to OpenAI if Google failed
+            # Try ElevenLabs first
+            try:
+                if elevenlabs_client.elevenlabs_client:
+                    audio_bytes = elevenlabs_client.generate_speech(text, language)
+            except Exception as e:
+                print(f"ElevenLabs TTS failed in cached mode: {e}")
+
+            # Fallback to Google TTS
+            if not audio_bytes:
+                try:
+                    if google_tts_client.tts_client:
+                        audio_bytes = google_tts_client.generate_speech(text, language)
+                except Exception as e:
+                    print(f"Google TTS failed in cached mode: {e}")
+
+            # Fallback to OpenAI if both failed
             if not audio_bytes and config.OPENAI_API_KEY:
                 from openai import OpenAI
                 client = OpenAI(api_key=config.OPENAI_API_KEY)
