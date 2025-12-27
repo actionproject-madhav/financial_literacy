@@ -40,54 +40,123 @@ except ImportError as e:
 load_dotenv()
 
 # Configuration
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-DB_NAME = os.getenv("DB_NAME", "finlit")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-SEED_FILE = "finlit_seed_questions.json"
+SEED_FILE = os.path.join(os.path.dirname(__file__), "seed_questions.json")
 
 # Initialize clients
-mongo_client = None
 db = None
 anthropic_client = None
 
 
-def init_clients():
-    """Initialize database and API clients."""
-    global mongo_client, db, anthropic_client
+def init_database():
+    """Initialize database connection using existing Database class."""
+    global db
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from database import Database
     
-    mongo_client = MongoClient(MONGO_URI)
-    db = mongo_client[DB_NAME]
-    
+    db = Database()
+    if not db.is_connected:
+        print("Error: Cannot connect to database. Check your MONGO_URI in .env")
+        sys.exit(1)
+    print("Database connected")
+
+
+def init_anthropic():
+    """Initialize Anthropic client if API key is available."""
+    global anthropic_client
     if ANTHROPIC_API_KEY:
         anthropic_client = Anthropic(api_key=ANTHROPIC_API_KEY)
+        print("Anthropic client initialized")
     else:
         print("Warning: ANTHROPIC_API_KEY not set. Generation features disabled.")
 
 
 def load_seed_data() -> Dict:
     """Load seed questions from JSON file."""
-    with open(SEED_FILE, 'r') as f:
-        return json.load(f)
+    if not os.path.exists(SEED_FILE):
+        print(f"❌ Error: Seed file not found at {SEED_FILE}")
+        print(f"   Please create the file with your questions.")
+        sys.exit(1)
+    
+    # Check if file is empty
+    file_size = os.path.getsize(SEED_FILE)
+    if file_size == 0:
+        print(f"❌ Error: Seed file is empty: {SEED_FILE}")
+        print(f"   Please add your questions to the file.")
+        print(f"   See docs/question_generation.md for the expected format.")
+        sys.exit(1)
+    
+    try:
+        with open(SEED_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        # Validate structure
+        if not isinstance(data, dict):
+            print(f"❌ Error: Seed file must contain a JSON object")
+            sys.exit(1)
+        
+        if 'knowledge_components' not in data:
+            print(f"⚠️  Warning: No 'knowledge_components' found in seed file")
+        
+        if 'questions' not in data:
+            print(f"⚠️  Warning: No 'questions' found in seed file")
+        
+        return data
+        
+    except json.JSONDecodeError as e:
+        print(f"❌ Error: Invalid JSON in seed file: {e}")
+        print(f"   File: {SEED_FILE}")
+        print(f"   Line {e.lineno}, Column {e.colno}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"❌ Error reading seed file: {e}")
+        sys.exit(1)
 
 
 def import_knowledge_components(kcs: List[Dict]) -> Dict[str, str]:
     """Import knowledge components and return slug -> id mapping."""
-    kc_collection = db.knowledge_components
+    collections = db.collections
     slug_to_id = {}
     
-    for kc in kcs:
-        # Check if already exists
-        existing = kc_collection.find_one({"slug": kc["slug"]})
-        if existing:
-            slug_to_id[kc["slug"]] = str(existing["_id"])
-            print(f"  KC exists: {kc['slug']}")
-        else:
-            kc["created_at"] = datetime.utcnow()
-            kc["is_active"] = True
-            result = kc_collection.insert_one(kc)
-            slug_to_id[kc["slug"]] = str(result.inserted_id)
-            print(f"  KC created: {kc['slug']}")
+    print(f"\nImporting {len(kcs)} knowledge components...")
     
+    for kc in kcs:
+        try:
+            # Check if already exists
+            existing = collections.knowledge_components.find_one({"slug": kc["slug"]})
+            if existing:
+                slug_to_id[kc["slug"]] = str(existing["_id"])
+                # Update existing KC with new data
+                collections.knowledge_components.update_one(
+                    {"slug": kc["slug"]},
+                    {"$set": {
+                        "name": kc.get("name"),
+                        "description": kc.get("description"),
+                        "domain": kc.get("domain"),
+                        "difficulty_tier": kc.get("difficulty_tier", 1),
+                        "bloom_level": kc.get("bloom_level"),
+                        "estimated_minutes": kc.get("estimated_minutes", 15),
+                        "updated_at": datetime.utcnow()
+                    }}
+                )
+            else:
+                # Create new KC using existing method
+                kc_id = collections.create_knowledge_component(
+                    slug=kc["slug"],
+                    name=kc["name"],
+                    domain=kc["domain"],
+                    description=kc.get("description"),
+                    difficulty_tier=kc.get("difficulty_tier", 1),
+                    bloom_level=kc.get("bloom_level"),
+                    estimated_minutes=kc.get("estimated_minutes", 15),
+                    icon_url=kc.get("icon_url")
+                )
+                slug_to_id[kc["slug"]] = kc_id
+            
+        except Exception as e:
+            print(f"  Error with KC {kc.get('slug', 'unknown')}: {e}")
+    
+    print(f"  Processed {len(slug_to_id)} knowledge components")
     return slug_to_id
 
 
@@ -99,8 +168,7 @@ def generate_question_hash(content: Dict) -> str:
 
 def import_questions(questions: List[Dict], slug_to_id: Dict[str, str]) -> Dict:
     """Import questions and create KC mappings."""
-    items_collection = db.learning_items
-    mappings_collection = db.item_kc_mappings
+    collections = db.collections
     
     stats = {"imported": 0, "skipped": 0, "errors": 0}
     
@@ -112,53 +180,56 @@ def import_questions(questions: List[Dict], slug_to_id: Dict[str, str]) -> Dict:
                 stats["errors"] += 1
                 continue
             
-            # Check for duplicate by hash
-            content_hash = generate_question_hash(q["content"])
-            existing = items_collection.find_one({"content_hash": content_hash})
-            if existing:
+            # Check for duplicate by exact stem match (case-insensitive)
+            stem = q["content"].get("stem", "").strip()
+            stem_lower = stem.lower()
+            
+            # Use exact match instead of regex to avoid special character issues
+            existing_items = list(collections.learning_items.find({
+                "content.stem": {"$exists": True}
+            }))
+            
+            # Check if exact duplicate exists (case-insensitive)
+            is_duplicate = False
+            for existing in existing_items:
+                existing_stem = existing.get("content", {}).get("stem", "").strip().lower()
+                if existing_stem == stem_lower:
+                    is_duplicate = True
+                    break
+            
+            if is_duplicate:
                 print(f"  Duplicate found, skipping: {q['content']['stem'][:50]}...")
                 stats["skipped"] += 1
                 continue
             
-            # Prepare item document
-            item_doc = {
-                "item_type": q.get("item_type", "multiple_choice"),
-                "content": q["content"],
-                "difficulty": q.get("difficulty", 0.5),
-                "discrimination": q.get("discrimination", 1.0),
-                "response_count": 0,
-                "correct_rate": None,
-                "avg_response_time_ms": None,
-                "media_type": q.get("media_type"),
-                "media_url": q.get("media_url"),
-                "allows_llm_personalization": q.get("allows_llm_personalization", True),
-                "forgetting_curve_factor": 1.0,
-                "is_active": q.get("is_active", True),
-                "content_hash": content_hash,
-                "source": q.get("source", "seed"),
-                "needs_review": q.get("needs_review", False),
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow()
-            }
+            # Create learning item using existing method
+            item_id = collections.create_learning_item(
+                item_type=q.get("item_type", "multiple_choice"),
+                content=q["content"],
+                difficulty=q.get("difficulty", 0.5),
+                discrimination=q.get("discrimination", 1.0),
+                media_type=q.get("media_type"),
+                media_url=q.get("media_url"),
+                allows_llm_personalization=q.get("allows_llm_personalization", True)
+            )
             
-            # Insert item
-            result = items_collection.insert_one(item_doc)
-            item_id = result.inserted_id
-            
-            # Create KC mapping
+            # Create KC mapping using existing method
             kc_id = slug_to_id[skill_slug]
-            mapping_doc = {
-                "item_id": item_id,
-                "kc_id": db.knowledge_components.find_one({"slug": skill_slug})["_id"],
-                "weight": 1.0,
-                "created_at": datetime.utcnow()
-            }
-            mappings_collection.insert_one(mapping_doc)
+            collections.create_item_kc_mapping(
+                item_id=item_id,
+                kc_id=kc_id,
+                weight=1.0
+            )
             
             stats["imported"] += 1
             
+            if stats["imported"] % 10 == 0:
+                print(f"  Imported {stats['imported']} questions...")
+            
         except Exception as e:
             print(f"  Error importing question: {e}")
+            import traceback
+            traceback.print_exc()
             stats["errors"] += 1
     
     return stats
@@ -166,19 +237,30 @@ def import_questions(questions: List[Dict], slug_to_id: Dict[str, str]) -> Dict:
 
 def import_seed_questions():
     """Import all seed questions from JSON file."""
-    print("Loading seed data...")
+    print("=" * 60)
+    print("IMPORTING SEED QUESTIONS")
+    print("=" * 60)
+    
+    print(f"\nLoading seed data from {SEED_FILE}...")
     data = load_seed_data()
     
-    print(f"\nImporting {len(data['knowledge_components'])} knowledge components...")
-    slug_to_id = import_knowledge_components(data["knowledge_components"])
+    print(f"\nFound {len(data.get('knowledge_components', []))} knowledge components")
+    print(f"Found {len(data.get('questions', []))} questions")
     
-    print(f"\nImporting {len(data['questions'])} questions...")
-    stats = import_questions(data["questions"], slug_to_id)
+    # Import knowledge components
+    slug_to_id = import_knowledge_components(data.get("knowledge_components", []))
     
-    print(f"\n✅ Import complete!")
-    print(f"   Imported: {stats['imported']}")
-    print(f"   Skipped (duplicates): {stats['skipped']}")
-    print(f"   Errors: {stats['errors']}")
+    # Import questions
+    print(f"\nImporting {len(data.get('questions', []))} questions...")
+    stats = import_questions(data.get("questions", []), slug_to_id)
+    
+    print(f"\n{'=' * 60}")
+    print("IMPORT COMPLETE!")
+    print(f"{'=' * 60}")
+    print(f"  Imported: {stats['imported']}")
+    print(f"  Skipped (duplicates): {stats['skipped']}")
+    print(f"  Errors: {stats['errors']}")
+    print(f"{'=' * 60}\n")
 
 
 # ============ QUESTION GENERATION WITH CLAUDE API ============
@@ -221,21 +303,16 @@ Generate exactly {count} unique, high-quality questions. Output ONLY valid JSON,
 
 def get_existing_stems(skill_slug: str) -> List[str]:
     """Get existing question stems for a skill to avoid duplicates."""
-    items_collection = db.learning_items
-    mappings_collection = db.item_kc_mappings
+    collections = db.collections
     
-    # Get KC ID
-    kc = db.knowledge_components.find_one({"slug": skill_slug})
+    # Get KC
+    kc = collections.knowledge_components.find_one({"slug": skill_slug})
     if not kc:
         return []
     
-    # Get all item IDs for this KC
-    mappings = mappings_collection.find({"kc_id": kc["_id"]})
-    item_ids = [m["item_id"] for m in mappings]
-    
-    # Get stems
-    items = items_collection.find({"_id": {"$in": item_ids}})
-    return [item["content"]["stem"] for item in items]
+    # Get all items for this KC
+    items = collections.get_items_for_kc(str(kc["_id"]))
+    return [item["content"]["stem"] for item in items if "content" in item and "stem" in item["content"]]
 
 
 def generate_questions_for_skill(skill_slug: str, count: int = 10) -> List[Dict]:
@@ -245,7 +322,8 @@ def generate_questions_for_skill(skill_slug: str, count: int = 10) -> List[Dict]
         return []
     
     # Get skill info
-    kc = db.knowledge_components.find_one({"slug": skill_slug})
+    collections = db.collections
+    kc = collections.knowledge_components.find_one({"slug": skill_slug})
     if not kc:
         print(f"Error: Skill '{skill_slug}' not found")
         return []
@@ -322,7 +400,8 @@ def generate_and_import(skill_slug: str, count: int = 10):
         return
     
     # Get slug to ID mapping
-    kc = db.knowledge_components.find_one({"slug": skill_slug})
+    collections = db.collections
+    kc = collections.knowledge_components.find_one({"slug": skill_slug})
     if not kc:
         print(f"Error: Skill '{skill_slug}' not found")
         return
@@ -339,7 +418,8 @@ def generate_and_import(skill_slug: str, count: int = 10):
 
 def generate_all(count_per_skill: int = 10):
     """Generate questions for all skills."""
-    kcs = list(db.knowledge_components.find({"is_active": True}))
+    collections = db.collections
+    kcs = list(collections.knowledge_components.find({"is_active": True}))
     
     print(f"Generating {count_per_skill} questions for {len(kcs)} skills...")
     total_stats = {"imported": 0, "skipped": 0, "errors": 0}
@@ -426,7 +506,7 @@ def export_for_review(output_file: str = "questions_for_review.csv"):
 
 def import_reviewed(input_file: str = "questions_reviewed.csv"):
     """Import reviewed questions, updating approval status."""
-    items_collection = db.learning_items
+    collections = db.collections
     
     with open(input_file, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
@@ -444,23 +524,20 @@ def import_reviewed(input_file: str = "questions_reviewed.csv"):
             from bson import ObjectId
             
             if status == 'Y':
-                items_collection.update_one(
+                collections.learning_items.update_one(
                     {"_id": ObjectId(item_id)},
                     {"$set": {
-                        "needs_review": False,
                         "is_active": True,
-                        "reviewed_at": datetime.utcnow()
+                        "updated_at": datetime.utcnow()
                     }}
                 )
                 approved += 1
             elif status == 'N':
-                items_collection.update_one(
+                collections.learning_items.update_one(
                     {"_id": ObjectId(item_id)},
                     {"$set": {
-                        "needs_review": False,
                         "is_active": False,
-                        "rejected_at": datetime.utcnow(),
-                        "rejection_notes": row.get('Notes', '')
+                        "updated_at": datetime.utcnow()
                     }}
                 )
                 rejected += 1
@@ -474,40 +551,29 @@ def import_reviewed(input_file: str = "questions_reviewed.csv"):
 
 def show_stats():
     """Show question statistics."""
-    items_collection = db.learning_items
-    kc_collection = db.knowledge_components
-    mappings_collection = db.item_kc_mappings
+    collections = db.collections
     
     print("\n📊 Question Statistics")
     print("=" * 50)
     
     # Total questions
-    total = items_collection.count_documents({})
-    active = items_collection.count_documents({"is_active": True})
-    needs_review = items_collection.count_documents({"needs_review": True})
+    total = collections.learning_items.count_documents({})
+    active = collections.learning_items.count_documents({"is_active": True})
     
     print(f"\nTotal Questions: {total}")
     print(f"Active Questions: {active}")
-    print(f"Needs Review: {needs_review}")
-    
-    # By source
-    print("\nBy Source:")
-    sources = items_collection.aggregate([
-        {"$group": {"_id": "$source", "count": {"$sum": 1}}}
-    ])
-    for s in sources:
-        print(f"  {s['_id'] or 'unknown'}: {s['count']}")
     
     # By difficulty
     print("\nBy Difficulty:")
-    difficulties = items_collection.aggregate([
+    pipeline = [
         {"$bucket": {
             "groupBy": "$difficulty",
             "boundaries": [0, 0.35, 0.55, 1.0],
             "default": "unknown",
             "output": {"count": {"$sum": 1}}
         }}
-    ])
+    ]
+    difficulties = list(collections.learning_items.aggregate(pipeline))
     labels = {0: "Easy (0-0.35)", 0.35: "Medium (0.35-0.55)", 0.55: "Hard (0.55-1.0)"}
     for d in difficulties:
         label = labels.get(d['_id'], str(d['_id']))
@@ -515,11 +581,17 @@ def show_stats():
     
     # By skill
     print("\nBy Skill:")
-    kcs = list(kc_collection.find({"is_active": True}))
+    kcs = list(collections.knowledge_components.find({"is_active": True}).sort("domain", 1))
+    current_domain = None
+    
     for kc in kcs:
-        count = mappings_collection.count_documents({"kc_id": kc["_id"]})
+        if kc.get("domain") != current_domain:
+            current_domain = kc.get("domain")
+            print(f"\n  [{current_domain.upper()}]")
+        
+        count = collections.item_kc_mappings.count_documents({"kc_id": kc["_id"]})
         status = "✅" if count >= 10 else "⚠️" if count >= 5 else "❌"
-        print(f"  {status} {kc['slug']}: {count} questions")
+        print(f"    {status} {kc['slug']}: {count} questions")
     
     print("\n" + "=" * 50)
 
@@ -559,8 +631,12 @@ def main():
         parser.print_help()
         return
     
-    # Initialize clients
-    init_clients()
+    # Initialize database
+    init_database()
+    
+    # Initialize Anthropic if needed
+    if args.command in ["generate", "generate-all"]:
+        init_anthropic()
     
     if args.command == "import-seed":
         import_seed_questions()

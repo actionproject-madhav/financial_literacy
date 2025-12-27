@@ -1,0 +1,2389 @@
+{
+    "metadata": {
+      "version": "1.0.0",
+      "generated_at": "2025-01-01",
+      "total_questions": 154,
+      "domains": ["banking", "credit", "money-management", "investing", "retirement", "taxes", "cryptocurrency"],
+      "target_audience": "immigrants and international students in the US"
+    },
+    "knowledge_components": [
+      {
+        "slug": "understanding-us-currency",
+        "name": "Understanding US Currency",
+        "domain": "banking",
+        "difficulty_tier": 1,
+        "bloom_level": "remember",
+        "estimated_minutes": 10,
+        "description": "Learn about US dollars, coins, and how currency works in America"
+      },
+      {
+        "slug": "checking-accounts",
+        "name": "Checking Accounts",
+        "domain": "banking",
+        "difficulty_tier": 1,
+        "bloom_level": "understand",
+        "estimated_minutes": 15,
+        "description": "Understanding checking accounts for daily transactions"
+      },
+      {
+        "slug": "savings-accounts",
+        "name": "Savings Accounts",
+        "domain": "banking",
+        "difficulty_tier": 1,
+        "bloom_level": "understand",
+        "estimated_minutes": 15,
+        "description": "How savings accounts work and when to use them"
+      },
+      {
+        "slug": "debit-cards",
+        "name": "Debit Cards",
+        "domain": "banking",
+        "difficulty_tier": 1,
+        "bloom_level": "apply",
+        "estimated_minutes": 10,
+        "description": "Using debit cards safely and effectively"
+      },
+      {
+        "slug": "bank-fees",
+        "name": "Bank Fees & Terms",
+        "domain": "banking",
+        "difficulty_tier": 2,
+        "bloom_level": "analyze",
+        "estimated_minutes": 20,
+        "description": "Understanding and avoiding common bank fees"
+      },
+      {
+        "slug": "what-is-credit",
+        "name": "What is Credit",
+        "domain": "credit",
+        "difficulty_tier": 1,
+        "bloom_level": "remember",
+        "estimated_minutes": 15,
+        "description": "Introduction to credit and borrowing in the US"
+      },
+      {
+        "slug": "credit-score-basics",
+        "name": "Credit Score Basics",
+        "domain": "credit",
+        "difficulty_tier": 2,
+        "bloom_level": "understand",
+        "estimated_minutes": 20,
+        "description": "Understanding credit scores and their importance"
+      },
+      {
+        "slug": "credit-score-factors",
+        "name": "Credit Score Factors",
+        "domain": "credit",
+        "difficulty_tier": 2,
+        "bloom_level": "analyze",
+        "estimated_minutes": 25,
+        "description": "The five factors that determine your credit score"
+      },
+      {
+        "slug": "building-credit",
+        "name": "Building Credit",
+        "domain": "credit",
+        "difficulty_tier": 2,
+        "bloom_level": "apply",
+        "estimated_minutes": 20,
+        "description": "Strategies for building credit as a newcomer"
+      },
+      {
+        "slug": "credit-cards",
+        "name": "Credit Cards",
+        "domain": "credit",
+        "difficulty_tier": 2,
+        "bloom_level": "apply",
+        "estimated_minutes": 25,
+        "description": "How credit cards work and using them responsibly"
+      },
+      {
+        "slug": "budgeting-basics",
+        "name": "Budgeting Basics",
+        "domain": "money-management",
+        "difficulty_tier": 1,
+        "bloom_level": "apply",
+        "estimated_minutes": 20,
+        "description": "Creating and maintaining a personal budget"
+      },
+      {
+        "slug": "emergency-funds",
+        "name": "Emergency Funds",
+        "domain": "money-management",
+        "difficulty_tier": 1,
+        "bloom_level": "understand",
+        "estimated_minutes": 15,
+        "description": "Why and how to build an emergency fund"
+      },
+      {
+        "slug": "debt-management",
+        "name": "Debt Management",
+        "domain": "money-management",
+        "difficulty_tier": 3,
+        "bloom_level": "analyze",
+        "estimated_minutes": 25,
+        "description": "Strategies for managing and paying off debt"
+      },
+      {
+        "slug": "what-is-investing",
+        "name": "What is Investing",
+        "domain": "investing",
+        "difficulty_tier": 1,
+        "bloom_level": "remember",
+        "estimated_minutes": 15,
+        "description": "Introduction to investing concepts"
+      },
+      {
+        "slug": "stocks-basics",
+        "name": "Stocks Basics",
+        "domain": "investing",
+        "difficulty_tier": 2,
+        "bloom_level": "understand",
+        "estimated_minutes": 20,
+        "description": "Understanding stocks and the stock market"
+      },
+      {
+        "slug": "bonds-basics",
+        "name": "Bonds Basics",
+        "domain": "investing",
+        "difficulty_tier": 2,
+        "bloom_level": "understand",
+        "estimated_minutes": 20,
+        "description": "Understanding bonds and fixed income"
+      },
+      {
+        "slug": "diversification",
+        "name": "Diversification",
+        "domain": "investing",
+        "difficulty_tier": 3,
+        "bloom_level": "apply",
+        "estimated_minutes": 20,
+        "description": "Why and how to diversify investments"
+      },
+      {
+        "slug": "401k-basics",
+        "name": "401(k) Basics",
+        "domain": "retirement",
+        "difficulty_tier": 2,
+        "bloom_level": "understand",
+        "estimated_minutes": 25,
+        "description": "Understanding employer-sponsored 401(k) plans"
+      },
+      {
+        "slug": "ira-accounts",
+        "name": "IRA Accounts",
+        "domain": "retirement",
+        "difficulty_tier": 2,
+        "bloom_level": "understand",
+        "estimated_minutes": 25,
+        "description": "Traditional and Roth IRA accounts"
+      },
+      {
+        "slug": "roth-vs-traditional",
+        "name": "Roth vs Traditional",
+        "domain": "retirement",
+        "difficulty_tier": 3,
+        "bloom_level": "analyze",
+        "estimated_minutes": 30,
+        "description": "Comparing Roth and Traditional retirement accounts"
+      },
+      {
+        "slug": "us-tax-system",
+        "name": "US Tax System",
+        "domain": "taxes",
+        "difficulty_tier": 2,
+        "bloom_level": "understand",
+        "estimated_minutes": 25,
+        "description": "Overview of how US taxes work"
+      },
+      {
+        "slug": "filing-taxes",
+        "name": "Filing Taxes",
+        "domain": "taxes",
+        "difficulty_tier": 2,
+        "bloom_level": "apply",
+        "estimated_minutes": 30,
+        "description": "How to file your US tax return"
+      },
+      {
+        "slug": "itin-vs-ssn",
+        "name": "ITIN vs SSN",
+        "domain": "taxes",
+        "difficulty_tier": 1,
+        "bloom_level": "remember",
+        "estimated_minutes": 15,
+        "description": "Understanding tax identification numbers"
+      },
+      {
+        "slug": "what-is-crypto",
+        "name": "What is Cryptocurrency",
+        "domain": "cryptocurrency",
+        "difficulty_tier": 2,
+        "bloom_level": "understand",
+        "estimated_minutes": 20,
+        "description": "Introduction to cryptocurrency and blockchain"
+      },
+      {
+        "slug": "crypto-risks",
+        "name": "Crypto Risks",
+        "domain": "cryptocurrency",
+        "difficulty_tier": 2,
+        "bloom_level": "analyze",
+        "estimated_minutes": 20,
+        "description": "Understanding the risks of cryptocurrency"
+      }
+    ],
+    "questions": [
+      {
+        "skill_slug": "understanding-us-currency",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is the smallest paper bill currently in circulation in the United States?",
+          "choices": [
+            "$1 bill",
+            "$2 bill",
+            "$5 bill",
+            "$10 bill"
+          ],
+          "correct_answer": 0,
+          "explanation": "The $1 bill is the smallest denomination paper currency in regular circulation in the US. While $2 bills exist, they are rarely used in daily transactions.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "You'll use $1 bills frequently for small purchases, vending machines, and tips."
+            }
+          }
+        },
+        "difficulty": 0.2,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "understanding-us-currency",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "Which coin is worth 25 cents in the United States?",
+          "choices": [
+            "Nickel",
+            "Dime",
+            "Quarter",
+            "Half dollar"
+          ],
+          "correct_answer": 2,
+          "explanation": "A quarter is worth 25 cents. It's the most commonly used coin for parking meters, laundry machines, and vending machines. A nickel is 5 cents, and a dime is 10 cents.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.2,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "understanding-us-currency",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is a 'penny' worth in US currency?",
+          "choices": [
+            "1 cent",
+            "5 cents",
+            "10 cents",
+            "25 cents"
+          ],
+          "correct_answer": 0,
+          "explanation": "A penny is worth 1 cent, making it the lowest value coin in US currency. 100 pennies equal $1.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.2,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "understanding-us-currency",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "If something costs $7.50 and you pay with a $10 bill, how much change should you receive?",
+          "choices": [
+            "$1.50",
+            "$2.00",
+            "$2.50",
+            "$3.50"
+          ],
+          "correct_answer": 2,
+          "explanation": "$10.00 - $7.50 = $2.50. It's important to count your change to make sure you receive the correct amount.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "understanding-us-currency",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What does the symbol '$' represent?",
+          "choices": [
+            "Euro",
+            "British Pound",
+            "US Dollar",
+            "Japanese Yen"
+          ],
+          "correct_answer": 2,
+          "explanation": "The '$' symbol represents the US Dollar. When you see prices written as $19.99 or $100, it means US dollars.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.2,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "understanding-us-currency",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "In the US, prices displayed in stores typically do NOT include:",
+          "choices": [
+            "The base price of the item",
+            "Sales tax",
+            "The brand name",
+            "The product description"
+          ],
+          "correct_answer": 1,
+          "explanation": "Unlike many other countries, US prices usually don't include sales tax. Tax is added at checkout, so the final price will be higher than the displayed price. Sales tax varies by state (0% to over 10%).",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "This is different from many countries where prices include all taxes. Always budget a little extra (usually 5-10%) for sales tax."
+            },
+            "H1B": {
+              "additional_context": "Tax rates vary significantly by state and city. Some states like Oregon have no sales tax, while others like California have rates over 7%."
+            }
+          }
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.2,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "checking-accounts",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is the PRIMARY purpose of a checking account?",
+          "choices": [
+            "To earn high interest on your savings",
+            "To manage daily transactions like paying bills and receiving your paycheck",
+            "To invest money in the stock market",
+            "To build your credit score"
+          ],
+          "correct_answer": 1,
+          "explanation": "A checking account is designed for everyday transactions - depositing paychecks, paying bills, and making purchases. Unlike savings accounts, checking accounts focus on easy access rather than earning interest.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "As an F1 student, you can open a checking account with your passport and I-20 form. This is usually the first financial account you should open."
+            },
+            "H1B": {
+              "additional_context": "Once you have your SSN and employment, you can open a checking account easily. Many banks offer accounts specifically for newcomers."
+            }
+          }
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "checking-accounts",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What happens if you write a check or make a purchase for more money than you have in your checking account?",
+          "choices": [
+            "The bank automatically gives you a free loan",
+            "Nothing happens - the purchase just fails",
+            "You may be charged an overdraft fee, typically $25-$35",
+            "Your account is immediately closed"
+          ],
+          "correct_answer": 2,
+          "explanation": "Overdrawing your account (spending more than your balance) typically results in an overdraft fee of $25-$35 per transaction. Some banks offer overdraft protection to avoid these fees.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "Always track your balance carefully. Download your bank's mobile app to check your balance before making purchases."
+            }
+          }
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "checking-accounts",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What documents do international students typically need to open a checking account in the US?",
+          "choices": [
+            "Only a driver's license",
+            "Passport, I-20 form, and proof of address",
+            "Birth certificate and utility bills",
+            "Only an SSN (Social Security Number)"
+          ],
+          "correct_answer": 1,
+          "explanation": "Most banks require international students to show their passport, I-20 or DS-2019 form, and proof of address (like a utility bill or lease agreement). An SSN is helpful but not always required initially.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "Bring your passport, I-20, university acceptance letter, and proof of address. Some banks near universities are experienced with international student accounts."
+            },
+            "J1": {
+              "additional_context": "Bring your passport, DS-2019, and proof of address. Your sponsoring organization may have bank recommendations."
+            }
+          }
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.2,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "checking-accounts",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is a 'routing number' used for?",
+          "choices": [
+            "To identify your specific account",
+            "To identify which bank your account is at",
+            "To track your spending",
+            "To calculate interest"
+          ],
+          "correct_answer": 1,
+          "explanation": "A routing number (9 digits) identifies your bank, while your account number identifies your specific account. Both are needed for direct deposit, wire transfers, and electronic payments.",
+          "visa_variants": {
+            "H1B": {
+              "additional_context": "Your employer will need both your routing number and account number to set up direct deposit for your paycheck."
+            }
+          }
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "checking-accounts",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is 'direct deposit'?",
+          "choices": [
+            "Depositing cash directly at an ATM",
+            "Your employer automatically sending your paycheck to your bank account",
+            "Transferring money between your own accounts",
+            "A type of savings account"
+          ],
+          "correct_answer": 1,
+          "explanation": "Direct deposit means your employer electronically deposits your paycheck directly into your bank account. It's faster and safer than paper checks, and many employers require it.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "If you work on campus, setting up direct deposit is usually simple and gets you paid faster than waiting for paper checks."
+            },
+            "H1B": {
+              "additional_context": "Most employers prefer or require direct deposit. You'll set this up during onboarding by providing your routing and account numbers."
+            }
+          }
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "checking-accounts",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "Which of the following is typically FREE at most banks?",
+          "choices": [
+            "Wire transfers to other countries",
+            "Paper checks",
+            "Online bill pay",
+            "Overdraft fees"
+          ],
+          "correct_answer": 2,
+          "explanation": "Most banks offer free online bill pay, allowing you to pay rent, utilities, and other bills electronically. Wire transfers usually cost $15-50, paper checks may have fees, and overdraft fees are definitely not free!",
+          "visa_variants": {}
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "savings-accounts",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is the main difference between a checking account and a savings account?",
+          "choices": [
+            "Savings accounts are only for businesses",
+            "Checking accounts earn more interest",
+            "Savings accounts typically earn interest but limit withdrawals",
+            "There is no difference"
+          ],
+          "correct_answer": 2,
+          "explanation": "Savings accounts are designed to hold money you don't need immediately. They typically earn interest but may limit withdrawals to 6 per month. Checking accounts are for daily transactions with unlimited access.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "savings-accounts",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What does 'APY' stand for in banking?",
+          "choices": [
+            "Annual Payment Yield",
+            "Annual Percentage Yield",
+            "Account Protection Year",
+            "Automatic Payment Yearly"
+          ],
+          "correct_answer": 1,
+          "explanation": "APY (Annual Percentage Yield) tells you how much interest you'll earn on your savings in one year, including compound interest. A higher APY means more earnings on your savings.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "savings-accounts",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "A high-yield savings account currently offers 4.5% APY. If you deposit $1,000, approximately how much interest will you earn in one year?",
+          "choices": [
+            "$4.50",
+            "$45.00",
+            "$450.00",
+            "$4,500.00"
+          ],
+          "correct_answer": 1,
+          "explanation": "$1,000 × 4.5% (0.045) = $45 in interest after one year. High-yield savings accounts (often from online banks) can offer significantly more interest than traditional banks.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "Online banks like Marcus, Ally, or Discover often offer higher rates than traditional banks. You can open these accounts online."
+            }
+          }
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.2,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "savings-accounts",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is 'FDIC insurance' for bank accounts?",
+          "choices": [
+            "Insurance you buy to protect your debit card",
+            "Government protection that covers your deposits up to $250,000 if the bank fails",
+            "A type of savings account",
+            "Protection against overdraft fees"
+          ],
+          "correct_answer": 1,
+          "explanation": "FDIC (Federal Deposit Insurance Corporation) insurance protects your deposits up to $250,000 per depositor, per bank, if the bank fails. This makes US bank accounts very safe.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "This protection applies to international students too! Look for 'Member FDIC' when choosing a bank."
+            }
+          }
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "debit-cards",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "When you use a debit card to make a purchase, where does the money come from?",
+          "choices": [
+            "The bank lends you the money",
+            "Directly from your checking account balance",
+            "From your credit limit",
+            "From your savings account"
+          ],
+          "correct_answer": 1,
+          "explanation": "A debit card withdraws money directly from your checking account. Unlike a credit card, you're spending your own money, not borrowing from the bank.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.2,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "debit-cards",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is a PIN (Personal Identification Number) used for?",
+          "choices": [
+            "To earn rewards points",
+            "To verify your identity when using your card at ATMs or for certain purchases",
+            "To increase your credit limit",
+            "To open new accounts"
+          ],
+          "correct_answer": 1,
+          "explanation": "Your PIN is a secret 4-6 digit code that verifies your identity. Never share your PIN with anyone, and don't write it on your card or keep it in your wallet.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "debit-cards",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "If your debit card is stolen, what should you do FIRST?",
+          "choices": [
+            "Wait to see if any suspicious charges appear",
+            "Immediately call your bank to report it and freeze the card",
+            "Post about it on social media",
+            "Go to the police station"
+          ],
+          "correct_answer": 1,
+          "explanation": "Contact your bank immediately to freeze your card and prevent unauthorized transactions. Most banks have 24/7 phone lines for card emergencies. Acting quickly limits your liability.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "Save your bank's phone number in your contacts. Most banks also let you freeze your card instantly through their mobile app."
+            }
+          }
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "debit-cards",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is the difference between selecting 'credit' vs 'debit' when using your debit card at a store?",
+          "choices": [
+            "Credit charges to a credit card, debit charges to your bank account",
+            "Both charge your bank account, but credit uses signature verification and debit uses PIN",
+            "Credit gives you rewards, debit doesn't",
+            "There is no difference"
+          ],
+          "correct_answer": 1,
+          "explanation": "Even when you select 'credit' with a debit card, it still comes from your checking account. The difference is the verification method: 'credit' uses your signature, 'debit' uses your PIN.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.6,
+        "discrimination": 1.2,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "bank-fees",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is a 'monthly maintenance fee' for a bank account?",
+          "choices": [
+            "A fee for using ATMs",
+            "A monthly charge some banks require to keep your account open",
+            "A fee for writing checks",
+            "A fee for online banking"
+          ],
+          "correct_answer": 1,
+          "explanation": "Monthly maintenance fees (typically $5-$15) are charges some banks require to keep your account open. Many banks waive this fee if you maintain a minimum balance or have direct deposit.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "Many banks offer student accounts with no monthly fees. Ask specifically about student checking accounts."
+            }
+          }
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "bank-fees",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "You use an ATM that doesn't belong to your bank's network. What might happen?",
+          "choices": [
+            "Your card won't work",
+            "You may be charged a fee by both your bank AND the ATM owner",
+            "You'll earn bonus rewards",
+            "Your withdrawal limit increases"
+          ],
+          "correct_answer": 1,
+          "explanation": "Using out-of-network ATMs can result in double fees: one from the ATM owner ($2-$5) and one from your own bank ($2-$3). Look for your bank's ATMs or banks that reimburse ATM fees.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "bank-fees",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "How can you typically avoid a monthly maintenance fee on a checking account?",
+          "choices": [
+            "By using your debit card at least once a month",
+            "By maintaining a minimum balance or setting up direct deposit",
+            "By visiting the bank branch monthly",
+            "By signing up for paperless statements"
+          ],
+          "correct_answer": 1,
+          "explanation": "Most banks waive monthly fees if you maintain a minimum balance (often $500-$1,500) or have regular direct deposits. Student accounts often have no fees at all.",
+          "visa_variants": {
+            "H1B": {
+              "additional_context": "Once you start receiving your salary through direct deposit, most banks will automatically waive monthly fees."
+            }
+          }
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "bank-fees",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is an 'NSF fee' (Non-Sufficient Funds fee)?",
+          "choices": [
+            "A fee for not saving enough money",
+            "A fee charged when a check or payment bounces due to insufficient funds",
+            "A fee for foreign transactions",
+            "A fee for losing your debit card"
+          ],
+          "correct_answer": 1,
+          "explanation": "An NSF fee (typically $25-$35) is charged when a payment fails because you don't have enough money in your account. This is similar to an overdraft fee and can be avoided by tracking your balance.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "what-is-credit",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is 'credit' in the context of personal finance?",
+          "choices": [
+            "Free money from the government",
+            "The ability to borrow money with the promise to pay it back later",
+            "Money you save in a bank",
+            "A type of insurance"
+          ],
+          "correct_answer": 1,
+          "explanation": "Credit is the ability to borrow money or access goods/services with the agreement that you'll pay later. Credit cards, loans, and mortgages are all forms of credit.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "Credit in the US is very different from many other countries. Your ability to rent apartments, get phone plans, and even some jobs can depend on your credit history."
+            }
+          }
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "what-is-credit",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "Why is having a good credit history important in the United States?",
+          "choices": [
+            "It's only important for buying a car",
+            "It affects your ability to rent apartments, get loans, and sometimes even get jobs",
+            "It determines your tax rate",
+            "It's not important at all"
+          ],
+          "correct_answer": 1,
+          "explanation": "In the US, credit history affects many aspects of life: renting apartments, buying cars, getting mortgages, cell phone plans, and some employers even check credit. Building good credit is essential.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "Even as a student, landlords may check your credit when you apply for off-campus housing. Some may accept a larger deposit if you have no credit history."
+            },
+            "H1B": {
+              "additional_context": "Building credit should be a priority when you arrive. Good credit can save you thousands in interest on cars, mortgages, and other loans."
+            }
+          }
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "what-is-credit",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "As a newcomer to the US, what is your credit history typically?",
+          "choices": [
+            "Excellent, because you have no debt",
+            "Poor, because of international records",
+            "Non-existent - you start with no US credit history",
+            "Average, based on your education level"
+          ],
+          "correct_answer": 2,
+          "explanation": "Your credit history from your home country does not transfer to the US. You start fresh with no credit history (not bad credit - just no credit). You'll need to build credit from scratch.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "Having no credit is different from having bad credit. You can build a good credit score in 6-12 months with responsible credit use."
+            },
+            "H1B": {
+              "additional_context": "Some banks like HSBC and Citibank offer 'Global Transfer' programs that may consider your international banking history."
+            }
+          }
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "credit-score-basics",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is the typical range of FICO credit scores in the United States?",
+          "choices": [
+            "0 to 100",
+            "100 to 500",
+            "300 to 850",
+            "500 to 1000"
+          ],
+          "correct_answer": 2,
+          "explanation": "FICO credit scores range from 300 to 850. Generally, scores above 700 are considered 'good,' scores above 750 are 'excellent,' and scores below 580 are considered 'poor.'",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "In India, CIBIL scores range from 300-900. The US FICO system is similar but the factors weighted differently."
+            }
+          }
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "credit-score-basics",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is generally considered a 'good' credit score?",
+          "choices": [
+            "300-500",
+            "500-650",
+            "670-739",
+            "All scores are the same"
+          ],
+          "correct_answer": 2,
+          "explanation": "Credit scores of 670-739 are generally considered 'good.' Scores of 740-799 are 'very good,' and 800+ is 'excellent.' With a good score, you can qualify for better interest rates and credit products.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "credit-score-basics",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "Which of the following is NOT a major credit bureau in the United States?",
+          "choices": [
+            "Equifax",
+            "Experian",
+            "TransUnion",
+            "Federal Reserve"
+          ],
+          "correct_answer": 3,
+          "explanation": "The three major US credit bureaus are Equifax, Experian, and TransUnion. They collect your credit information and generate credit reports. The Federal Reserve is the central bank, not a credit bureau.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "credit-score-basics",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "How often can you get a FREE credit report from each major credit bureau?",
+          "choices": [
+            "Never - you always have to pay",
+            "Once per year from AnnualCreditReport.com",
+            "Once per month",
+            "Only when you apply for credit"
+          ],
+          "correct_answer": 1,
+          "explanation": "By law, you can get one free credit report per year from each bureau at AnnualCreditReport.com. That's 3 free reports per year. Many credit cards and apps also provide free credit score monitoring.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "Check your credit report regularly to make sure there are no errors or signs of identity theft. Spread out your free reports (one every 4 months) for year-round monitoring."
+            }
+          }
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "credit-score-factors",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "Which factor has the BIGGEST impact on your credit score?",
+          "choices": [
+            "Number of credit cards you have",
+            "Payment history (paying bills on time)",
+            "Your income level",
+            "Your age"
+          ],
+          "correct_answer": 1,
+          "explanation": "Payment history accounts for about 35% of your FICO score - the largest factor. Always pay at least the minimum payment by the due date. Even one late payment can significantly hurt your score.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.2,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "credit-score-factors",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is 'credit utilization ratio'?",
+          "choices": [
+            "The number of credit cards you own",
+            "The percentage of your available credit that you're using",
+            "How long you've had credit",
+            "Your monthly payment amount"
+          ],
+          "correct_answer": 1,
+          "explanation": "Credit utilization is the percentage of your credit limit that you're using. If you have a $1,000 limit and $300 balance, your utilization is 30%. Keeping it below 30% is recommended for a good score.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.2,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "credit-score-factors",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What percentage of your credit limit should you ideally stay below to maintain a good credit score?",
+          "choices": [
+            "10%",
+            "30%",
+            "50%",
+            "90%"
+          ],
+          "correct_answer": 1,
+          "explanation": "Experts recommend keeping credit utilization below 30%. Lower is even better - people with the highest credit scores often use less than 10% of their available credit.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "If you have a $500 limit, try to keep your balance below $150 at any time. Pay off your balance before the statement date for the lowest reported utilization."
+            }
+          }
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "credit-score-factors",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "Which of these actions will HURT your credit score?",
+          "choices": [
+            "Paying your credit card bill in full each month",
+            "Having a mix of credit types",
+            "Missing a payment deadline by 30+ days",
+            "Keeping old credit accounts open"
+          ],
+          "correct_answer": 2,
+          "explanation": "Late payments (30+ days overdue) significantly damage your credit score and stay on your report for 7 years. Set up autopay for at least the minimum payment to avoid accidental late payments.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "credit-score-factors",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "How long does a late payment typically stay on your credit report?",
+          "choices": [
+            "1 year",
+            "3 years",
+            "7 years",
+            "Forever"
+          ],
+          "correct_answer": 2,
+          "explanation": "Late payments stay on your credit report for 7 years. However, their impact lessens over time. A late payment from 6 years ago hurts much less than a recent one.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "building-credit",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is a 'secured credit card'?",
+          "choices": [
+            "A credit card with extra security features",
+            "A credit card that requires a refundable deposit as collateral",
+            "A credit card only for online purchases",
+            "A credit card with no spending limit"
+          ],
+          "correct_answer": 1,
+          "explanation": "A secured credit card requires a cash deposit (usually $200-$500) that becomes your credit limit. It's an excellent way to build credit when you have no credit history or are rebuilding credit.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "Secured cards are often the easiest first credit card for international students. After 6-12 months of on-time payments, you may qualify for unsecured cards."
+            },
+            "H1B": {
+              "additional_context": "Consider starting with a secured card while waiting for your SSN. You can upgrade to unsecured cards quickly with responsible use."
+            }
+          }
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "building-credit",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "As a newcomer with no credit history, which is typically the BEST first step to build credit?",
+          "choices": [
+            "Apply for multiple credit cards at once",
+            "Get a secured credit card and make small purchases, paying the full balance each month",
+            "Avoid credit completely",
+            "Borrow money from friends"
+          ],
+          "correct_answer": 1,
+          "explanation": "A secured credit card is the best starting point. Make small regular purchases and always pay the full balance on time. This builds a positive credit history without paying interest.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "Discover and Capital One offer secured cards for students. Some credit unions near universities also offer student credit cards."
+            }
+          }
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.2,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "building-credit",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "How long does it typically take to build a credit score from zero history?",
+          "choices": [
+            "1 week",
+            "1-2 months",
+            "3-6 months",
+            "5 years"
+          ],
+          "correct_answer": 2,
+          "explanation": "It typically takes 3-6 months of credit activity to generate your first credit score. With consistent on-time payments, you can build a good score (670+) within 12-18 months.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "Start building credit early in your program. By the time you graduate or look for OPT employment, you'll have a solid credit history."
+            }
+          }
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "building-credit",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is an 'authorized user' on a credit card?",
+          "choices": [
+            "Someone who steals your credit card",
+            "A secondary user added to someone else's credit card account",
+            "A bank employee",
+            "Someone who only uses the card online"
+          ],
+          "correct_answer": 1,
+          "explanation": "An authorized user is added to someone else's credit card account. The account's payment history may appear on the authorized user's credit report, potentially helping them build credit.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "If you have a US citizen friend or relative with good credit, being added as an authorized user can jumpstart your credit history."
+            }
+          }
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "credit-cards",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is the 'grace period' on a credit card?",
+          "choices": [
+            "Time given to apply for a new card",
+            "Time between purchase and when interest starts accruing if you pay in full",
+            "Time before your card expires",
+            "Time to dispute a charge"
+          ],
+          "correct_answer": 1,
+          "explanation": "The grace period (usually 21-25 days) is the time between your statement date and payment due date. If you pay your full balance during this period, you won't pay any interest on purchases.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "credit-cards",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What happens if you only pay the 'minimum payment' on your credit card each month?",
+          "choices": [
+            "Nothing - this is the recommended approach",
+            "You avoid interest charges",
+            "You'll be charged interest on the remaining balance, and it will take much longer to pay off",
+            "Your credit limit increases"
+          ],
+          "correct_answer": 2,
+          "explanation": "Paying only the minimum means you'll be charged interest (often 15-25% APR) on the remaining balance. A $1,000 balance with minimum payments could take years to pay off and cost hundreds in interest.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "Always try to pay the full balance. If you can't, pay as much as possible above the minimum to reduce interest charges."
+            }
+          }
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.2,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "credit-cards",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is 'APR' on a credit card?",
+          "choices": [
+            "Annual Payment Required",
+            "Annual Percentage Rate - the interest rate you pay on carried balances",
+            "Account Protection Rating",
+            "Automatic Payment Reminder"
+          ],
+          "correct_answer": 1,
+          "explanation": "APR (Annual Percentage Rate) is the yearly interest rate charged on credit card balances you carry. Average credit card APRs are 20-25%, making it expensive to carry balances.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "credit-cards",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "If your credit card has a 24% APR and you carry a $1,000 balance for one year, approximately how much interest would you pay?",
+          "choices": [
+            "$24",
+            "$120",
+            "$240",
+            "$2,400"
+          ],
+          "correct_answer": 2,
+          "explanation": "$1,000 × 24% = $240 in interest per year. This is why paying your balance in full each month is so important - you avoid these high interest charges entirely.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.2,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "credit-cards",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is a 'cash advance' on a credit card?",
+          "choices": [
+            "Getting cash back at a store",
+            "Using your credit card to withdraw cash from an ATM, usually with high fees and immediate interest",
+            "A promotional 0% APR offer",
+            "A refund on your card"
+          ],
+          "correct_answer": 1,
+          "explanation": "A cash advance lets you withdraw cash using your credit card, but it comes with high fees (often 3-5%) and immediate interest with no grace period. Avoid cash advances except in emergencies.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "budgeting-basics",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is the '50/30/20' budgeting rule?",
+          "choices": [
+            "50% taxes, 30% savings, 20% spending",
+            "50% needs, 30% wants, 20% savings and debt repayment",
+            "50% rent, 30% food, 20% entertainment",
+            "50% income from job, 30% from side hustle, 20% from investments"
+          ],
+          "correct_answer": 1,
+          "explanation": "The 50/30/20 rule suggests: 50% for needs (rent, utilities, food), 30% for wants (entertainment, dining out), and 20% for savings and debt repayment. It's a simple starting framework for budgeting.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "In expensive cities, you may need to adjust - rent alone might exceed 50%. Focus on tracking spending first, then optimize."
+            }
+          }
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "budgeting-basics",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "Which of these is typically a 'fixed expense' in a budget?",
+          "choices": [
+            "Grocery shopping",
+            "Entertainment",
+            "Monthly rent payment",
+            "Dining out"
+          ],
+          "correct_answer": 2,
+          "explanation": "Fixed expenses stay the same each month (rent, car payment, insurance). Variable expenses change (groceries, utilities, entertainment). Knowing the difference helps you budget accurately.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "budgeting-basics",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is the FIRST step in creating a budget?",
+          "choices": [
+            "Start cutting expenses immediately",
+            "Open a savings account",
+            "Track your income and current spending for 1-2 months",
+            "Cancel all subscriptions"
+          ],
+          "correct_answer": 2,
+          "explanation": "Before making changes, you need to understand where your money is going. Track all income and expenses for 1-2 months to see your actual spending patterns, then make informed adjustments.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "budgeting-basics",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "Which FREE app or tool is commonly recommended for tracking expenses?",
+          "choices": [
+            "Microsoft Excel only",
+            "Mint, YNAB, or your bank's app",
+            "Social media apps",
+            "Calculator"
+          ],
+          "correct_answer": 1,
+          "explanation": "Apps like Mint (free), YNAB (free trial), Personal Capital, and most bank apps offer expense tracking and budgeting features. They automatically categorize your spending and show patterns.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "Mint works well in the US and connects to most banks. YNAB offers a free year for students with a .edu email address."
+            }
+          }
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "emergency-funds",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "How much money should an emergency fund ideally contain?",
+          "choices": [
+            "$100",
+            "$1,000 minimum, ideally 3-6 months of expenses",
+            "10% of your annual income",
+            "Exactly $10,000"
+          ],
+          "correct_answer": 1,
+          "explanation": "Financial experts recommend starting with $1,000 as a mini emergency fund, then building to 3-6 months of living expenses. This protects you from unexpected costs like medical bills or job loss.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "As an international student, consider building a slightly larger emergency fund since your financial options may be more limited if you face unexpected situations."
+            },
+            "H1B": {
+              "additional_context": "Your visa status makes emergency funds even more important. If you lose your job, you have 60 days to find new employment or change status."
+            }
+          }
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "emergency-funds",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "Where is the BEST place to keep your emergency fund?",
+          "choices": [
+            "In cash at home",
+            "In a high-yield savings account",
+            "Invested in stocks",
+            "In a certificate of deposit (CD) with a 5-year term"
+          ],
+          "correct_answer": 1,
+          "explanation": "A high-yield savings account offers easy access (liquidity), FDIC insurance (safety), and earns interest. Cash at home earns nothing and can be lost/stolen. Stocks are too volatile for emergencies.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "emergency-funds",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "Which of these is a good example of when to use your emergency fund?",
+          "choices": [
+            "A sale on electronics you want",
+            "Unexpected car repair needed to get to work",
+            "A friend's birthday gift",
+            "A vacation opportunity"
+          ],
+          "correct_answer": 1,
+          "explanation": "Emergency funds are for unexpected, necessary expenses: medical bills, car repairs, job loss, urgent home repairs. Sales, gifts, and vacations are not emergencies - budget for those separately.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "debt-management",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is the 'debt avalanche' method?",
+          "choices": [
+            "Taking out new loans to pay off old ones",
+            "Paying off debts with the highest interest rate first",
+            "Paying off the smallest debts first",
+            "Declaring bankruptcy"
+          ],
+          "correct_answer": 1,
+          "explanation": "The debt avalanche method focuses on paying off high-interest debt first while making minimum payments on others. This minimizes total interest paid and is mathematically optimal.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.2,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "debt-management",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is the 'debt snowball' method?",
+          "choices": [
+            "Taking on more debt over time",
+            "Paying off debts with the highest interest rate first",
+            "Paying off the smallest balance debts first for psychological wins",
+            "Consolidating all debts into one"
+          ],
+          "correct_answer": 2,
+          "explanation": "The debt snowball method pays off the smallest debts first, regardless of interest rate. The psychological boost of eliminating debts can help motivate continued progress.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "debt-management",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "You have the following debts. Using the debt avalanche method, which should you pay off first? A) $500 at 5% APR, B) $2,000 at 22% APR, C) $1,000 at 18% APR",
+          "choices": [
+            "A - $500 at 5% (smallest amount)",
+            "B - $2,000 at 22% (highest interest rate)",
+            "C - $1,000 at 18% (medium balance)",
+            "Pay them all equally"
+          ],
+          "correct_answer": 1,
+          "explanation": "The debt avalanche method targets the highest interest rate first (22%). This saves the most money on interest over time, even though the balance is higher.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.6,
+        "discrimination": 1.3,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "what-is-investing",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is the main goal of investing?",
+          "choices": [
+            "To keep your money safe without growth",
+            "To grow your money over time through returns",
+            "To spend money quickly",
+            "To avoid paying taxes"
+          ],
+          "correct_answer": 1,
+          "explanation": "Investing aims to grow your wealth over time through returns (interest, dividends, or price appreciation). Unlike a savings account, investments have potential for higher returns but also carry more risk.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "F1 students can open investment accounts in the US. However, focus on building savings and credit first before investing."
+            },
+            "H1B": {
+              "additional_context": "Take advantage of any employer 401(k) match first - it's free money. Then consider additional investing in IRAs or brokerage accounts."
+            }
+          }
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "what-is-investing",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is the relationship between risk and potential return in investing?",
+          "choices": [
+            "Higher risk means lower potential returns",
+            "Higher risk typically means higher potential returns (and losses)",
+            "Risk and return are not related",
+            "Lower risk always means guaranteed returns"
+          ],
+          "correct_answer": 1,
+          "explanation": "Generally, investments with higher potential returns also carry higher risk of losses. This is the risk-return tradeoff. Safe investments (like savings accounts) have lower returns than stocks.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "what-is-investing",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is 'compound interest'?",
+          "choices": [
+            "Interest paid only on your original investment",
+            "Interest earned on both your original investment AND previously earned interest",
+            "A type of bank fee",
+            "Interest you pay on loans"
+          ],
+          "correct_answer": 1,
+          "explanation": "Compound interest means you earn interest on your interest. Over time, this creates exponential growth. It's why starting to invest early is so powerful - even small amounts grow significantly.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.2,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "stocks-basics",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What does it mean to own a 'stock'?",
+          "choices": [
+            "You've loaned money to a company",
+            "You own a small piece (share) of that company",
+            "You work for that company",
+            "You have a savings account with that company"
+          ],
+          "correct_answer": 1,
+          "explanation": "When you buy stock, you become a partial owner (shareholder) of the company. As the company grows and profits, your shares may increase in value. You may also receive dividends.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "stocks-basics",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is a 'dividend'?",
+          "choices": [
+            "A fee you pay to own stocks",
+            "A portion of company profits paid to shareholders",
+            "The price of a stock",
+            "A type of bond"
+          ],
+          "correct_answer": 1,
+          "explanation": "A dividend is a payment companies make to shareholders from their profits. Not all companies pay dividends - many reinvest profits for growth. Dividend-paying stocks can provide regular income.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "stocks-basics",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is an 'index fund'?",
+          "choices": [
+            "A fund that only invests in banks",
+            "A fund that tracks a market index like the S&P 500, holding all or most stocks in that index",
+            "A fund with a guaranteed return",
+            "A fund only for experienced investors"
+          ],
+          "correct_answer": 1,
+          "explanation": "An index fund holds the same stocks as a market index (like the S&P 500), providing instant diversification. They typically have low fees and are recommended for most investors.",
+          "visa_variants": {
+            "H1B": {
+              "additional_context": "Index funds like those tracking the S&P 500 are often recommended for 401(k) investments. Look for low expense ratios (under 0.2%)."
+            }
+          }
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.2,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "bonds-basics",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is a bond?",
+          "choices": [
+            "Ownership in a company",
+            "A loan you make to a government or corporation that pays you interest",
+            "A type of stock",
+            "A bank savings account"
+          ],
+          "correct_answer": 1,
+          "explanation": "A bond is essentially a loan you make to a government or corporation. They pay you regular interest and return your principal at maturity. Bonds are generally less risky than stocks.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "bonds-basics",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "Which is generally considered SAFER: US Treasury bonds or corporate bonds?",
+          "choices": [
+            "Corporate bonds - companies are more stable",
+            "US Treasury bonds - backed by the US government",
+            "They have exactly the same risk",
+            "Neither is safe"
+          ],
+          "correct_answer": 1,
+          "explanation": "US Treasury bonds are considered among the safest investments because they're backed by the US government. Corporate bonds carry more risk but typically offer higher interest rates to compensate.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "diversification",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What does 'diversification' mean in investing?",
+          "choices": [
+            "Putting all your money in one investment",
+            "Spreading investments across different assets to reduce risk",
+            "Only investing in stocks",
+            "Investing only in your employer's stock"
+          ],
+          "correct_answer": 1,
+          "explanation": "Diversification means spreading investments across different asset types, industries, and geographies. This reduces risk because when one investment falls, others may rise or stay stable.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "diversification",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "Which portfolio is MOST diversified?",
+          "choices": [
+            "100% in one tech company stock",
+            "50% US stocks, 30% international stocks, 20% bonds",
+            "100% in cryptocurrency",
+            "100% in your employer's stock"
+          ],
+          "correct_answer": 1,
+          "explanation": "A mix of US stocks, international stocks, and bonds provides diversification across asset types and geographies. Single-stock portfolios are very risky if that company struggles.",
+          "visa_variants": {
+            "H1B": {
+              "additional_context": "Be careful about holding too much of your employer's stock. Your job and investments shouldn't both depend on one company's success."
+            }
+          }
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.2,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "401k-basics",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is a 401(k)?",
+          "choices": [
+            "A type of checking account",
+            "An employer-sponsored retirement savings plan with tax advantages",
+            "A government social security program",
+            "A type of credit card"
+          ],
+          "correct_answer": 1,
+          "explanation": "A 401(k) is a retirement savings plan offered by employers. Contributions are often made pre-tax (reducing current taxable income), and many employers match a portion of your contributions.",
+          "visa_variants": {
+            "H1B": {
+              "additional_context": "If your employer offers 401(k) matching, this is essentially free money. Contribute at least enough to get the full match - it's part of your total compensation."
+            },
+            "F1": {
+              "additional_context": "F1 students with on-campus jobs typically don't have 401(k) access, but you can learn about them for future employment."
+            }
+          }
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "401k-basics",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is an 'employer match' in a 401(k)?",
+          "choices": [
+            "When your employer chooses your investments for you",
+            "Free money your employer contributes based on your own contributions",
+            "A loan from your employer",
+            "Your employer matching your salary"
+          ],
+          "correct_answer": 1,
+          "explanation": "An employer match means your company contributes money to your 401(k) based on your contributions. A common match is 50% of your contribution up to 6% of salary. This is essentially free money!",
+          "visa_variants": {
+            "H1B": {
+              "additional_context": "Example: If you earn $100,000 and contribute 6% ($6,000), a 50% match means your employer adds $3,000 for free. Always contribute enough to get the full match."
+            }
+          }
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.2,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "401k-basics",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What typically happens if you withdraw money from a 401(k) before age 59½?",
+          "choices": [
+            "Nothing - it's your money",
+            "You pay income taxes plus a 10% early withdrawal penalty",
+            "You only pay a 1% fee",
+            "The money doubles"
+          ],
+          "correct_answer": 1,
+          "explanation": "Early withdrawals from traditional 401(k)s are subject to regular income tax PLUS a 10% penalty. This makes early withdrawals very expensive and is why 401(k)s are for retirement.",
+          "visa_variants": {
+            "H1B": {
+              "additional_context": "If you leave the US permanently, you can withdraw your 401(k), but you'll pay taxes and penalties. Consider rolling it to an IRA instead if you might return."
+            }
+          }
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "401k-basics",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is the maximum amount you can contribute to a 401(k) in 2024?",
+          "choices": [
+            "$6,500",
+            "$10,000",
+            "$23,000",
+            "Unlimited"
+          ],
+          "correct_answer": 2,
+          "explanation": "In 2024, the maximum 401(k) contribution is $23,000 (or $30,500 if you're 50 or older). This limit doesn't include employer matching contributions.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.6,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "ira-accounts",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What does IRA stand for?",
+          "choices": [
+            "Internal Revenue Account",
+            "Individual Retirement Account",
+            "Investment Return Average",
+            "International Retirement Association"
+          ],
+          "correct_answer": 1,
+          "explanation": "IRA stands for Individual Retirement Account. Unlike 401(k)s, IRAs are opened individually (not through an employer) and offer tax advantages for retirement savings.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "ira-accounts",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is the maximum you can contribute to an IRA (Traditional or Roth) in 2024?",
+          "choices": [
+            "$3,000",
+            "$7,000",
+            "$23,000",
+            "$50,000"
+          ],
+          "correct_answer": 1,
+          "explanation": "In 2024, the IRA contribution limit is $7,000 ($8,000 if you're 50 or older). This limit applies to your total IRA contributions - Traditional and Roth combined.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "roth-vs-traditional",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is the main difference between a Traditional IRA and a Roth IRA?",
+          "choices": [
+            "Traditional has higher contribution limits",
+            "Traditional: tax deduction now, taxed at withdrawal. Roth: taxed now, tax-free at withdrawal",
+            "Roth is only for employers to set up",
+            "There is no difference"
+          ],
+          "correct_answer": 1,
+          "explanation": "Traditional IRA: contribute pre-tax (tax deduction now), pay taxes when you withdraw in retirement. Roth IRA: contribute after-tax (no deduction), but withdrawals in retirement are tax-free.",
+          "visa_variants": {
+            "H1B": {
+              "additional_context": "If you're early in your career with lower income now, Roth often makes sense - pay taxes at your current lower rate, enjoy tax-free growth."
+            }
+          }
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.3,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "roth-vs-traditional",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "If you expect your tax rate to be HIGHER in retirement than it is now, which account type is generally better?",
+          "choices": [
+            "Traditional IRA/401(k)",
+            "Roth IRA/401(k)",
+            "Regular savings account",
+            "Neither - they're the same"
+          ],
+          "correct_answer": 1,
+          "explanation": "If you expect higher taxes in retirement, Roth is better - pay taxes now at your lower rate, withdraw tax-free later. Traditional is better if you expect lower taxes in retirement.",
+          "visa_variants": {
+            "H1B": {
+              "additional_context": "Early career professionals often benefit from Roth accounts. As your income grows, you may hit Roth income limits and need to use Traditional instead."
+            }
+          }
+        },
+        "difficulty": 0.6,
+        "discrimination": 1.3,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "us-tax-system",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What type of tax system does the United States use for income tax?",
+          "choices": [
+            "Flat tax - everyone pays the same rate",
+            "Progressive tax - higher incomes pay higher rates on additional income",
+            "Regressive tax - lower incomes pay higher rates",
+            "No income tax"
+          ],
+          "correct_answer": 1,
+          "explanation": "The US uses a progressive tax system with tax brackets. As income increases, only the additional income is taxed at higher rates - not all your income. This is a common misconception.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "F1 students are typically considered nonresident aliens for tax purposes for their first 5 years and file Form 1040-NR."
+            },
+            "H1B": {
+              "additional_context": "H1B holders are typically resident aliens for tax purposes and file the same forms as US citizens."
+            }
+          }
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "us-tax-system",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is a 'W-2 form'?",
+          "choices": [
+            "A form to open a bank account",
+            "A form your employer sends showing your annual wages and taxes withheld",
+            "A form to apply for a visa",
+            "A form to apply for credit"
+          ],
+          "correct_answer": 1,
+          "explanation": "A W-2 is sent by your employer in January/February showing your total wages for the year and how much tax was withheld. You need this to file your tax return.",
+          "visa_variants": {
+            "H1B": {
+              "additional_context": "You'll receive your W-2 by January 31st. If you changed jobs during the year, you'll get a W-2 from each employer."
+            }
+          }
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "us-tax-system",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is the deadline to file federal income taxes in the US (in normal years)?",
+          "choices": [
+            "December 31st",
+            "January 15th",
+            "April 15th",
+            "June 30th"
+          ],
+          "correct_answer": 2,
+          "explanation": "Federal tax returns are due April 15th each year (or the next business day if it falls on a weekend/holiday). You can request an extension to file, but any taxes owed are still due April 15th.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "F1 students must file taxes if they earned any income in the US. Even if you owe nothing, filing is often required."
+            }
+          }
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "filing-taxes",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is the 'standard deduction' in US taxes?",
+          "choices": [
+            "A fee you pay to file taxes",
+            "A fixed amount you can subtract from your income before calculating taxes",
+            "The minimum tax everyone must pay",
+            "A penalty for late filing"
+          ],
+          "correct_answer": 1,
+          "explanation": "The standard deduction is an amount you can subtract from your gross income, reducing your taxable income. In 2024, it's $14,600 for single filers. Most people use this instead of itemizing deductions.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "F1 students filing as nonresident aliens cannot take the standard deduction - they can only claim specific deductions allowed for nonresidents."
+            },
+            "H1B": {
+              "additional_context": "As a resident alien, you can claim the standard deduction just like US citizens."
+            }
+          }
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "filing-taxes",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What happens if you get a 'tax refund'?",
+          "choices": [
+            "You owe more money to the IRS",
+            "You overpaid taxes during the year and the IRS returns the excess",
+            "You won a government lottery",
+            "You're being audited"
+          ],
+          "correct_answer": 1,
+          "explanation": "A tax refund means you paid more in taxes throughout the year (through withholding) than you actually owed. The IRS returns the overpayment. While nice, ideally you'd adjust withholding to pay closer to what you owe.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "filing-taxes",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "Which software or service can help you file taxes for FREE if you have simple taxes?",
+          "choices": [
+            "Tax services are never free",
+            "IRS Free File program (for income under $79,000) or free versions of TurboTax/H&R Block",
+            "Only accountants can file taxes",
+            "Microsoft Excel"
+          ],
+          "correct_answer": 1,
+          "explanation": "The IRS Free File program offers free tax filing for those earning under $79,000. TurboTax, H&R Block, and others also offer free versions for simple returns. Don't pay if you don't have to!",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "Many universities offer free tax filing help for international students. Software like Sprintax is designed specifically for nonresident alien returns."
+            }
+          }
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "itin-vs-ssn",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is a Social Security Number (SSN)?",
+          "choices": [
+            "A phone number for social services",
+            "A 9-digit number used for tax, employment, and identification purposes",
+            "A bank account number",
+            "A visa application number"
+          ],
+          "correct_answer": 1,
+          "explanation": "An SSN is a unique 9-digit number issued by the Social Security Administration. It's used for employment, taxes, credit applications, and many other purposes. It's one of the most important numbers you'll have in the US.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "F1 students can get an SSN when they have authorized employment (on-campus job, CPT, OPT). Without employment, you may need an ITIN for taxes instead."
+            },
+            "H1B": {
+              "additional_context": "As an H1B worker, you're eligible for an SSN. Apply at your local Social Security office with your passport, I-94, and approval notice."
+            }
+          }
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "itin-vs-ssn",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is an ITIN (Individual Taxpayer Identification Number)?",
+          "choices": [
+            "The same thing as an SSN",
+            "A tax processing number for people who need to file taxes but aren't eligible for an SSN",
+            "A number for international wire transfers",
+            "A visa category"
+          ],
+          "correct_answer": 1,
+          "explanation": "An ITIN is a 9-digit number issued by the IRS for tax filing purposes to individuals who aren't eligible for an SSN. It allows you to file taxes and, in some cases, open bank accounts.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "If you're an F1 student without work authorization but need to file taxes (for a scholarship, for example), you can apply for an ITIN."
+            }
+          }
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "itin-vs-ssn",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "Can you use an ITIN to work legally in the United States?",
+          "choices": [
+            "Yes, an ITIN allows you to work",
+            "No, an ITIN is only for tax purposes - it doesn't authorize employment",
+            "Yes, but only part-time",
+            "Yes, but only for cash payments"
+          ],
+          "correct_answer": 1,
+          "explanation": "An ITIN is ONLY for tax filing purposes. It does NOT authorize you to work in the US. You need proper work authorization (like an SSN with work-authorized status) to be employed legally.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "Having an ITIN doesn't mean you can work. F1 students need CPT/OPT authorization for off-campus work, and on-campus work authorization to get an SSN."
+            }
+          }
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.2,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "what-is-crypto",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is cryptocurrency?",
+          "choices": [
+            "A type of foreign currency like Euros",
+            "Digital or virtual currency that uses cryptography for security and operates on decentralized networks",
+            "A type of credit card",
+            "A government-backed digital payment system"
+          ],
+          "correct_answer": 1,
+          "explanation": "Cryptocurrency is digital currency secured by cryptography, typically operating on decentralized networks called blockchains. Bitcoin and Ethereum are the most well-known examples.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "what-is-crypto",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is a 'blockchain'?",
+          "choices": [
+            "A type of cryptocurrency",
+            "A digital ledger that records all transactions across a network of computers",
+            "A physical device to store cryptocurrency",
+            "A type of encryption password"
+          ],
+          "correct_answer": 1,
+          "explanation": "A blockchain is a decentralized, distributed digital ledger that records transactions across many computers. Once recorded, transactions cannot be altered, providing security and transparency.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "what-is-crypto",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is Bitcoin?",
+          "choices": [
+            "A company that makes digital payments",
+            "The first and most well-known cryptocurrency, created in 2009",
+            "A type of online bank",
+            "A stock market index"
+          ],
+          "correct_answer": 1,
+          "explanation": "Bitcoin was the first cryptocurrency, created in 2009 by an anonymous person (or group) using the name Satoshi Nakamoto. It remains the largest cryptocurrency by market value.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.3,
+        "discrimination": 1.0,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "crypto-risks",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What is the BIGGEST risk of investing in cryptocurrency?",
+          "choices": [
+            "It's illegal to own cryptocurrency",
+            "Extreme price volatility - values can change dramatically in short periods",
+            "Cryptocurrency transactions are too slow",
+            "There are no risks"
+          ],
+          "correct_answer": 1,
+          "explanation": "Cryptocurrency is extremely volatile - prices can swing 20%+ in a single day. While there's potential for high returns, you could also lose most or all of your investment quickly.",
+          "visa_variants": {
+            "F1": {
+              "additional_context": "Be very cautious with cryptocurrency. Never invest money you can't afford to lose, and focus on building traditional emergency savings first."
+            }
+          }
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "crypto-risks",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "Is cryptocurrency taxable in the United States?",
+          "choices": [
+            "No, cryptocurrency is not taxed",
+            "Yes, cryptocurrency is treated as property and subject to capital gains tax",
+            "Only if you convert to dollars",
+            "Only for amounts over $10,000"
+          ],
+          "correct_answer": 1,
+          "explanation": "The IRS treats cryptocurrency as property. Selling crypto for a profit triggers capital gains tax. Even trading one cryptocurrency for another is a taxable event. Keep records of all transactions.",
+          "visa_variants": {
+            "H1B": {
+              "additional_context": "You must report cryptocurrency gains on your tax return. Use software like CoinTracker or Koinly to help track transactions."
+            }
+          }
+        },
+        "difficulty": 0.5,
+        "discrimination": 1.2,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      },
+      {
+        "skill_slug": "crypto-risks",
+        "item_type": "multiple_choice",
+        "content": {
+          "stem": "What happens if you lose access to your cryptocurrency wallet or forget your password?",
+          "choices": [
+            "Call customer service to reset it",
+            "The bank will recover your funds",
+            "Your cryptocurrency may be permanently lost with no way to recover it",
+            "The government will help you"
+          ],
+          "correct_answer": 2,
+          "explanation": "Unlike banks, there's no customer service for cryptocurrency. If you lose your private keys or seed phrase, your cryptocurrency may be permanently inaccessible. Billions of dollars in Bitcoin have been lost this way.",
+          "visa_variants": {}
+        },
+        "difficulty": 0.4,
+        "discrimination": 1.1,
+        "media_type": null,
+        "media_url": null,
+        "allows_llm_personalization": true,
+        "is_active": true
+      }
+    ]
+  }
