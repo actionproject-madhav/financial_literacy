@@ -2,8 +2,8 @@
 Voice Service for Speech-to-Text and Text-to-Speech
 
 This service handles:
-- Voice transcription using OpenAI Whisper
-- Text-to-speech generation
+- Voice transcription using ElevenLabs Scribe (STT)
+- Text-to-speech generation using ElevenLabs (TTS)
 - Audio confidence analysis
 """
 
@@ -13,7 +13,6 @@ import io
 import tempfile
 from typing import Dict, Optional
 import numpy as np
-from openai import OpenAI
 from dotenv import load_dotenv
 
 # Try to import pydub for audio processing
@@ -30,31 +29,29 @@ load_dotenv()
 
 class VoiceService:
     """
-    Voice input/output service using OpenAI APIs
+    Voice input/output service using ElevenLabs APIs
 
     Features:
-    - Speech-to-text transcription
-    - Text-to-speech generation
+    - Speech-to-text transcription (ElevenLabs Scribe)
+    - Text-to-speech generation (ElevenLabs)
     - Audio confidence analysis
     - Multi-language support
     """
 
     SUPPORTED_LANGUAGES = ['en', 'es', 'zh', 'hi', 'ne', 'ko', 'ja', 'ar', 'fr', 'pt']
 
-    # TTS voices
-    VOICES = {
-        'en': 'alloy',     # Clear, neutral
-        'es': 'nova',      # Warm, friendly
-        'default': 'alloy'
-    }
-
     def __init__(self):
-        """Initialize OpenAI client with cheapest models"""
+        """Initialize ElevenLabs client"""
         from config.services import config
         
-        self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-        self.tts_model = config.OPENAI_TTS_MODEL  # tts-1 (cheapest)
-        self.whisper_model = config.OPENAI_WHISPER_MODEL  # whisper-1
+        if not config.ELEVENLABS_API_KEY:
+            raise ValueError("ELEVENLABS_API_KEY not set in environment")
+        
+        try:
+            from elevenlabs.client import ElevenLabs
+            self.client = ElevenLabs(api_key=config.ELEVENLABS_API_KEY)
+        except ImportError:
+            raise ImportError("elevenlabs package not installed. Run: pip install elevenlabs")
 
     def _decode_base64_audio(self, audio_base64: str) -> bytes:
         """
@@ -78,7 +75,7 @@ class VoiceService:
         language_hint: Optional[str] = None
     ) -> Dict:
         """
-        Transcribe audio to text using Whisper
+        Transcribe audio to text using ElevenLabs Scribe
 
         Args:
             audio_base64: Base64 encoded audio file
@@ -96,34 +93,32 @@ class VoiceService:
             # Decode audio
             audio_bytes = self._decode_base64_audio(audio_base64)
 
-            # Write to temporary file (Whisper API requires file-like object)
+            # Write to temporary file
             with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as temp_audio:
                 temp_audio.write(audio_bytes)
                 temp_audio.flush()
+                temp_path = temp_audio.name
 
-                # Transcribe
-                with open(temp_audio.name, 'rb') as audio_file:
-                    response = self.client.audio.transcriptions.create(
-                        model=self.whisper_model,
-                        file=audio_file,
-                        language=language_hint,
-                        response_format='verbose_json'
-                    )
+            # Read audio bytes
+            with open(temp_path, 'rb') as audio_file:
+                audio_bytes = audio_file.read()
 
             # Clean up temp file
-            os.unlink(temp_audio.name)
+            os.unlink(temp_path)
+
+            # Transcribe using ElevenLabs Scribe
+            from services.elevenlabs_client import transcribe_audio
+            result = transcribe_audio(
+                audio_bytes=audio_bytes,
+                language_code=language_hint or 'en',
+                model_id='scribe_v1'  # Use v1 for batch transcription
+            )
 
             # Extract results
-            transcription = response.text
-            duration_ms = int(response.duration * 1000) if hasattr(response, 'duration') else 0
-            detected_language = response.language if hasattr(response, 'language') else language_hint or 'en'
-
-            # Whisper doesn't provide confidence directly, estimate from segments if available
-            confidence = 0.9  # Default high confidence
-            if hasattr(response, 'segments') and response.segments:
-                # Average no_speech_prob from segments (lower is better)
-                avg_no_speech = np.mean([seg.get('no_speech_probability', 0.1) for seg in response.segments])
-                confidence = 1.0 - avg_no_speech
+            transcription = result['text']
+            duration_ms = result['duration_ms']
+            detected_language = result['language']
+            confidence = result['confidence']
 
             return {
                 'transcription': transcription,
@@ -133,7 +128,7 @@ class VoiceService:
             }
 
         except Exception as e:
-            print(f"Error transcribing audio: {e}")
+            print(f"Error transcribing audio with ElevenLabs: {e}")
             return {
                 'transcription': '',
                 'confidence': 0.0,
@@ -149,37 +144,40 @@ class VoiceService:
         voice: Optional[str] = None
     ) -> Optional[str]:
         """
-        Generate text-to-speech audio
+        Generate text-to-speech audio using ElevenLabs
 
         Args:
             text: Text to convert to speech
             language: Language code
-            voice: Voice to use (default: auto-select by language)
+            voice: Voice ID to use (default: auto-select by language)
 
         Returns:
             Base64 encoded audio or None on error
         """
         try:
-            # Select voice
+            from services.elevenlabs_client import VOICE_MAP, generate_speech
+            
+            # Select voice based on language
             if not voice:
-                voice = self.VOICES.get(language, self.VOICES['default'])
+                voice_key = language
+                voice_id = VOICE_MAP.get(voice_key, VOICE_MAP['en'])
+            else:
+                voice_id = voice
 
-            # Generate speech
-            response = self.client.audio.speech.create(
-                model=self.tts_model,
-                voice=voice,
-                input=text,
-                response_format='mp3'
+            # Generate speech using ElevenLabs
+            audio_bytes = generate_speech(
+                text=text,
+                language=language,
+                voice_gender='female'  # Default, can be made configurable
             )
 
             # Convert to base64
-            audio_bytes = response.content
             audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
 
             return f"data:audio/mp3;base64,{audio_base64}"
 
         except Exception as e:
-            print(f"Error generating TTS: {e}")
+            print(f"Error generating TTS with ElevenLabs: {e}")
             return None
 
     def analyze_audio_confidence(self, audio_base64: str) -> Dict:

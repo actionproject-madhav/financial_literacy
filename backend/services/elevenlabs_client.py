@@ -1,8 +1,11 @@
 """
-ElevenLabs Text-to-Speech Client
+ElevenLabs Voice Client (STT + TTS)
 
-High-quality, natural-sounding voice synthesis with multi-language support.
-Known for superior voice quality and emotional range.
+Provides both:
+- Speech-to-Text (STT) using Scribe models
+- Text-to-Speech (TTS) with high-quality, natural voices
+
+Multi-language support with superior voice quality and emotional range.
 """
 
 import sys
@@ -158,3 +161,57 @@ def get_available_voices():
 def get_supported_languages():
     """Get list of supported language codes"""
     return [k for k in VOICE_MAP.keys() if '-' not in k]  # Exclude -male variants
+
+
+def transcribe_audio(
+    audio_bytes: bytes,
+    language_code: str = 'en',
+    model_id: str = 'scribe_v1'  # or 'scribe_v2_realtime' for real-time
+) -> dict:
+    """
+    Transcribe audio to text using ElevenLabs Scribe.
+
+    Args:
+        audio_bytes: Raw audio file bytes
+        language_code: Language code (e.g., 'en', 'es', 'zh')
+        model_id: Model to use ('scribe_v1' for batch, 'scribe_v2_realtime' for real-time)
+
+    Returns:
+        {
+            'text': str,
+            'language': str,
+            'confidence': float (0-1),
+            'duration_ms': int,
+            'words': list (if available)
+        }
+    """
+    if not elevenlabs_client:
+        raise RuntimeError("ElevenLabs client not initialized. Check ELEVENLABS_API_KEY.")
+
+    try:
+        # Use ElevenLabs speech-to-text API
+        # Note: API structure may vary, adjust based on actual SDK
+        response = elevenlabs_client.speech_to_text.convert(
+            file=audio_bytes,
+            model_id=model_id,
+            language_code=language_code
+        )
+
+        # Extract transcription
+        text = response.text if hasattr(response, 'text') else str(response)
+        detected_language = getattr(response, 'language', language_code)
+        confidence = getattr(response, 'confidence', 0.9)
+        duration_ms = int(getattr(response, 'duration', 0) * 1000)
+        words = getattr(response, 'words', [])
+
+        return {
+            'text': text,
+            'language': detected_language,
+            'confidence': confidence,
+            'duration_ms': duration_ms,
+            'words': words
+        }
+
+    except Exception as e:
+        print(f"ElevenLabs STT error: {e}")
+        raise

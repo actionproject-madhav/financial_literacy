@@ -1,9 +1,7 @@
 """
 Complete Voice Service - Budget-Aware Version
 
-Automatically uses budget or premium services based on config.USE_BUDGET_SERVICES:
-- Budget: Deepgram (STT), Google TTS, Supabase Storage
-- Premium: OpenAI Whisper, OpenAI TTS
+Uses OpenAI Whisper (STT) and ElevenLabs/Google TTS (TTS) with Supabase Storage.
 
 Can be imported as drop-in replacement for original voice.py
 """
@@ -14,31 +12,27 @@ from typing import Dict, Optional
 
 from config.services import config
 
-# Import budget services
+# Import services
 try:
-    from services import deepgram_client, google_tts_client, supabase_client, elevenlabs_client
-    BUDGET_AVAILABLE = True
-except ImportError:
-    BUDGET_AVAILABLE = False
-
-# Import premium services (original OpenAI-based)
-try:
+    from services import google_tts_client, supabase_client, elevenlabs_client
     from services.voice import VoiceService as PremiumVoiceService
-    PREMIUM_AVAILABLE = True
+    SERVICES_AVAILABLE = True
 except ImportError:
-    PREMIUM_AVAILABLE = False
-
+    SERVICES_AVAILABLE = False
 
 class BudgetVoiceService:
-    """Voice service using budget-friendly providers"""
+    """Voice service using ElevenLabs (STT + TTS) and Google TTS (fallback)"""
 
     def __init__(self):
-        if not BUDGET_AVAILABLE:
-            raise RuntimeError("Budget services not available. Install: deepgram-sdk, google-cloud-texttospeech, supabase")
+        if not SERVICES_AVAILABLE:
+            raise RuntimeError("Services not available. Install: elevenlabs, google-cloud-texttospeech, supabase")
+        
+        # Use ElevenLabs for STT (from main voice service)
+        self.voice_service = PremiumVoiceService()
 
     def transcribe(self, audio_base64: str, language_hint: Optional[str] = None) -> Dict:
         """
-        Transcribe audio using Deepgram.
+        Transcribe audio using ElevenLabs Scribe.
 
         Args:
             audio_base64: Base64 encoded audio
@@ -54,8 +48,8 @@ class BudgetVoiceService:
                 'words': list
             }
         """
-        # Transcribe with Deepgram
-        result = deepgram_client.transcribe_from_base64(audio_base64, language_hint)
+        # Transcribe with ElevenLabs Scribe
+        result = self.voice_service.transcribe(audio_base64, language_hint)
 
         # Upload to Supabase if configured
         audio_url = None
@@ -76,12 +70,12 @@ class BudgetVoiceService:
         confidence_analysis = self._analyze_audio_from_base64(audio_base64)
 
         return {
-            'transcription': result['text'],
+            'transcription': result['transcription'],
             'confidence': result['confidence'],
-            'detected_language': result['language'],
-            'duration_ms': int(result['duration_sec'] * 1000),
+            'detected_language': result['detected_language'],
+            'duration_ms': result['duration_ms'],
             'audio_url': audio_url,
-            'words': result.get('words', []),
+            'words': [],  # OpenAI Whisper doesn't provide word-level timestamps in basic mode
             **confidence_analysis
         }
 
@@ -260,19 +254,17 @@ class VoiceService:
     """
 
     def __init__(self):
-        if config.USE_BUDGET_SERVICES:
-            if not BUDGET_AVAILABLE:
-                raise RuntimeError("Budget services requested but not available. Install dependencies.")
+        # Always use BudgetVoiceService which uses ElevenLabs for both STT and TTS
+        if SERVICES_AVAILABLE:
             self._service = BudgetVoiceService()
-            print("🎤 Using BUDGET voice services (Deepgram, Google TTS)")
+            print("🎤 Using voice services (ElevenLabs STT + TTS)")
         else:
-            if PREMIUM_AVAILABLE:
+            # Fallback to main voice service if available
+            if PremiumVoiceService:
                 self._service = PremiumVoiceService()
-                print("🎤 Using PREMIUM voice services (OpenAI)")
+                print("🎤 Using ElevenLabs voice services (STT + TTS)")
             else:
-                # Fallback to budget if premium not available
-                self._service = BudgetVoiceService()
-                print("🎤 Premium not available, using BUDGET voice services")
+                raise RuntimeError("Voice services not available. Install dependencies.")
 
     def transcribe(self, audio_base64: str, language_hint: Optional[str] = None) -> Dict:
         """Transcribe audio to text"""

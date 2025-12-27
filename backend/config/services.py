@@ -1,8 +1,7 @@
 """
-Service Configuration for Budget-Friendly Voice Services
+Service Configuration for Voice Services
 
-Supports both premium (OpenAI) and budget (Deepgram, Google, R2) options.
-Set USE_BUDGET_SERVICES=true to use budget services.
+Supports OpenAI Whisper (STT) and ElevenLabs (TTS) for voice services.
 """
 
 import os
@@ -14,20 +13,14 @@ load_dotenv()
 class ServiceConfig:
     """Configuration for all external services"""
 
-    # Service mode selection
-    USE_BUDGET_SERVICES = os.getenv('USE_BUDGET_SERVICES', 'false').lower() == 'true'
+    # ========== VOICE SERVICES ==========
 
-    # ========== BUDGET SERVICES ==========
+    # ElevenLabs TTS - High-quality, natural voices (Primary TTS)
+    ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
 
-    # Deepgram (STT) - $0.0043/min vs OpenAI $0.006/min
-    DEEPGRAM_API_KEY = os.getenv('DEEPGRAM_API_KEY')
-
-    # Google Cloud TTS - $0.004/1K chars vs OpenAI $0.015/1K
+    # Google Cloud TTS - Alternative TTS option
     GOOGLE_TTS_API_KEY = os.getenv('GOOGLE_TTS_API_KEY')
     GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
-
-    # ElevenLabs TTS - High-quality, natural voices
-    ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
 
     # Supabase Storage - Free 1GB storage, 2GB bandwidth/month (no card required)
     SUPABASE_URL = os.getenv('SUPABASE_URL')
@@ -56,40 +49,26 @@ class ServiceConfig:
 
     @classmethod
     def validate(cls):
-        """Validate that required credentials are present based on mode"""
-        if cls.USE_BUDGET_SERVICES:
-            # Budget mode validation
-            required = []
+        """Validate that required credentials are present"""
+        required = []
+        
+        # ElevenLabs for both STT and TTS
+        if not cls.ELEVENLABS_API_KEY:
+            required.append('ELEVENLABS_API_KEY')
+        
+        if required:
+            raise ValueError(f"Missing required credentials: {', '.join(required)}")
 
-            # Deepgram for STT
-            if not cls.DEEPGRAM_API_KEY:
-                required.append('DEEPGRAM_API_KEY')
-
-            # Google TTS
-            if not (cls.GOOGLE_TTS_API_KEY or cls.GOOGLE_APPLICATION_CREDENTIALS):
-                required.append('GOOGLE_TTS_API_KEY or GOOGLE_APPLICATION_CREDENTIALS')
-
-            # Supabase storage
-            if not (cls.SUPABASE_URL and cls.SUPABASE_SERVICE_KEY):
-                required.append('SUPABASE_URL and SUPABASE_SERVICE_KEY')
-
-            if required:
-                raise ValueError(f"Budget mode enabled but missing: {', '.join(required)}")
-
-            print("✅ Using BUDGET services (Deepgram, Google TTS, Supabase Storage, Local Embeddings)")
-        else:
-            # Premium mode validation
-            if not cls.OPENAI_API_KEY:
-                raise ValueError("Premium mode requires OPENAI_API_KEY")
-
-            print("✅ Using PREMIUM services (OpenAI)")
+        print("✅ Service configuration validated")
+        print("   STT: ElevenLabs Scribe")
+        print("   TTS: ElevenLabs")
 
         return True
 
     @classmethod
     def get_storage_config(cls):
-        """Get storage configuration based on mode"""
-        if cls.USE_BUDGET_SERVICES and cls.SUPABASE_URL and cls.SUPABASE_SERVICE_KEY:
+        """Get storage configuration"""
+        if cls.SUPABASE_URL and cls.SUPABASE_SERVICE_KEY:
             return {
                 'type': 'supabase',
                 'url': cls.SUPABASE_URL,

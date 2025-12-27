@@ -4,8 +4,8 @@ Test All External Services
 Checks connectivity and functionality of:
 - MongoDB
 - Supabase Storage
-- Deepgram (STT)
-- OpenAI (TTS/LLM)
+- OpenAI (Whisper STT, LLM)
+- ElevenLabs (TTS)
 - Local Embeddings
 """
 
@@ -112,39 +112,37 @@ def test_supabase():
         return False
 
 
-def test_deepgram():
-    """Test Deepgram STT"""
+def test_elevenlabs():
+    """Test ElevenLabs TTS"""
     print("\n" + "="*60)
-    print("3️  TESTING DEEPGRAM (STT)")
+    print("3️  TESTING ELEVENLABS (TTS)")
     print("="*60)
     
-    if not config.DEEPGRAM_API_KEY:
-        print(" Deepgram API key not configured")
-        print("   Required: DEEPGRAM_API_KEY")
+    if not config.ELEVENLABS_API_KEY:
+        print("⚠️  ElevenLabs API key not configured")
+        print("   Optional: ELEVENLABS_API_KEY")
         return False
     
     try:
-        # Test Deepgram directly
-        from deepgram import DeepgramClient
+        from elevenlabs.client import ElevenLabs
         
-        # Try new API first (api_key parameter)
-        try:
-            client = DeepgramClient(api_key=config.DEEPGRAM_API_KEY)
-        except TypeError:
-            # Fallback to old API
-            client = DeepgramClient(config.DEEPGRAM_API_KEY)
+        client = ElevenLabs(api_key=config.ELEVENLABS_API_KEY)
         
-        print(f" Deepgram Client Initialized")
-        print(f"   API Key: {config.DEEPGRAM_API_KEY[:10]}...{config.DEEPGRAM_API_KEY[-4:]}")
-        print(f" Deepgram API Key Valid")
+        # Test by getting available voices
+        voices = client.voices.get_all()
+        voice_count = len(voices.voices) if voices else 0
+        
+        print(f"✅ ElevenLabs Client Initialized")
+        print(f"   API Key: {config.ELEVENLABS_API_KEY[:10]}...{config.ELEVENLABS_API_KEY[-4:]}")
+        print(f"   Available Voices: {voice_count}")
         return True
             
     except ImportError:
-        print(" deepgram-sdk not installed")
-        print("   Run: pip install deepgram-sdk")
+        print("⚠️  elevenlabs package not installed")
+        print("   Run: pip install elevenlabs")
         return False
     except Exception as e:
-        print(f" Deepgram Error: {e}")
+        print(f"❌ ElevenLabs Error: {e}")
         return False
 
 
@@ -322,7 +320,7 @@ def main():
     # Test all services
     results['MongoDB'] = test_mongodb()
     results['Supabase'] = test_supabase()
-    results['Deepgram'] = test_deepgram()
+    results['ElevenLabs'] = test_elevenlabs()
     results['OpenAI'] = test_openai()
     results['Local Embeddings'] = test_local_embeddings()
     results['Google TTS'] = test_google_tts()  # Optional
@@ -333,8 +331,8 @@ def main():
     print("TEST SUMMARY")
     print("="*60)
     
-    required = ['MongoDB', 'Supabase', 'Deepgram', 'OpenAI', 'Local Embeddings']
-    optional = ['Google TTS', 'API Endpoints']
+    required = ['MongoDB', 'Supabase', 'OpenAI', 'Local Embeddings']
+    optional = ['ElevenLabs', 'Google TTS', 'API Endpoints']
     
     passed = 0
     failed = 0
