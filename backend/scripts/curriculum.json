@@ -1,0 +1,3788 @@
+{
+    "metadata": {
+      "version": "1.0.0",
+      "generated_at": "2025-12-27T21:55:33.530334Z",
+      "content_type": "baseline_curriculum",
+      "personalization_note": "This is base content. LLM personalization layer adds visa-specific context, cultural bridges, and localized examples at runtime.",
+      "statistics": {
+        "total_modules": 11,
+        "total_lessons": 33,
+        "total_content_blocks": 117,
+        "total_estimated_minutes": 720,
+        "total_estimated_hours": 12.0,
+        "total_xp_available": 535
+      }
+    },
+    "modules": [
+      {
+        "id": "banking-fundamentals",
+        "name": "Banking Fundamentals",
+        "description": "Understanding the US banking system, account types, and essential banking operations",
+        "color": "#1CB0F6",
+        "estimated_minutes": 90,
+        "order": 1,
+        "prerequisites": [],
+        "lessons": [
+          {
+            "id": "us-currency",
+            "skill_slug": "understanding-us-currency",
+            "title": "US Currency and Money Basics",
+            "order": 1,
+            "estimated_minutes": 10,
+            "xp_reward": 12,
+            "learning_objectives": [
+              "Identify US paper currency denominations",
+              "Recognize and value US coins",
+              "Understand that displayed prices exclude sales tax",
+              "Perform basic currency calculations"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "currency-overview",
+                "title": "US Dollar Overview",
+                "content": {
+                  "text": "The United States dollar (USD) is the official currency, divided into 100 cents. The dollar sign ($) precedes amounts. Unlike many countries, US currency notes are uniform in size and predominantly green, requiring attention to printed denominations.",
+                  "key_fact": "1 dollar = 100 cents"
+                }
+              },
+              {
+                "type": "reference_table",
+                "id": "paper-currency",
+                "title": "Paper Currency (Bills)",
+                "content": {
+                  "columns": [
+                    "Denomination",
+                    "Common Name",
+                    "Frequency of Use"
+                  ],
+                  "rows": [
+                    [
+                      "$1",
+                      "One dollar bill",
+                      "Very common - small purchases, tips"
+                    ],
+                    [
+                      "$5",
+                      "Five dollar bill",
+                      "Common"
+                    ],
+                    [
+                      "$10",
+                      "Ten dollar bill",
+                      "Common"
+                    ],
+                    [
+                      "$20",
+                      "Twenty dollar bill",
+                      "Most common - standard ATM dispensing"
+                    ],
+                    [
+                      "$50",
+                      "Fifty dollar bill",
+                      "Less common"
+                    ],
+                    [
+                      "$100",
+                      "Hundred dollar bill",
+                      "Large purchases - some businesses do not accept"
+                    ]
+                  ],
+                  "note": "The $2 bill exists but is rarely circulated."
+                }
+              },
+              {
+                "type": "reference_table",
+                "id": "coins",
+                "title": "Coins",
+                "content": {
+                  "columns": [
+                    "Name",
+                    "Value",
+                    "Appearance",
+                    "Common Uses"
+                  ],
+                  "rows": [
+                    [
+                      "Penny",
+                      "1 cent ($0.01)",
+                      "Copper colored, smallest value",
+                      "Exact change"
+                    ],
+                    [
+                      "Nickel",
+                      "5 cents ($0.05)",
+                      "Silver colored, larger than dime",
+                      "Vending machines"
+                    ],
+                    [
+                      "Dime",
+                      "10 cents ($0.10)",
+                      "Silver colored, smallest size",
+                      "Vending machines"
+                    ],
+                    [
+                      "Quarter",
+                      "25 cents ($0.25)",
+                      "Silver colored, largest common coin",
+                      "Parking meters, laundry, vending"
+                    ]
+                  ],
+                  "important": "The dime (10 cents) is physically smaller than the nickel (5 cents). Coin values are not proportional to size."
+                }
+              },
+              {
+                "type": "concept",
+                "id": "sales-tax",
+                "title": "Sales Tax",
+                "content": {
+                  "text": "Displayed prices in US stores typically exclude sales tax. Tax is calculated and added at checkout, making the final price higher than the displayed price.",
+                  "details": [
+                    "Sales tax rates vary by state (0% to over 10%)",
+                    "Some states have no sales tax: Oregon, Montana, New Hampshire, Delaware",
+                    "Cities may add additional local taxes",
+                    "Some items may be tax-exempt (groceries, medicine) depending on state"
+                  ],
+                  "example": {
+                    "displayed_price": "$50.00",
+                    "tax_rate": "8%",
+                    "tax_amount": "$4.00",
+                    "total_paid": "$54.00"
+                  },
+                  "practical_tip": "Budget 5-10% above displayed prices for sales tax."
+                }
+              }
+            ]
+          },
+          {
+            "id": "checking-accounts",
+            "skill_slug": "checking-accounts",
+            "title": "Checking Accounts",
+            "order": 2,
+            "estimated_minutes": 15,
+            "xp_reward": 18,
+            "learning_objectives": [
+              "Understand the purpose and features of checking accounts",
+              "Know what documents are required to open an account",
+              "Understand key terms: routing number, account number, direct deposit",
+              "Recognize and avoid common fees"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "checking-purpose",
+                "title": "What is a Checking Account",
+                "content": {
+                  "definition": "A checking account is a deposit account designed for frequent transactions including deposits, withdrawals, and payments.",
+                  "primary_uses": [
+                    "Receiving income through direct deposit",
+                    "Paying bills (online, automatic, or by check)",
+                    "Making purchases with a linked debit card",
+                    "Transferring money to other accounts or people",
+                    "Withdrawing cash from ATMs"
+                  ],
+                  "key_characteristic": "Designed for liquidity and frequent access, not for earning interest."
+                }
+              },
+              {
+                "type": "concept",
+                "id": "opening-account",
+                "title": "Opening a Checking Account",
+                "content": {
+                  "required_documents": [
+                    "Government-issued photo ID (passport accepted)",
+                    "Proof of address (utility bill, lease agreement, or official letter)",
+                    "Social Security Number (SSN) or Individual Taxpayer Identification Number (ITIN)",
+                    "Initial deposit (typically $25-$100)"
+                  ],
+                  "where_to_open": [
+                    "Traditional banks: Chase, Bank of America, Wells Fargo, Citibank",
+                    "Credit unions: Often lower fees, membership requirements apply",
+                    "Online banks: Ally, Discover, Capital One 360"
+                  ]
+                }
+              },
+              {
+                "type": "definitions",
+                "id": "checking-terms",
+                "title": "Essential Terms",
+                "content": {
+                  "terms": [
+                    {
+                      "term": "Routing Number",
+                      "definition": "A 9-digit code identifying the financial institution. Used for direct deposits, wire transfers, and electronic payments."
+                    },
+                    {
+                      "term": "Account Number",
+                      "definition": "Unique number identifying your specific account. Combined with routing number to receive funds."
+                    },
+                    {
+                      "term": "Direct Deposit",
+                      "definition": "Electronic transfer of funds directly into your account, typically used for payroll."
+                    },
+                    {
+                      "term": "Overdraft",
+                      "definition": "Occurs when you spend more than your available balance. Results in negative balance and typically incurs fees of $25-$35."
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "reference_table",
+                "id": "checking-fees",
+                "title": "Common Checking Account Fees",
+                "content": {
+                  "columns": [
+                    "Fee Type",
+                    "Typical Amount",
+                    "How to Avoid"
+                  ],
+                  "rows": [
+                    [
+                      "Monthly maintenance",
+                      "$8-$15/month",
+                      "Maintain minimum balance, set up direct deposit, or use student account"
+                    ],
+                    [
+                      "Overdraft",
+                      "$25-$35 per transaction",
+                      "Track balance, set up alerts, link to savings for protection"
+                    ],
+                    [
+                      "Out-of-network ATM",
+                      "$2-$5 per withdrawal",
+                      "Use your bank's ATM network, get cash back at stores"
+                    ],
+                    [
+                      "Paper statement",
+                      "$2-$5/month",
+                      "Enroll in electronic statements"
+                    ],
+                    [
+                      "Wire transfer (domestic)",
+                      "$15-$30",
+                      "Use ACH transfer or Zelle when possible"
+                    ]
+                  ]
+                }
+              },
+              {
+                "type": "comparison",
+                "id": "checking-vs-savings",
+                "title": "Checking vs Savings Accounts",
+                "content": {
+                  "columns": [
+                    "Feature",
+                    "Checking Account",
+                    "Savings Account"
+                  ],
+                  "rows": [
+                    [
+                      "Purpose",
+                      "Daily transactions",
+                      "Storing money for goals"
+                    ],
+                    [
+                      "Interest earned",
+                      "Little to none (0-0.1%)",
+                      "Higher rates available (4-5% at online banks)"
+                    ],
+                    [
+                      "Withdrawal limits",
+                      "Unlimited",
+                      "May be limited"
+                    ],
+                    [
+                      "Debit card",
+                      "Yes",
+                      "Typically no"
+                    ],
+                    [
+                      "Check writing",
+                      "Yes",
+                      "No"
+                    ]
+                  ],
+                  "recommendation": "Maintain both: checking for expenses, savings for reserves."
+                }
+              }
+            ]
+          },
+          {
+            "id": "savings-accounts",
+            "skill_slug": "savings-accounts",
+            "title": "Savings Accounts and Interest",
+            "order": 3,
+            "estimated_minutes": 12,
+            "xp_reward": 15,
+            "learning_objectives": [
+              "Understand savings account features and purpose",
+              "Calculate interest earnings using APY",
+              "Compare traditional vs high-yield savings accounts",
+              "Understand FDIC insurance protection"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "savings-purpose",
+                "title": "Purpose of Savings Accounts",
+                "content": {
+                  "definition": "A savings account is a deposit account that earns interest while keeping funds accessible for goals and emergencies.",
+                  "characteristics": [
+                    "Earns interest on deposited funds",
+                    "FDIC insured up to $250,000",
+                    "Lower transaction frequency than checking",
+                    "No debit card or check-writing (typically)"
+                  ],
+                  "best_uses": [
+                    "Emergency fund",
+                    "Short-term savings goals (1-3 years)",
+                    "Holding funds before investing"
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "apy-explained",
+                "title": "Understanding APY",
+                "content": {
+                  "definition": "APY (Annual Percentage Yield) represents the total interest earned on deposits over one year, including compound interest.",
+                  "formula": "Interest = Principal x APY",
+                  "example": {
+                    "principal": "$5,000",
+                    "apy": "4.5%",
+                    "annual_interest": "$225",
+                    "calculation": "$5,000 x 0.045 = $225"
+                  }
+                }
+              },
+              {
+                "type": "comparison",
+                "id": "savings-comparison",
+                "title": "Traditional vs High-Yield Savings",
+                "content": {
+                  "columns": [
+                    "Feature",
+                    "Traditional Bank Savings",
+                    "High-Yield Savings (Online)"
+                  ],
+                  "rows": [
+                    [
+                      "Typical APY",
+                      "0.01% - 0.5%",
+                      "4% - 5%"
+                    ],
+                    [
+                      "Annual interest on $10,000",
+                      "$1 - $50",
+                      "$400 - $500"
+                    ],
+                    [
+                      "Physical branches",
+                      "Yes",
+                      "Usually no"
+                    ],
+                    [
+                      "FDIC insured",
+                      "Yes",
+                      "Yes"
+                    ],
+                    [
+                      "Monthly fees",
+                      "Often yes",
+                      "Usually none"
+                    ]
+                  ],
+                  "recommendation": "High-yield savings accounts offer significantly better returns with the same protections."
+                }
+              },
+              {
+                "type": "concept",
+                "id": "fdic-insurance",
+                "title": "FDIC Insurance",
+                "content": {
+                  "what_it_is": "The Federal Deposit Insurance Corporation (FDIC) insures deposits at member banks.",
+                  "coverage": "$250,000 per depositor, per insured bank, per ownership category",
+                  "what_is_covered": [
+                    "Checking accounts",
+                    "Savings accounts",
+                    "Money market deposit accounts",
+                    "Certificates of deposit (CDs)"
+                  ],
+                  "what_is_not_covered": [
+                    "Investments (stocks, bonds, mutual funds)",
+                    "Cryptocurrency"
+                  ],
+                  "verification": "Look for 'Member FDIC' on bank materials."
+                }
+              }
+            ]
+          },
+          {
+            "id": "debit-cards",
+            "skill_slug": "debit-cards",
+            "title": "Using Debit Cards",
+            "order": 4,
+            "estimated_minutes": 10,
+            "xp_reward": 12,
+            "learning_objectives": [
+              "Understand how debit cards work",
+              "Know the difference between PIN and signature transactions",
+              "Implement security best practices",
+              "Know what to do if card is lost or stolen"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "debit-basics",
+                "title": "How Debit Cards Work",
+                "content": {
+                  "definition": "A debit card is linked to your checking account and allows you to spend money directly from your balance.",
+                  "transaction_process": [
+                    "Card is swiped, inserted, or tapped",
+                    "Transaction is authorized against your balance",
+                    "Funds are deducted from checking account"
+                  ],
+                  "key_distinction": "Unlike credit cards, debit cards use YOUR money, not borrowed funds."
+                }
+              },
+              {
+                "type": "comparison",
+                "id": "pin-vs-signature",
+                "title": "PIN vs Signature Transactions",
+                "content": {
+                  "explanation": "When using a debit card at checkout, you may be asked to select 'debit' or 'credit'. Both withdraw from your checking account.",
+                  "columns": [
+                    "Selection",
+                    "Authentication",
+                    "Features"
+                  ],
+                  "rows": [
+                    [
+                      "Debit (PIN)",
+                      "Enter 4-digit PIN",
+                      "Can request cash back"
+                    ],
+                    [
+                      "Credit (Signature)",
+                      "Sign receipt or tap",
+                      "May offer better fraud protection"
+                    ]
+                  ],
+                  "clarification": "Selecting 'credit' does NOT charge a credit card. It changes how the transaction is processed."
+                }
+              },
+              {
+                "type": "concept",
+                "id": "debit-security",
+                "title": "Security Best Practices",
+                "content": {
+                  "pin_security": [
+                    "Never share your PIN with anyone",
+                    "Do not write PIN on card or store in wallet",
+                    "Cover keypad when entering PIN in public",
+                    "Choose a PIN that is not easily guessed"
+                  ],
+                  "general_security": [
+                    "Enable transaction alerts via mobile app",
+                    "Review account activity regularly",
+                    "Use mobile wallet (Apple Pay, Google Pay) for added security",
+                    "Be cautious of card skimmers at ATMs"
+                  ]
+                }
+              },
+              {
+                "type": "procedure",
+                "id": "lost-stolen-card",
+                "title": "If Your Card is Lost or Stolen",
+                "content": {
+                  "immediate_steps": [
+                    "Lock/freeze card immediately through mobile banking app",
+                    "Call bank's 24/7 customer service line",
+                    "Report the loss and request card cancellation",
+                    "Review recent transactions for unauthorized charges",
+                    "Request a new card"
+                  ],
+                  "liability": {
+                    "reported_within_2_days": "Maximum liability: $50",
+                    "reported_within_60_days": "Maximum liability: $500",
+                    "reported_after_60_days": "Potentially unlimited liability"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "id": "bank-fees",
+            "skill_slug": "bank-fees",
+            "title": "Understanding and Avoiding Bank Fees",
+            "order": 5,
+            "estimated_minutes": 10,
+            "xp_reward": 12,
+            "learning_objectives": [
+              "Identify common bank fees and their costs",
+              "Implement strategies to avoid unnecessary fees",
+              "Understand fee waiver conditions"
+            ],
+            "content_blocks": [
+              {
+                "type": "reference_table",
+                "id": "common-fees",
+                "title": "Common Bank Fees",
+                "content": {
+                  "columns": [
+                    "Fee",
+                    "Typical Cost",
+                    "What Triggers It"
+                  ],
+                  "rows": [
+                    [
+                      "Monthly maintenance fee",
+                      "$8-$15/month",
+                      "Standard charge for maintaining account"
+                    ],
+                    [
+                      "Overdraft fee",
+                      "$25-$35 per item",
+                      "Spending more than available balance"
+                    ],
+                    [
+                      "NSF (Non-Sufficient Funds)",
+                      "$25-$35 per item",
+                      "Payment bounces due to insufficient funds"
+                    ],
+                    [
+                      "Out-of-network ATM fee",
+                      "$2-$3 (your bank) + $2-$3 (ATM owner)",
+                      "Using ATM outside your bank's network"
+                    ],
+                    [
+                      "Foreign transaction fee",
+                      "1-3% of transaction",
+                      "Purchases in foreign currency"
+                    ],
+                    [
+                      "Wire transfer (outgoing)",
+                      "$15-$50",
+                      "Sending wire transfer"
+                    ]
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "fee-avoidance",
+                "title": "Fee Avoidance Strategies",
+                "content": {
+                  "monthly_maintenance_fee": {
+                    "waiver_options": [
+                      "Maintain minimum daily balance (typically $500-$1,500)",
+                      "Set up direct deposit",
+                      "Open a student account",
+                      "Choose an online bank with no monthly fees"
+                    ]
+                  },
+                  "overdraft_fee": {
+                    "prevention": [
+                      "Set up low balance alerts",
+                      "Track spending and check balance before purchases",
+                      "Link savings account for overdraft protection",
+                      "Opt out of overdraft coverage (transactions will decline instead)"
+                    ]
+                  },
+                  "atm_fees": {
+                    "strategies": [
+                      "Use your bank's ATM network",
+                      "Get cash back at grocery stores (no fee)",
+                      "Choose a bank that reimburses ATM fees"
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "calculation",
+                "id": "fee-impact",
+                "title": "Annual Impact of Fees",
+                "content": {
+                  "scenario": "Potential annual cost if not managed",
+                  "items": [
+                    {
+                      "fee": "Monthly maintenance ($12/month)",
+                      "annual": "$144"
+                    },
+                    {
+                      "fee": "ATM fees ($3 x 4/month)",
+                      "annual": "$144"
+                    },
+                    {
+                      "fee": "Overdrafts (2 per year x $35)",
+                      "annual": "$70"
+                    }
+                  ],
+                  "total": "$358/year",
+                  "message": "Most of these fees are avoidable with proper account management."
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "credit-fundamentals",
+        "name": "Credit Fundamentals",
+        "description": "Understanding the US credit system, credit scores, and building credit history",
+        "color": "#8549BA",
+        "estimated_minutes": 120,
+        "order": 2,
+        "prerequisites": [
+          "banking-fundamentals"
+        ],
+        "lessons": [
+          {
+            "id": "credit-intro",
+            "skill_slug": "what-is-credit",
+            "title": "Introduction to Credit",
+            "order": 1,
+            "estimated_minutes": 12,
+            "xp_reward": 15,
+            "learning_objectives": [
+              "Define credit and understand its role in the US financial system",
+              "Recognize situations where credit history is evaluated",
+              "Distinguish between having no credit and having bad credit"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "credit-definition",
+                "title": "What is Credit",
+                "content": {
+                  "definition": "Credit is the ability to borrow money or access goods and services with the agreement to pay later, typically with interest.",
+                  "forms_of_credit": [
+                    "Credit cards: Revolving credit for purchases",
+                    "Auto loans: Installment loan for vehicle purchase",
+                    "Mortgages: Loan secured by real estate",
+                    "Student loans: Loans for education expenses",
+                    "Personal loans: Unsecured loans for various purposes"
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "credit-importance",
+                "title": "Why Credit Matters in the US",
+                "content": {
+                  "text": "The US financial system relies heavily on credit history to assess trustworthiness.",
+                  "where_credit_is_checked": [
+                    {
+                      "situation": "Renting an apartment",
+                      "impact": "Landlords review credit to assess reliability"
+                    },
+                    {
+                      "situation": "Auto loans",
+                      "impact": "Credit score directly affects interest rate"
+                    },
+                    {
+                      "situation": "Credit card applications",
+                      "impact": "Determines approval, credit limit, and interest rate"
+                    },
+                    {
+                      "situation": "Cell phone contracts",
+                      "impact": "Carriers may require deposits without credit history"
+                    },
+                    {
+                      "situation": "Insurance premiums",
+                      "impact": "In many states, credit affects auto and home insurance rates"
+                    },
+                    {
+                      "situation": "Employment",
+                      "impact": "Some employers check credit for positions involving financial responsibility"
+                    },
+                    {
+                      "situation": "Mortgage applications",
+                      "impact": "Credit score is a primary factor in approval and rate"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "no-credit-vs-bad",
+                "title": "No Credit vs Bad Credit",
+                "content": {
+                  "no_credit": {
+                    "definition": "No US credit history exists. Credit bureaus have no record of your borrowing behavior.",
+                    "typical_situation": "New arrivals to the US, young adults who have not used credit",
+                    "implication": "Lenders cannot assess risk, but there is no negative history. Building credit is straightforward."
+                  },
+                  "bad_credit": {
+                    "definition": "Credit history exists but shows negative patterns: late payments, defaults, collections, or bankruptcy.",
+                    "implication": "Lenders view as high risk. Rebuilding takes time and consistent positive behavior."
+                  },
+                  "key_point": "Starting with no credit history is not the same as having damaged credit."
+                }
+              }
+            ]
+          },
+          {
+            "id": "credit-scores",
+            "skill_slug": "credit-score-basics",
+            "title": "Understanding Credit Scores",
+            "order": 2,
+            "estimated_minutes": 15,
+            "xp_reward": 18,
+            "learning_objectives": [
+              "Understand credit score ranges and what they mean",
+              "Know the three major credit bureaus",
+              "Access free credit reports and scores"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "score-overview",
+                "title": "What is a Credit Score",
+                "content": {
+                  "definition": "A credit score is a three-digit number (typically 300-850) that represents creditworthiness based on credit history.",
+                  "most_common_model": "FICO Score (used in 90%+ of lending decisions)",
+                  "alternative_model": "VantageScore (used by some lenders and free monitoring services)"
+                }
+              },
+              {
+                "type": "reference_table",
+                "id": "score-ranges",
+                "title": "FICO Score Ranges",
+                "content": {
+                  "columns": [
+                    "Range",
+                    "Rating",
+                    "Implications"
+                  ],
+                  "rows": [
+                    [
+                      "800-850",
+                      "Exceptional",
+                      "Best rates and terms, easy approval"
+                    ],
+                    [
+                      "740-799",
+                      "Very Good",
+                      "Better than average rates, high approval odds"
+                    ],
+                    [
+                      "670-739",
+                      "Good",
+                      "Acceptable to most lenders, average rates"
+                    ],
+                    [
+                      "580-669",
+                      "Fair",
+                      "Subprime rates, may require deposits"
+                    ],
+                    [
+                      "300-579",
+                      "Poor",
+                      "Difficulty getting approved, highest rates"
+                    ]
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "credit-bureaus",
+                "title": "The Three Credit Bureaus",
+                "content": {
+                  "explanation": "Three companies collect and maintain credit information in the US.",
+                  "bureaus": [
+                    {
+                      "name": "Equifax",
+                      "founded": "1899",
+                      "headquarters": "Atlanta, GA"
+                    },
+                    {
+                      "name": "Experian",
+                      "founded": "1996 (US)",
+                      "headquarters": "Costa Mesa, CA"
+                    },
+                    {
+                      "name": "TransUnion",
+                      "founded": "1968",
+                      "headquarters": "Chicago, IL"
+                    }
+                  ],
+                  "why_scores_differ": "Not all lenders report to all three bureaus, and timing varies."
+                }
+              },
+              {
+                "type": "concept",
+                "id": "free-access",
+                "title": "Accessing Your Credit Information",
+                "content": {
+                  "free_credit_reports": {
+                    "source": "AnnualCreditReport.com",
+                    "frequency": "One free report from each bureau per year",
+                    "contains": "Detailed credit history but NOT the score"
+                  },
+                  "free_credit_scores": {
+                    "sources": [
+                      "Credit Karma (VantageScore, free)",
+                      "Many credit cards provide free FICO scores",
+                      "Discover Credit Scorecard (free for anyone)"
+                    ]
+                  },
+                  "recommendation": "Check reports annually for errors. Monitor score monthly through free services."
+                }
+              },
+              {
+                "type": "calculation",
+                "id": "score-impact-example",
+                "title": "How Credit Score Affects Loan Costs",
+                "content": {
+                  "scenario": "$25,000 auto loan, 60 months",
+                  "examples": [
+                    {
+                      "score_range": "720+",
+                      "rate": "5.5%",
+                      "monthly_payment": "$477",
+                      "total_interest": "$3,620"
+                    },
+                    {
+                      "score_range": "660-719",
+                      "rate": "8.5%",
+                      "monthly_payment": "$512",
+                      "total_interest": "$5,720"
+                    },
+                    {
+                      "score_range": "600-659",
+                      "rate": "13%",
+                      "monthly_payment": "$569",
+                      "total_interest": "$9,140"
+                    },
+                    {
+                      "score_range": "Below 600",
+                      "rate": "18%+",
+                      "monthly_payment": "$635",
+                      "total_interest": "$13,100"
+                    }
+                  ],
+                  "difference": "A lower credit score can cost nearly $10,000 more on the same loan."
+                }
+              }
+            ]
+          },
+          {
+            "id": "credit-factors",
+            "skill_slug": "credit-score-factors",
+            "title": "Factors That Determine Your Credit Score",
+            "order": 3,
+            "estimated_minutes": 15,
+            "xp_reward": 20,
+            "learning_objectives": [
+              "Understand the five FICO score components and their weights",
+              "Learn how to positively influence each factor",
+              "Recognize actions that damage credit scores"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "score-components",
+                "title": "FICO Score Components",
+                "content": {
+                  "overview": "Your credit score is calculated from five categories of information.",
+                  "components": [
+                    {
+                      "factor": "Payment History",
+                      "weight": "35%",
+                      "description": "Record of on-time and late payments"
+                    },
+                    {
+                      "factor": "Credit Utilization",
+                      "weight": "30%",
+                      "description": "Percentage of available credit being used"
+                    },
+                    {
+                      "factor": "Length of Credit History",
+                      "weight": "15%",
+                      "description": "Age of oldest account, newest account, and average age"
+                    },
+                    {
+                      "factor": "Credit Mix",
+                      "weight": "10%",
+                      "description": "Variety of credit types (cards, loans, mortgage)"
+                    },
+                    {
+                      "factor": "New Credit",
+                      "weight": "10%",
+                      "description": "Recent credit applications and new accounts"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "payment-history-detail",
+                "title": "Payment History (35%)",
+                "content": {
+                  "what_it_tracks": [
+                    "On-time payments",
+                    "Late payments (30, 60, 90, 120+ days)",
+                    "Accounts sent to collections",
+                    "Bankruptcies, foreclosures, liens"
+                  ],
+                  "impact_of_late_payment": "A single 30-day late payment can drop your score 50-100+ points",
+                  "how_long_it_stays": "Late payments remain on report for 7 years",
+                  "best_practices": [
+                    "Set up autopay for at least minimum payments",
+                    "Create calendar reminders before due dates",
+                    "If you will be late, call creditor before due date"
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "utilization-detail",
+                "title": "Credit Utilization (30%)",
+                "content": {
+                  "calculation": "Utilization = (Total Balances / Total Credit Limits) x 100",
+                  "example": {
+                    "credit_limit": "$10,000",
+                    "current_balance": "$2,500",
+                    "utilization": "25%"
+                  },
+                  "guidelines": [
+                    {
+                      "range": "0-9%",
+                      "impact": "Excellent"
+                    },
+                    {
+                      "range": "10-29%",
+                      "impact": "Good"
+                    },
+                    {
+                      "range": "30-49%",
+                      "impact": "Fair"
+                    },
+                    {
+                      "range": "50-74%",
+                      "impact": "Poor"
+                    },
+                    {
+                      "range": "75%+",
+                      "impact": "Very poor"
+                    }
+                  ],
+                  "tips": [
+                    "Pay balance before statement closes for lowest reported utilization",
+                    "Request credit limit increases",
+                    "Utilization has no memory - reducing it improves score immediately"
+                  ]
+                }
+              },
+              {
+                "type": "reference_list",
+                "id": "score-actions",
+                "title": "Actions That Help vs Hurt Your Score",
+                "content": {
+                  "helps_score": [
+                    "Paying all bills on time",
+                    "Keeping credit utilization low",
+                    "Keeping old accounts open",
+                    "Having a mix of credit types",
+                    "Disputing and correcting errors"
+                  ],
+                  "hurts_score": [
+                    "Late payments (30+ days)",
+                    "High credit utilization",
+                    "Closing old accounts",
+                    "Applying for many new accounts quickly",
+                    "Accounts going to collections"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "building-credit",
+            "skill_slug": "building-credit",
+            "title": "Building Credit from Zero",
+            "order": 4,
+            "estimated_minutes": 15,
+            "xp_reward": 20,
+            "learning_objectives": [
+              "Understand strategies for building credit with no history",
+              "Know how secured credit cards work",
+              "Create a timeline for credit building"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "building-strategies",
+                "title": "Credit Building Methods",
+                "content": {
+                  "primary_methods": [
+                    {
+                      "method": "Secured Credit Card",
+                      "how_it_works": "You provide a refundable security deposit ($200-$500) that becomes your credit limit. Use card normally and pay on time. After 6-12 months, you may qualify for unsecured cards.",
+                      "best_for": "Primary method for those with no credit history"
+                    },
+                    {
+                      "method": "Authorized User",
+                      "how_it_works": "Someone with good credit adds you to their credit card account. Their payment history on that account appears on your credit report.",
+                      "considerations": "Only works if primary holder has good habits."
+                    },
+                    {
+                      "method": "Credit Builder Loan",
+                      "how_it_works": "You make fixed payments to a lender who holds the funds. At end of term, you receive the money. Payments are reported to credit bureaus.",
+                      "offered_by": "Credit unions, some banks, services like Self"
+                    },
+                    {
+                      "method": "Student Credit Card",
+                      "how_it_works": "Credit cards designed for students with limited or no credit history.",
+                      "requirement": "Proof of enrollment"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "secured-card-detail",
+                "title": "Using a Secured Credit Card",
+                "content": {
+                  "how_it_works": [
+                    "Apply for secured card and provide deposit ($200-$500)",
+                    "Deposit becomes your credit limit",
+                    "Use card for regular small purchases",
+                    "Pay statement balance in full each month",
+                    "Card issuer reports your activity to credit bureaus",
+                    "After 6-12 months, request upgrade to unsecured card",
+                    "Receive deposit back when closing or upgrading"
+                  ],
+                  "best_practices": [
+                    "Use for 1-3 small recurring purchases",
+                    "Keep utilization below 30% of limit",
+                    "Pay full balance by due date",
+                    "Set up autopay"
+                  ]
+                }
+              },
+              {
+                "type": "timeline",
+                "id": "credit-building-timeline",
+                "title": "Typical Credit Building Timeline",
+                "content": {
+                  "milestones": [
+                    {
+                      "month": "0",
+                      "action": "Open secured credit card",
+                      "status": "No credit score yet"
+                    },
+                    {
+                      "month": "1-2",
+                      "action": "Make small purchases, pay in full",
+                      "status": "Activity being reported"
+                    },
+                    {
+                      "month": "3-4",
+                      "action": "Continue responsible use",
+                      "status": "First credit score appears (often 630-680)"
+                    },
+                    {
+                      "month": "6",
+                      "action": "Consider credit builder loan or second card",
+                      "status": "Score typically 650-700"
+                    },
+                    {
+                      "month": "12",
+                      "action": "Request secured card upgrade",
+                      "status": "Score typically 680-720+"
+                    },
+                    {
+                      "month": "18-24",
+                      "action": "Qualify for mainstream credit products",
+                      "status": "Established credit history"
+                    }
+                  ],
+                  "note": "Timeline assumes consistent on-time payments and low utilization."
+                }
+              },
+              {
+                "type": "warning",
+                "id": "building-mistakes",
+                "title": "Common Credit Building Mistakes",
+                "content": {
+                  "mistakes": [
+                    {
+                      "mistake": "Applying for multiple cards at once",
+                      "why_harmful": "Multiple hard inquiries lower score",
+                      "instead": "Apply for one card, wait 6+ months"
+                    },
+                    {
+                      "mistake": "Carrying a balance to build credit",
+                      "why_harmful": "Myth. Paying interest does not help your score.",
+                      "instead": "Pay in full every month"
+                    },
+                    {
+                      "mistake": "Missing even one payment",
+                      "why_harmful": "Single late payment can drop score 50-100 points",
+                      "instead": "Set up autopay immediately"
+                    },
+                    {
+                      "mistake": "Maxing out credit limit",
+                      "why_harmful": "High utilization damages score",
+                      "instead": "Keep balance under 30% of limit"
+                    },
+                    {
+                      "mistake": "Closing first credit card",
+                      "why_harmful": "Reduces credit history length",
+                      "instead": "Keep first card open"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "credit-cards-101",
+            "skill_slug": "credit-cards",
+            "title": "Credit Card Fundamentals",
+            "order": 5,
+            "estimated_minutes": 15,
+            "xp_reward": 18,
+            "learning_objectives": [
+              "Understand how credit card billing works",
+              "Calculate interest charges",
+              "Use credit cards responsibly to avoid debt"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "cc-basics",
+                "title": "How Credit Cards Work",
+                "content": {
+                  "definition": "A credit card allows you to borrow money from the card issuer for purchases. You must repay what you borrow, plus interest if you do not pay in full.",
+                  "billing_cycle": {
+                    "length": "Approximately 30 days",
+                    "statement_date": "End of billing cycle, balance is totaled",
+                    "due_date": "21-25 days after statement date",
+                    "grace_period": "Time between statement and due date where no interest accrues if previous balance was paid"
+                  },
+                  "key_principle": "Pay statement balance in full by due date to avoid all interest charges."
+                }
+              },
+              {
+                "type": "definitions",
+                "id": "cc-terms",
+                "title": "Credit Card Terms",
+                "content": {
+                  "terms": [
+                    {
+                      "term": "APR",
+                      "definition": "Annual Percentage Rate - yearly interest rate on unpaid balances. Typically 15-25%+."
+                    },
+                    {
+                      "term": "Statement Balance",
+                      "definition": "Total charges from the previous billing cycle. Pay this in full to avoid interest."
+                    },
+                    {
+                      "term": "Minimum Payment",
+                      "definition": "Smallest amount required to keep account in good standing. Typically 1-3% of balance or $25."
+                    },
+                    {
+                      "term": "Credit Limit",
+                      "definition": "Maximum amount you can borrow on the card."
+                    },
+                    {
+                      "term": "Cash Advance",
+                      "definition": "Using credit card to withdraw cash. Incurs immediate interest and fees. Avoid."
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "calculation",
+                "id": "interest-calculation",
+                "title": "Understanding Credit Card Interest",
+                "content": {
+                  "scenario": "$1,000 balance at 22% APR, paying only minimum",
+                  "monthly_interest_rate": "22% / 12 = 1.83% per month",
+                  "first_month_interest": "$1,000 x 1.83% = $18.30",
+                  "minimum_payment_trap": {
+                    "minimum_payment": "$25",
+                    "interest_portion": "$18.30",
+                    "principal_reduction": "$6.70",
+                    "time_to_payoff": "Approximately 5 years",
+                    "total_interest_paid": "Over $600"
+                  },
+                  "lesson": "Minimum payments are designed to keep you in debt. Always pay more than minimum."
+                }
+              },
+              {
+                "type": "comparison",
+                "id": "good-vs-bad-cc-use",
+                "title": "Responsible vs Irresponsible Credit Card Use",
+                "content": {
+                  "columns": [
+                    "Responsible Use",
+                    "Irresponsible Use"
+                  ],
+                  "rows": [
+                    [
+                      "Pay statement balance in full monthly",
+                      "Pay only minimum payment"
+                    ],
+                    [
+                      "Keep utilization under 30%",
+                      "Max out credit limit"
+                    ],
+                    [
+                      "Track all purchases",
+                      "Lose track of spending"
+                    ],
+                    [
+                      "Use for planned purchases within budget",
+                      "Use for spending beyond means"
+                    ],
+                    [
+                      "Result: Build credit, earn rewards, pay $0 interest",
+                      "Result: High interest debt, damaged credit"
+                    ]
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "cc-rewards",
+                "title": "Credit Card Rewards",
+                "content": {
+                  "types": [
+                    {
+                      "type": "Cash Back",
+                      "how_it_works": "Earn 1-5% back on purchases",
+                      "best_for": "Simplicity"
+                    },
+                    {
+                      "type": "Points",
+                      "how_it_works": "Earn points redeemable for travel, merchandise",
+                      "best_for": "Flexibility"
+                    },
+                    {
+                      "type": "Miles",
+                      "how_it_works": "Earn airline miles for flights",
+                      "best_for": "Frequent travelers"
+                    }
+                  ],
+                  "critical_warning": "Rewards are worthless if you carry a balance. 2% cash back is meaningless against 22% interest."
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "money-management",
+        "name": "Money Management",
+        "description": "Budgeting, saving strategies, and managing debt effectively",
+        "color": "#58CC02",
+        "estimated_minutes": 75,
+        "order": 3,
+        "prerequisites": [
+          "banking-fundamentals"
+        ],
+        "lessons": [
+          {
+            "id": "budgeting",
+            "skill_slug": "budgeting-basics",
+            "title": "Creating and Maintaining a Budget",
+            "order": 1,
+            "estimated_minutes": 15,
+            "xp_reward": 18,
+            "learning_objectives": [
+              "Understand the purpose and benefits of budgeting",
+              "Apply the 50/30/20 budgeting framework",
+              "Track income and expenses effectively"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "budget-purpose",
+                "title": "What is a Budget",
+                "content": {
+                  "definition": "A budget is a plan for how you will allocate your income across expenses, savings, and other financial goals.",
+                  "purpose": [
+                    "Understand where money is going",
+                    "Ensure essential expenses are covered",
+                    "Allocate funds toward goals",
+                    "Prevent overspending and debt"
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "50-30-20",
+                "title": "The 50/30/20 Framework",
+                "content": {
+                  "overview": "A simple guideline for allocating after-tax income",
+                  "categories": [
+                    {
+                      "category": "Needs (50%)",
+                      "description": "Essential expenses",
+                      "examples": [
+                        "Rent/mortgage",
+                        "Utilities",
+                        "Groceries",
+                        "Insurance",
+                        "Minimum debt payments",
+                        "Transportation"
+                      ]
+                    },
+                    {
+                      "category": "Wants (30%)",
+                      "description": "Non-essential spending",
+                      "examples": [
+                        "Dining out",
+                        "Entertainment",
+                        "Subscriptions",
+                        "Shopping",
+                        "Hobbies"
+                      ]
+                    },
+                    {
+                      "category": "Savings & Debt (20%)",
+                      "description": "Building financial security",
+                      "examples": [
+                        "Emergency fund",
+                        "Retirement contributions",
+                        "Extra debt payments",
+                        "Investments"
+                      ]
+                    }
+                  ],
+                  "flexibility": "These are guidelines. Adjust based on your situation and cost of living."
+                }
+              },
+              {
+                "type": "procedure",
+                "id": "budget-creation",
+                "title": "Creating Your Budget",
+                "content": {
+                  "steps": [
+                    {
+                      "step": 1,
+                      "title": "Calculate monthly after-tax income",
+                      "detail": "Use take-home pay, not gross salary"
+                    },
+                    {
+                      "step": 2,
+                      "title": "Track current spending for 30 days",
+                      "detail": "Use bank and credit card statements"
+                    },
+                    {
+                      "step": 3,
+                      "title": "Categorize expenses",
+                      "detail": "Group into needs, wants, and savings"
+                    },
+                    {
+                      "step": 4,
+                      "title": "Compare to 50/30/20 targets",
+                      "detail": "Identify areas over or under budget"
+                    },
+                    {
+                      "step": 5,
+                      "title": "Set specific limits for each category",
+                      "detail": "Create realistic targets"
+                    },
+                    {
+                      "step": 6,
+                      "title": "Automate where possible",
+                      "detail": "Automatic transfers to savings, automatic bill pay"
+                    },
+                    {
+                      "step": 7,
+                      "title": "Review and adjust monthly",
+                      "detail": "Budget is a living document"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "reference_list",
+                "id": "budget-tools",
+                "title": "Budgeting Tools",
+                "content": {
+                  "apps": [
+                    {
+                      "name": "Mint",
+                      "cost": "Free",
+                      "features": "Automatic transaction import, categorization, budgets"
+                    },
+                    {
+                      "name": "YNAB",
+                      "cost": "$14.99/month (free for students)",
+                      "features": "Zero-based budgeting, goal tracking"
+                    },
+                    {
+                      "name": "Personal Capital",
+                      "cost": "Free",
+                      "features": "Budgeting plus investment tracking"
+                    },
+                    {
+                      "name": "Spreadsheet",
+                      "cost": "Free",
+                      "features": "Complete customization"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "calculation",
+                "id": "budget-example",
+                "title": "Sample Budget",
+                "content": {
+                  "monthly_income": "$4,000 (after tax)",
+                  "allocation": {
+                    "needs_50_percent": {
+                      "total": "$2,000",
+                      "items": [
+                        "Rent: $1,200",
+                        "Utilities: $150",
+                        "Groceries: $300",
+                        "Transportation: $200",
+                        "Insurance: $100",
+                        "Phone: $50"
+                      ]
+                    },
+                    "wants_30_percent": {
+                      "total": "$1,200",
+                      "items": [
+                        "Dining out: $200",
+                        "Entertainment: $150",
+                        "Subscriptions: $50",
+                        "Shopping: $200",
+                        "Personal: $100",
+                        "Misc: $500"
+                      ]
+                    },
+                    "savings_20_percent": {
+                      "total": "$800",
+                      "items": [
+                        "Emergency fund: $300",
+                        "Retirement: $400",
+                        "Other savings: $100"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "id": "emergency-funds",
+            "skill_slug": "emergency-funds",
+            "title": "Building an Emergency Fund",
+            "order": 2,
+            "estimated_minutes": 12,
+            "xp_reward": 15,
+            "learning_objectives": [
+              "Understand the purpose of an emergency fund",
+              "Determine appropriate emergency fund size",
+              "Know where to keep emergency funds"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "ef-purpose",
+                "title": "What is an Emergency Fund",
+                "content": {
+                  "definition": "Money set aside specifically to cover unexpected financial emergencies.",
+                  "purpose": [
+                    "Cover unexpected expenses without using credit cards",
+                    "Provide income replacement during job loss",
+                    "Reduce financial stress",
+                    "Prevent debt spiral from unexpected costs"
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "ef-amount",
+                "title": "How Much to Save",
+                "content": {
+                  "stages": [
+                    {
+                      "stage": "Starter Emergency Fund",
+                      "amount": "$1,000 - $2,000",
+                      "priority": "First financial goal",
+                      "covers": "Minor emergencies"
+                    },
+                    {
+                      "stage": "Full Emergency Fund",
+                      "amount": "3-6 months of essential expenses",
+                      "priority": "After high-interest debt",
+                      "covers": "Job loss, major emergencies"
+                    }
+                  ],
+                  "calculating_target": {
+                    "formula": "Monthly essential expenses x number of months",
+                    "essential_expenses": "Rent, utilities, food, insurance, minimum debt payments, transportation",
+                    "example": {
+                      "monthly_essentials": "$2,500",
+                      "target_months": 4,
+                      "goal": "$10,000"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "concept",
+                "id": "ef-location",
+                "title": "Where to Keep Emergency Fund",
+                "content": {
+                  "ideal_characteristics": [
+                    "Easily accessible",
+                    "Safe (FDIC insured)",
+                    "Earns interest",
+                    "Separate from checking"
+                  ],
+                  "best_option": "High-yield savings account at online bank",
+                  "why_not_other_options": {
+                    "checking_account": "Too accessible, likely to be spent",
+                    "cash_at_home": "No interest, risk of loss",
+                    "investments": "Value can decrease when you need money"
+                  }
+                }
+              },
+              {
+                "type": "reference_table",
+                "id": "ef-qualifying",
+                "title": "What Qualifies as an Emergency",
+                "content": {
+                  "columns": [
+                    "Emergencies (Use Fund)",
+                    "Not Emergencies (Budget for These)"
+                  ],
+                  "rows": [
+                    [
+                      "Job loss",
+                      "Vacation"
+                    ],
+                    [
+                      "Unexpected medical bills",
+                      "Holiday gifts"
+                    ],
+                    [
+                      "Car repair needed for work",
+                      "Car upgrade"
+                    ],
+                    [
+                      "Essential home repair",
+                      "Home improvement"
+                    ],
+                    [
+                      "Emergency travel (family illness)",
+                      "Planned travel"
+                    ]
+                  ]
+                }
+              },
+              {
+                "type": "procedure",
+                "id": "ef-building",
+                "title": "Building Your Emergency Fund",
+                "content": {
+                  "strategies": [
+                    {
+                      "strategy": "Automate transfers",
+                      "how": "Set up automatic transfer on payday",
+                      "start": "$25-$50 per paycheck"
+                    },
+                    {
+                      "strategy": "Save windfalls",
+                      "examples": "Tax refunds, bonuses, gifts"
+                    },
+                    {
+                      "strategy": "Cut one expense temporarily",
+                      "examples": "Subscription, dining out budget"
+                    },
+                    {
+                      "strategy": "Sell unused items",
+                      "approach": "Direct proceeds to fund"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "debt-management",
+            "skill_slug": "debt-management",
+            "title": "Managing and Eliminating Debt",
+            "order": 3,
+            "estimated_minutes": 15,
+            "xp_reward": 18,
+            "learning_objectives": [
+              "Distinguish between different types of debt",
+              "Understand debt avalanche and debt snowball methods",
+              "Create a debt repayment plan"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "debt-types",
+                "title": "Types of Debt",
+                "content": {
+                  "categorization": {
+                    "high_interest_debt": {
+                      "examples": [
+                        "Credit cards (15-25%+)",
+                        "Payday loans (400%+)",
+                        "Personal loans (10-30%)"
+                      ],
+                      "priority": "Pay off aggressively"
+                    },
+                    "moderate_interest_debt": {
+                      "examples": [
+                        "Auto loans (5-15%)",
+                        "Some student loans (5-8%)"
+                      ],
+                      "priority": "Pay on schedule, consider extra payments"
+                    },
+                    "low_interest_debt": {
+                      "examples": [
+                        "Federal student loans (3-7%)",
+                        "Mortgages (6-8%)"
+                      ],
+                      "priority": "Pay minimum, may not need to pay extra"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "comparison",
+                "id": "payoff-methods",
+                "title": "Debt Payoff Strategies",
+                "content": {
+                  "methods": [
+                    {
+                      "name": "Debt Avalanche",
+                      "approach": "Pay highest interest rate first",
+                      "pros": "Minimizes total interest paid",
+                      "cons": "May take longer to see progress",
+                      "best_for": "Those motivated by math"
+                    },
+                    {
+                      "name": "Debt Snowball",
+                      "approach": "Pay smallest balance first",
+                      "pros": "Quick wins build momentum",
+                      "cons": "May pay more total interest",
+                      "best_for": "Those who need motivation"
+                    }
+                  ],
+                  "both_require": "Making at least minimum payments on all debts"
+                }
+              },
+              {
+                "type": "calculation",
+                "id": "avalanche-example",
+                "title": "Debt Avalanche Example",
+                "content": {
+                  "scenario": {
+                    "extra_payment_available": "$200/month beyond minimums",
+                    "debts": [
+                      {
+                        "name": "Credit Card A",
+                        "balance": "$3,000",
+                        "apr": "22%",
+                        "minimum": "$75"
+                      },
+                      {
+                        "name": "Credit Card B",
+                        "balance": "$1,500",
+                        "apr": "18%",
+                        "minimum": "$40"
+                      },
+                      {
+                        "name": "Car Loan",
+                        "balance": "$8,000",
+                        "apr": "6%",
+                        "minimum": "$250"
+                      }
+                    ]
+                  },
+                  "avalanche_order": [
+                    "Pay minimums on all",
+                    "Put extra $200 toward Credit Card A (highest rate)",
+                    "When A paid off, redirect $275 to Credit Card B",
+                    "When B paid off, redirect $315 to Car Loan"
+                  ]
+                }
+              },
+              {
+                "type": "warning",
+                "id": "debt-traps",
+                "title": "Debt Traps to Avoid",
+                "content": {
+                  "traps": [
+                    {
+                      "trap": "Payday loans",
+                      "danger": "APR of 400%+",
+                      "alternative": "Emergency fund, negotiate with creditors"
+                    },
+                    {
+                      "trap": "Minimum payments only",
+                      "danger": "Takes years, costs multiples of original",
+                      "alternative": "Always pay more than minimum"
+                    },
+                    {
+                      "trap": "Balance transfer without plan",
+                      "danger": "Promo rate ends, high rate applies",
+                      "alternative": "Only transfer if you can pay off in promo period"
+                    },
+                    {
+                      "trap": "Using retirement funds",
+                      "danger": "Penalties, taxes, lost growth",
+                      "alternative": "Exhaust other options first"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "taxes",
+        "name": "US Tax Essentials",
+        "description": "Understanding and navigating the US tax system",
+        "color": "#FF9600",
+        "estimated_minutes": 75,
+        "order": 4,
+        "prerequisites": [],
+        "lessons": [
+          {
+            "id": "tax-system",
+            "skill_slug": "us-tax-system",
+            "title": "How the US Tax System Works",
+            "order": 1,
+            "estimated_minutes": 15,
+            "xp_reward": 18,
+            "learning_objectives": [
+              "Understand the types of taxes in the US",
+              "Know how progressive tax brackets work",
+              "Understand the difference between tax deductions and credits"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "tax-types",
+                "title": "Types of US Taxes",
+                "content": {
+                  "taxes": [
+                    {
+                      "type": "Federal Income Tax",
+                      "collected_by": "IRS",
+                      "rates": "10% to 37% (progressive brackets)"
+                    },
+                    {
+                      "type": "State Income Tax",
+                      "collected_by": "State government",
+                      "rates": "0% to 13%+ (varies by state)",
+                      "no_tax_states": "Alaska, Florida, Nevada, South Dakota, Texas, Washington, Wyoming"
+                    },
+                    {
+                      "type": "FICA Taxes",
+                      "collected_by": "IRS",
+                      "what": "Social Security and Medicare",
+                      "rate": "7.65% employee portion"
+                    },
+                    {
+                      "type": "Sales Tax",
+                      "collected_by": "State/local",
+                      "rates": "0% to 10%+"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "progressive-tax",
+                "title": "Progressive Tax Brackets",
+                "content": {
+                  "explanation": "The US uses marginal tax brackets. You pay different rates on different portions of income.",
+                  "example_2024_single": {
+                    "brackets": [
+                      {
+                        "income_range": "$0 - $11,600",
+                        "rate": "10%"
+                      },
+                      {
+                        "income_range": "$11,601 - $47,150",
+                        "rate": "12%"
+                      },
+                      {
+                        "income_range": "$47,151 - $100,525",
+                        "rate": "22%"
+                      },
+                      {
+                        "income_range": "$100,526 - $191,950",
+                        "rate": "24%"
+                      },
+                      {
+                        "income_range": "$191,951 - $243,725",
+                        "rate": "32%"
+                      },
+                      {
+                        "income_range": "$243,726 - $609,350",
+                        "rate": "35%"
+                      },
+                      {
+                        "income_range": "Over $609,350",
+                        "rate": "37%"
+                      }
+                    ]
+                  },
+                  "key_point": "Moving into a higher bracket does not mean all income is taxed at the higher rate."
+                }
+              },
+              {
+                "type": "calculation",
+                "id": "tax-calculation",
+                "title": "Tax Calculation Example",
+                "content": {
+                  "taxable_income": "$60,000",
+                  "calculation": [
+                    {
+                      "bracket": "First $11,600 at 10%",
+                      "tax": "$1,160"
+                    },
+                    {
+                      "bracket": "Next $35,550 at 12%",
+                      "tax": "$4,266"
+                    },
+                    {
+                      "bracket": "Remaining $12,850 at 22%",
+                      "tax": "$2,827"
+                    }
+                  ],
+                  "total_tax": "$8,253",
+                  "effective_rate": "13.8% (not 22%)"
+                }
+              },
+              {
+                "type": "concept",
+                "id": "deductions-credits",
+                "title": "Deductions vs Credits",
+                "content": {
+                  "deductions": {
+                    "definition": "Reduce your taxable income",
+                    "effect": "Save money equal to deduction x your marginal tax rate",
+                    "example": "$1,000 deduction at 22% bracket saves $220",
+                    "types": {
+                      "standard": "$14,600 (single), $29,200 (married filing jointly) for 2024",
+                      "itemized": "Individual deductions (mortgage interest, state taxes, charity)"
+                    }
+                  },
+                  "credits": {
+                    "definition": "Directly reduce your tax bill dollar-for-dollar",
+                    "effect": "Save exact amount of the credit",
+                    "example": "$1,000 credit saves $1,000 in taxes"
+                  },
+                  "comparison": "Credits are more valuable than deductions of the same amount."
+                }
+              },
+              {
+                "type": "reference_table",
+                "id": "tax-deadlines",
+                "title": "Key Tax Deadlines",
+                "content": {
+                  "columns": [
+                    "Date",
+                    "What Happens"
+                  ],
+                  "rows": [
+                    [
+                      "January 31",
+                      "Employers must provide W-2 forms"
+                    ],
+                    [
+                      "April 15",
+                      "Tax filing deadline"
+                    ],
+                    [
+                      "April 15",
+                      "Deadline to file extension (more time to file, NOT to pay)"
+                    ],
+                    [
+                      "October 15",
+                      "Deadline for those who filed extension"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "filing-taxes",
+            "skill_slug": "filing-taxes",
+            "title": "Filing Your Tax Return",
+            "order": 2,
+            "estimated_minutes": 18,
+            "xp_reward": 20,
+            "learning_objectives": [
+              "Know what documents are needed to file",
+              "Understand filing options and costs",
+              "Complete a basic tax return"
+            ],
+            "content_blocks": [
+              {
+                "type": "reference_list",
+                "id": "tax-documents",
+                "title": "Documents Needed to File",
+                "content": {
+                  "required": [
+                    {
+                      "document": "Social Security Number or ITIN",
+                      "what": "Your taxpayer identification number"
+                    },
+                    {
+                      "document": "W-2",
+                      "what": "From each employer, shows wages and taxes withheld"
+                    }
+                  ],
+                  "if_applicable": [
+                    {
+                      "document": "1099 forms",
+                      "what": "For freelance income, bank interest, investments"
+                    },
+                    {
+                      "document": "1098 forms",
+                      "what": "Mortgage interest, student loan interest, tuition"
+                    },
+                    {
+                      "document": "Records of deductible expenses",
+                      "what": "Charitable donations, medical expenses"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "comparison",
+                "id": "filing-options",
+                "title": "How to File",
+                "content": {
+                  "options": [
+                    {
+                      "method": "IRS Free File",
+                      "cost": "Free",
+                      "eligibility": "AGI $79,000 or less",
+                      "good_for": "Simple returns"
+                    },
+                    {
+                      "method": "Tax software",
+                      "cost": "Free to $100+",
+                      "good_for": "Most filers"
+                    },
+                    {
+                      "method": "Tax professional",
+                      "cost": "$100-$500+",
+                      "good_for": "Complex situations"
+                    },
+                    {
+                      "method": "VITA",
+                      "cost": "Free",
+                      "eligibility": "Generally income under $60,000",
+                      "good_for": "Low to moderate income"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "procedure",
+                "id": "filing-process",
+                "title": "Tax Filing Process",
+                "content": {
+                  "steps": [
+                    {
+                      "step": 1,
+                      "action": "Gather all tax documents",
+                      "timing": "January - early February"
+                    },
+                    {
+                      "step": 2,
+                      "action": "Choose filing method"
+                    },
+                    {
+                      "step": 3,
+                      "action": "Determine filing status",
+                      "options": "Single, Married Filing Jointly, Married Filing Separately, Head of Household"
+                    },
+                    {
+                      "step": 4,
+                      "action": "Enter income information"
+                    },
+                    {
+                      "step": 5,
+                      "action": "Claim deductions (standard or itemized)"
+                    },
+                    {
+                      "step": 6,
+                      "action": "Claim applicable credits"
+                    },
+                    {
+                      "step": 7,
+                      "action": "Review return carefully"
+                    },
+                    {
+                      "step": 8,
+                      "action": "Submit (e-file recommended)"
+                    },
+                    {
+                      "step": 9,
+                      "action": "Pay any tax owed OR receive refund"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "refund-vs-owe",
+                "title": "Refund vs Owing",
+                "content": {
+                  "refund": {
+                    "what": "You overpaid taxes during the year",
+                    "meaning": "IRS returns the excess"
+                  },
+                  "owing": {
+                    "what": "You underpaid taxes during the year",
+                    "meaning": "You must pay the difference by April 15"
+                  },
+                  "ideal": "Break even or small refund/balance due. Large refund means you gave government interest-free loan."
+                }
+              }
+            ]
+          },
+          {
+            "id": "itin-ssn",
+            "skill_slug": "itin-vs-ssn",
+            "title": "Tax Identification Numbers",
+            "order": 3,
+            "estimated_minutes": 10,
+            "xp_reward": 12,
+            "learning_objectives": [
+              "Understand the difference between SSN and ITIN",
+              "Know how to apply for each"
+            ],
+            "content_blocks": [
+              {
+                "type": "comparison",
+                "id": "ssn-vs-itin",
+                "title": "SSN vs ITIN",
+                "content": {
+                  "columns": [
+                    "Feature",
+                    "Social Security Number (SSN)",
+                    "ITIN"
+                  ],
+                  "rows": [
+                    [
+                      "Format",
+                      "XXX-XX-XXXX",
+                      "9XX-XX-XXXX (starts with 9)"
+                    ],
+                    [
+                      "Issued by",
+                      "Social Security Administration",
+                      "IRS"
+                    ],
+                    [
+                      "Purpose",
+                      "Work, taxes, government benefits, credit",
+                      "Tax filing only"
+                    ],
+                    [
+                      "Work authorization",
+                      "Yes (with valid status)",
+                      "No"
+                    ],
+                    [
+                      "Who can get it",
+                      "US citizens, permanent residents, work-authorized visa holders",
+                      "Anyone who needs to file US taxes but is ineligible for SSN"
+                    ]
+                  ]
+                }
+              },
+              {
+                "type": "procedure",
+                "id": "getting-ssn",
+                "title": "Getting a Social Security Number",
+                "content": {
+                  "eligibility": "Must have work authorization in the US",
+                  "steps": [
+                    {
+                      "step": 1,
+                      "action": "Wait at least 10 days after US arrival"
+                    },
+                    {
+                      "step": 2,
+                      "action": "Gather documents (immigration document, passport, I-94)"
+                    },
+                    {
+                      "step": 3,
+                      "action": "Visit local Social Security Administration office"
+                    },
+                    {
+                      "step": 4,
+                      "action": "Complete Form SS-5"
+                    },
+                    {
+                      "step": 5,
+                      "action": "Receive card by mail (2-4 weeks)"
+                    }
+                  ],
+                  "cost": "Free"
+                }
+              },
+              {
+                "type": "concept",
+                "id": "ssn-security",
+                "title": "Protecting Your SSN",
+                "content": {
+                  "best_practices": [
+                    "Do not carry Social Security card in wallet",
+                    "Only provide SSN when absolutely necessary",
+                    "Shred documents containing SSN before discarding",
+                    "Monitor credit reports for signs of misuse",
+                    "Never share SSN via email or over phone unless you initiated contact"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "investing-basics",
+        "name": "Investing Fundamentals",
+        "description": "Building wealth through investing in stocks, bonds, and funds",
+        "color": "#00CD9C",
+        "estimated_minutes": 90,
+        "order": 5,
+        "prerequisites": [
+          "money-management"
+        ],
+        "lessons": [
+          {
+            "id": "investing-intro",
+            "skill_slug": "what-is-investing",
+            "title": "Introduction to Investing",
+            "order": 1,
+            "estimated_minutes": 15,
+            "xp_reward": 18,
+            "learning_objectives": [
+              "Understand the difference between saving and investing",
+              "Know the relationship between risk and return",
+              "Understand compound growth"
+            ],
+            "content_blocks": [
+              {
+                "type": "comparison",
+                "id": "saving-vs-investing",
+                "title": "Saving vs Investing",
+                "content": {
+                  "columns": [
+                    "Feature",
+                    "Saving",
+                    "Investing"
+                  ],
+                  "rows": [
+                    [
+                      "Risk",
+                      "Very low",
+                      "Varies (can lose money)"
+                    ],
+                    [
+                      "Return",
+                      "Low (4-5%)",
+                      "Higher potential (7-10% stocks)"
+                    ],
+                    [
+                      "Time horizon",
+                      "0-5 years",
+                      "5+ years"
+                    ],
+                    [
+                      "Best for",
+                      "Emergency fund, short-term goals",
+                      "Retirement, wealth building"
+                    ]
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "risk-return",
+                "title": "Risk and Return Relationship",
+                "content": {
+                  "principle": "Higher potential returns generally require accepting higher risk",
+                  "spectrum": [
+                    {
+                      "asset": "Savings account",
+                      "risk": "Very low",
+                      "historical_return": "0-5%"
+                    },
+                    {
+                      "asset": "Government bonds",
+                      "risk": "Low",
+                      "historical_return": "3-6%"
+                    },
+                    {
+                      "asset": "Stock index funds",
+                      "risk": "Medium",
+                      "historical_return": "7-10%"
+                    },
+                    {
+                      "asset": "Individual stocks",
+                      "risk": "High",
+                      "historical_return": "Varies widely"
+                    },
+                    {
+                      "asset": "Cryptocurrency",
+                      "risk": "Very high",
+                      "historical_return": "Highly volatile"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "calculation",
+                "id": "compound-growth",
+                "title": "The Power of Compound Growth",
+                "content": {
+                  "definition": "Compound growth means you earn returns on your returns",
+                  "example": {
+                    "investment": "$200/month",
+                    "annual_return": "7%",
+                    "results": [
+                      {
+                        "years": 10,
+                        "contributed": "$24,000",
+                        "value": "$34,600"
+                      },
+                      {
+                        "years": 20,
+                        "contributed": "$48,000",
+                        "value": "$104,000"
+                      },
+                      {
+                        "years": 30,
+                        "contributed": "$72,000",
+                        "value": "$243,000"
+                      },
+                      {
+                        "years": 40,
+                        "contributed": "$96,000",
+                        "value": "$525,000"
+                      }
+                    ]
+                  },
+                  "lesson": "Time in the market matters more than timing the market."
+                }
+              },
+              {
+                "type": "checklist",
+                "id": "before-investing",
+                "title": "Before You Start Investing",
+                "content": {
+                  "prerequisites": [
+                    {
+                      "item": "Emergency fund established",
+                      "target": "3-6 months expenses"
+                    },
+                    {
+                      "item": "High-interest debt paid off",
+                      "exception": "401k match is worth getting even with some debt"
+                    },
+                    {
+                      "item": "Stable income and budget"
+                    },
+                    {
+                      "item": "401(k) employer match claimed"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "stocks-bonds",
+            "skill_slug": "stocks-basics",
+            "title": "Stocks and Bonds",
+            "order": 2,
+            "estimated_minutes": 15,
+            "xp_reward": 18,
+            "learning_objectives": [
+              "Understand what stocks and bonds represent",
+              "Know key differences between them",
+              "Understand why index funds are recommended"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "stocks-explained",
+                "title": "What is a Stock",
+                "content": {
+                  "definition": "A stock represents partial ownership in a company.",
+                  "how_you_make_money": [
+                    {
+                      "method": "Capital appreciation",
+                      "how": "Stock price increases"
+                    },
+                    {
+                      "method": "Dividends",
+                      "how": "Some companies distribute profits"
+                    }
+                  ],
+                  "risks": [
+                    "Stock price can decrease",
+                    "Individual companies can fail"
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "bonds-explained",
+                "title": "What is a Bond",
+                "content": {
+                  "definition": "A bond is a loan you make to a government or corporation.",
+                  "how_it_works": [
+                    "You buy bond for $1,000",
+                    "Issuer pays you interest periodically",
+                    "At maturity, you receive original $1,000 back"
+                  ]
+                }
+              },
+              {
+                "type": "comparison",
+                "id": "stocks-vs-bonds",
+                "title": "Stocks vs Bonds",
+                "content": {
+                  "columns": [
+                    "Characteristic",
+                    "Stocks",
+                    "Bonds"
+                  ],
+                  "rows": [
+                    [
+                      "You are a",
+                      "Owner",
+                      "Lender"
+                    ],
+                    [
+                      "Risk level",
+                      "Higher",
+                      "Lower"
+                    ],
+                    [
+                      "Return potential",
+                      "Higher",
+                      "Lower"
+                    ],
+                    [
+                      "Best for",
+                      "Long-term growth",
+                      "Stability, income"
+                    ]
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "index-funds",
+                "title": "Index Funds",
+                "content": {
+                  "definition": "A fund that holds all stocks in a market index (like S&P 500)",
+                  "benefits": [
+                    "Instant diversification (hundreds of companies in one purchase)",
+                    "Low costs (expense ratios under 0.1%)",
+                    "Beats most actively managed funds over time",
+                    "Simplicity - no stock picking"
+                  ],
+                  "popular_funds": [
+                    {
+                      "name": "VTI/VTSAX",
+                      "tracks": "Total US stock market"
+                    },
+                    {
+                      "name": "VOO/VFIAX",
+                      "tracks": "S&P 500"
+                    },
+                    {
+                      "name": "VXUS/VTIAX",
+                      "tracks": "International stocks"
+                    }
+                  ],
+                  "recommendation": "For most investors, low-cost index funds are the optimal choice."
+                }
+              }
+            ]
+          },
+          {
+            "id": "diversification",
+            "skill_slug": "diversification",
+            "title": "Diversification",
+            "order": 3,
+            "estimated_minutes": 12,
+            "xp_reward": 15,
+            "learning_objectives": [
+              "Understand why diversification matters",
+              "Know how to diversify a portfolio",
+              "Understand asset allocation by age"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "diversification-explained",
+                "title": "What is Diversification",
+                "content": {
+                  "definition": "Spreading investments across different assets so poor performance in one area is offset by others",
+                  "types": [
+                    {
+                      "type": "Across asset classes",
+                      "what": "Mix of stocks, bonds, real estate"
+                    },
+                    {
+                      "type": "Across geographies",
+                      "what": "US stocks, international, emerging markets"
+                    },
+                    {
+                      "type": "Across sectors",
+                      "what": "Technology, healthcare, finance, energy"
+                    },
+                    {
+                      "type": "Across company sizes",
+                      "what": "Large cap, mid cap, small cap"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "asset-allocation",
+                "title": "Asset Allocation",
+                "content": {
+                  "definition": "How you divide investments between stocks, bonds, and other assets",
+                  "key_factor": "Time horizon - how long until you need the money",
+                  "rule_of_thumb": "(110 - your age) = percentage in stocks",
+                  "sample_allocations": [
+                    {
+                      "investor": "Young (20s-30s)",
+                      "stocks": "80-90%",
+                      "bonds": "10-20%"
+                    },
+                    {
+                      "investor": "Mid-career (40s-50s)",
+                      "stocks": "60-70%",
+                      "bonds": "30-40%"
+                    },
+                    {
+                      "investor": "Near retirement (60s)",
+                      "stocks": "40-50%",
+                      "bonds": "50-60%"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "retirement-planning",
+        "name": "Retirement Planning",
+        "description": "Tax-advantaged accounts for retirement savings",
+        "color": "#8549BA",
+        "estimated_minutes": 60,
+        "order": 6,
+        "prerequisites": [
+          "investing-basics"
+        ],
+        "lessons": [
+          {
+            "id": "401k",
+            "skill_slug": "401k-basics",
+            "title": "401(k) Plans",
+            "order": 1,
+            "estimated_minutes": 15,
+            "xp_reward": 18,
+            "learning_objectives": [
+              "Understand how 401(k) plans work",
+              "Know the importance of employer matching",
+              "Understand contribution limits"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "401k-basics",
+                "title": "What is a 401(k)",
+                "content": {
+                  "definition": "Employer-sponsored retirement savings plan with tax advantages",
+                  "how_it_works": [
+                    "Money deducted from paycheck before taxes (Traditional) or after (Roth)",
+                    "You choose investments from plan options",
+                    "Money grows tax-advantaged until retirement"
+                  ],
+                  "types": {
+                    "traditional_401k": "Contributions reduce taxable income now; withdrawals taxed in retirement",
+                    "roth_401k": "Contributions from after-tax income; withdrawals tax-free in retirement"
+                  }
+                }
+              },
+              {
+                "type": "concept",
+                "id": "employer-match",
+                "title": "Employer Matching",
+                "content": {
+                  "what_it_is": "Employers contribute additional money based on your contributions",
+                  "example": {
+                    "salary": "$60,000",
+                    "match_formula": "50% of contributions up to 6%",
+                    "your_contribution": "6% = $3,600",
+                    "employer_contribution": "50% of $3,600 = $1,800",
+                    "total": "$5,400/year",
+                    "free_money": "$1,800"
+                  },
+                  "critical_point": "Always contribute at least enough to get the full employer match."
+                }
+              },
+              {
+                "type": "reference_table",
+                "id": "401k-limits",
+                "title": "2024 Contribution Limits",
+                "content": {
+                  "columns": [
+                    "Category",
+                    "Limit"
+                  ],
+                  "rows": [
+                    [
+                      "Employee contribution (under 50)",
+                      "$23,000"
+                    ],
+                    [
+                      "Employee contribution (50+)",
+                      "$30,500"
+                    ],
+                    [
+                      "Total limit (employee + employer)",
+                      "$69,000"
+                    ]
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "401k-withdrawals",
+                "title": "Withdrawal Rules",
+                "content": {
+                  "early_withdrawal": {
+                    "age_threshold": "Before 59 1/2",
+                    "penalty": "10% penalty PLUS income tax",
+                    "example": {
+                      "withdrawal": "$10,000",
+                      "penalty": "$1,000",
+                      "taxes_at_22_percent": "$2,200",
+                      "net": "$6,800"
+                    }
+                  },
+                  "required_minimum": "Must begin withdrawals at age 73"
+                }
+              }
+            ]
+          },
+          {
+            "id": "ira",
+            "skill_slug": "ira-accounts",
+            "title": "Individual Retirement Accounts",
+            "order": 2,
+            "estimated_minutes": 12,
+            "xp_reward": 15,
+            "learning_objectives": [
+              "Understand differences between Traditional and Roth IRAs",
+              "Know contribution limits and eligibility"
+            ],
+            "content_blocks": [
+              {
+                "type": "comparison",
+                "id": "traditional-vs-roth-ira",
+                "title": "Traditional vs Roth IRA",
+                "content": {
+                  "columns": [
+                    "Feature",
+                    "Traditional IRA",
+                    "Roth IRA"
+                  ],
+                  "rows": [
+                    [
+                      "Contributions",
+                      "May be tax-deductible",
+                      "Not tax-deductible"
+                    ],
+                    [
+                      "Withdrawals in retirement",
+                      "Taxed as income",
+                      "Tax-free"
+                    ],
+                    [
+                      "Required distributions",
+                      "Must begin at 73",
+                      "None during owner's lifetime"
+                    ],
+                    [
+                      "Income limits",
+                      "None (deduction may be limited)",
+                      "Yes - phases out at higher incomes"
+                    ]
+                  ]
+                }
+              },
+              {
+                "type": "reference_table",
+                "id": "ira-limits",
+                "title": "2024 IRA Contribution Limits",
+                "content": {
+                  "columns": [
+                    "Category",
+                    "Limit"
+                  ],
+                  "rows": [
+                    [
+                      "Annual contribution (under 50)",
+                      "$7,000"
+                    ],
+                    [
+                      "Annual contribution (50+)",
+                      "$8,000"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "roth-vs-traditional",
+            "skill_slug": "roth-vs-traditional",
+            "title": "Roth vs Traditional Accounts",
+            "order": 3,
+            "estimated_minutes": 12,
+            "xp_reward": 15,
+            "learning_objectives": [
+              "Understand when to choose Roth vs Traditional",
+              "Develop a strategy using both account types"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "tax-timing",
+                "title": "The Core Question: When to Pay Taxes",
+                "content": {
+                  "traditional": {
+                    "when_taxed": "In retirement when you withdraw",
+                    "best_when": "Current tax rate is HIGHER than expected retirement rate"
+                  },
+                  "roth": {
+                    "when_taxed": "Now, when you contribute",
+                    "best_when": "Current tax rate is LOWER than expected retirement rate"
+                  }
+                }
+              },
+              {
+                "type": "concept",
+                "id": "strategy",
+                "title": "Optimal Strategy",
+                "content": {
+                  "recommendation": "Use both account types for tax diversification",
+                  "typical_approach": [
+                    "Contribute to 401(k) up to employer match",
+                    "Max out Roth IRA ($7,000)",
+                    "Return to 401(k) for additional contributions"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "insurance",
+        "name": "Insurance Essentials",
+        "description": "Protecting yourself with appropriate insurance coverage",
+        "color": "#1CB0F6",
+        "estimated_minutes": 60,
+        "order": 7,
+        "prerequisites": [],
+        "lessons": [
+          {
+            "id": "insurance-basics",
+            "skill_slug": "insurance-basics",
+            "title": "Understanding Insurance",
+            "order": 1,
+            "estimated_minutes": 12,
+            "xp_reward": 15,
+            "learning_objectives": [
+              "Understand the purpose of insurance",
+              "Know key insurance terminology",
+              "Identify types of insurance"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "insurance-purpose",
+                "title": "What is Insurance",
+                "content": {
+                  "definition": "A contract where you pay premiums in exchange for financial protection against specific losses.",
+                  "how_it_works": [
+                    "You pay regular premiums",
+                    "If covered event occurs, insurance pays for damages",
+                    "You pay deductible first",
+                    "Insurance covers costs up to policy limits"
+                  ]
+                }
+              },
+              {
+                "type": "definitions",
+                "id": "insurance-terms",
+                "title": "Key Insurance Terms",
+                "content": {
+                  "terms": [
+                    {
+                      "term": "Premium",
+                      "definition": "Amount you pay for coverage"
+                    },
+                    {
+                      "term": "Deductible",
+                      "definition": "Amount you pay before insurance kicks in"
+                    },
+                    {
+                      "term": "Coverage limit",
+                      "definition": "Maximum amount insurance will pay"
+                    },
+                    {
+                      "term": "Copay",
+                      "definition": "Fixed amount for specific services (health insurance)"
+                    },
+                    {
+                      "term": "Coinsurance",
+                      "definition": "Percentage you pay after meeting deductible"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "reference_table",
+                "id": "insurance-types",
+                "title": "Types of Insurance",
+                "content": {
+                  "columns": [
+                    "Type",
+                    "What it Covers",
+                    "Required?"
+                  ],
+                  "rows": [
+                    [
+                      "Health Insurance",
+                      "Medical expenses",
+                      "Essential in US"
+                    ],
+                    [
+                      "Auto Insurance",
+                      "Car accidents, liability",
+                      "Required by law"
+                    ],
+                    [
+                      "Renters Insurance",
+                      "Belongings, liability",
+                      "Often required by landlords"
+                    ],
+                    [
+                      "Life Insurance",
+                      "Death benefit to beneficiaries",
+                      "Recommended if others depend on you"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "health-insurance",
+            "skill_slug": "health-insurance",
+            "title": "Health Insurance",
+            "order": 2,
+            "estimated_minutes": 18,
+            "xp_reward": 20,
+            "learning_objectives": [
+              "Understand why health insurance is critical",
+              "Know how to obtain health insurance"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "health-insurance-importance",
+                "title": "Why Health Insurance is Essential",
+                "content": {
+                  "sample_costs_without_insurance": [
+                    {
+                      "service": "Emergency room visit",
+                      "cost": "$1,000 - $20,000+"
+                    },
+                    {
+                      "service": "Ambulance ride",
+                      "cost": "$500 - $3,000"
+                    },
+                    {
+                      "service": "Appendectomy surgery",
+                      "cost": "$15,000 - $50,000"
+                    },
+                    {
+                      "service": "3-day hospital stay",
+                      "cost": "$30,000 - $100,000+"
+                    }
+                  ],
+                  "consequence": "Medical debt is a leading cause of bankruptcy in the US"
+                }
+              },
+              {
+                "type": "reference_list",
+                "id": "health-insurance-sources",
+                "title": "How to Get Health Insurance",
+                "content": {
+                  "sources": [
+                    {
+                      "source": "Employer",
+                      "details": "Most common, employer pays portion"
+                    },
+                    {
+                      "source": "Healthcare.gov Marketplace",
+                      "details": "Subsidies available based on income"
+                    },
+                    {
+                      "source": "University (students)",
+                      "details": "Often required for international students"
+                    },
+                    {
+                      "source": "Parent's plan",
+                      "details": "Can stay until age 26"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "network",
+                "title": "Understanding Networks",
+                "content": {
+                  "in_network": {
+                    "meaning": "Providers with negotiated rates",
+                    "cost": "Lower"
+                  },
+                  "out_of_network": {
+                    "meaning": "Providers without agreements",
+                    "cost": "Much higher, may not be covered"
+                  },
+                  "action": "Always verify provider is in-network before receiving care."
+                }
+              }
+            ]
+          },
+          {
+            "id": "renters-insurance",
+            "skill_slug": "renters-insurance",
+            "title": "Renters Insurance",
+            "order": 3,
+            "estimated_minutes": 10,
+            "xp_reward": 12,
+            "learning_objectives": [
+              "Understand what renters insurance covers",
+              "Know typical costs"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "renters-basics",
+                "title": "What Renters Insurance Covers",
+                "content": {
+                  "coverage_types": [
+                    {
+                      "coverage": "Personal property",
+                      "protects": "Belongings against theft, fire, water damage"
+                    },
+                    {
+                      "coverage": "Liability",
+                      "protects": "You if someone is injured in your rental"
+                    },
+                    {
+                      "coverage": "Additional living expenses",
+                      "protects": "Costs if you must live elsewhere temporarily"
+                    }
+                  ],
+                  "not_covered": [
+                    "Roommate's belongings",
+                    "Flood damage",
+                    "Your car"
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "renters-cost",
+                "title": "Cost and Coverage",
+                "content": {
+                  "typical_cost": "$15-$30 per month",
+                  "typical_coverage": {
+                    "personal_property": "$20,000-$50,000",
+                    "liability": "$100,000",
+                    "deductible": "$250-$500"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "consumer-protection",
+        "name": "Consumer Protection",
+        "description": "Protecting yourself from scams and understanding your rights",
+        "color": "#FF4B4B",
+        "estimated_minutes": 45,
+        "order": 8,
+        "prerequisites": [],
+        "lessons": [
+          {
+            "id": "scam-protection",
+            "skill_slug": "avoiding-scams",
+            "title": "Protecting Yourself from Scams",
+            "order": 1,
+            "estimated_minutes": 15,
+            "xp_reward": 18,
+            "learning_objectives": [
+              "Recognize common scams",
+              "Identify red flags",
+              "Know how to report scams"
+            ],
+            "content_blocks": [
+              {
+                "type": "reference_list",
+                "id": "common-scams",
+                "title": "Common Scams",
+                "content": {
+                  "scams": [
+                    {
+                      "name": "IRS/Government Impersonation",
+                      "how": "Caller demands immediate payment, threatens arrest",
+                      "reality": "IRS always contacts by mail first"
+                    },
+                    {
+                      "name": "Immigration Scam",
+                      "how": "Email about visa problems, requests payment",
+                      "reality": "USCIS does not contact via email"
+                    },
+                    {
+                      "name": "Social Security Scam",
+                      "how": "Claims SSN is suspended",
+                      "reality": "SSNs are never suspended"
+                    },
+                    {
+                      "name": "Rental Scam",
+                      "how": "Great apartment, deposit before viewing",
+                      "reality": "Never pay before in-person viewing"
+                    },
+                    {
+                      "name": "Job Scam",
+                      "how": "Job requires payment for training",
+                      "reality": "Legitimate jobs never charge"
+                    },
+                    {
+                      "name": "Romance Scam",
+                      "how": "Online relationship requests money",
+                      "reality": "Never send money to someone not met in person"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "reference_list",
+                "id": "red-flags",
+                "title": "Red Flags of Scams",
+                "content": {
+                  "warning_signs": [
+                    "Urgency: Demands for immediate action",
+                    "Threats: Claims of arrest, deportation",
+                    "Unusual payment: Gift cards, wire transfers, crypto",
+                    "Request for sensitive information via phone/email",
+                    "Too good to be true offers",
+                    "Pressure to keep secret"
+                  ]
+                }
+              },
+              {
+                "type": "procedure",
+                "id": "if-scammed",
+                "title": "If You've Been Scammed",
+                "content": {
+                  "immediate_actions": [
+                    "Stop communication with scammer",
+                    "Contact bank if money was sent",
+                    "Change passwords if account access given"
+                  ],
+                  "reporting": [
+                    {
+                      "agency": "FTC",
+                      "website": "ReportFraud.ftc.gov"
+                    },
+                    {
+                      "agency": "FBI IC3",
+                      "website": "ic3.gov"
+                    },
+                    {
+                      "agency": "Local police",
+                      "for": "Documentation"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "consumer-rights",
+            "skill_slug": "consumer-rights",
+            "title": "Your Consumer Rights",
+            "order": 2,
+            "estimated_minutes": 12,
+            "xp_reward": 15,
+            "learning_objectives": [
+              "Know key consumer protection laws",
+              "Understand how to dispute credit report errors"
+            ],
+            "content_blocks": [
+              {
+                "type": "reference_list",
+                "id": "consumer-laws",
+                "title": "Key Consumer Protection Laws",
+                "content": {
+                  "laws": [
+                    {
+                      "law": "Fair Credit Reporting Act",
+                      "rights": [
+                        "Free credit report annually",
+                        "Right to dispute inaccurate information",
+                        "Bureaus must investigate within 30 days"
+                      ]
+                    },
+                    {
+                      "law": "Fair Debt Collection Practices Act",
+                      "rights": [
+                        "Collectors cannot harass or threaten",
+                        "Cannot call before 8 AM or after 9 PM",
+                        "Right to request written verification"
+                      ]
+                    },
+                    {
+                      "law": "Electronic Fund Transfer Act",
+                      "rights": [
+                        "Limited liability for unauthorized transactions",
+                        "Bank must investigate within 10 days"
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "procedure",
+                "id": "disputing-errors",
+                "title": "Disputing Credit Report Errors",
+                "content": {
+                  "steps": [
+                    {
+                      "step": 1,
+                      "action": "Get free credit reports from AnnualCreditReport.com"
+                    },
+                    {
+                      "step": 2,
+                      "action": "Review for errors"
+                    },
+                    {
+                      "step": 3,
+                      "action": "Gather supporting documentation"
+                    },
+                    {
+                      "step": 4,
+                      "action": "File dispute with credit bureau(s)"
+                    },
+                    {
+                      "step": 5,
+                      "action": "Bureau investigates (30 days)"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "major-purchases",
+        "name": "Major Purchases",
+        "description": "Making smart decisions on large purchases",
+        "color": "#00CD9C",
+        "estimated_minutes": 45,
+        "order": 9,
+        "prerequisites": [
+          "credit-fundamentals"
+        ],
+        "lessons": [
+          {
+            "id": "buying-car",
+            "skill_slug": "buying-car",
+            "title": "Buying a Car",
+            "order": 1,
+            "estimated_minutes": 18,
+            "xp_reward": 20,
+            "learning_objectives": [
+              "Understand true cost of car ownership",
+              "Know the car buying process",
+              "Avoid common mistakes"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "car-ownership-costs",
+                "title": "True Cost of Car Ownership",
+                "content": {
+                  "costs": [
+                    {
+                      "category": "Purchase/Loan payment",
+                      "typical_monthly": "$300-$700"
+                    },
+                    {
+                      "category": "Insurance",
+                      "typical_monthly": "$100-$300"
+                    },
+                    {
+                      "category": "Fuel",
+                      "typical_monthly": "$100-$200"
+                    },
+                    {
+                      "category": "Maintenance",
+                      "typical_monthly": "$50-$100"
+                    },
+                    {
+                      "category": "Parking (urban)",
+                      "typical_monthly": "$0-$300"
+                    }
+                  ],
+                  "total_estimate": "$500-$1,200+ per month"
+                }
+              },
+              {
+                "type": "comparison",
+                "id": "new-vs-used",
+                "title": "New vs Used Cars",
+                "content": {
+                  "columns": [
+                    "Factor",
+                    "New Car",
+                    "Used Car (2-4 years)"
+                  ],
+                  "rows": [
+                    [
+                      "Price",
+                      "Full MSRP",
+                      "20-40% less"
+                    ],
+                    [
+                      "Depreciation",
+                      "Loses 20-30% in first year",
+                      "Already occurred"
+                    ],
+                    [
+                      "Insurance cost",
+                      "Higher",
+                      "Lower"
+                    ]
+                  ],
+                  "recommendation": "Used cars (2-4 years old) from reliable brands often offer best value"
+                }
+              },
+              {
+                "type": "procedure",
+                "id": "car-buying-process",
+                "title": "Car Buying Process",
+                "content": {
+                  "steps": [
+                    {
+                      "step": 1,
+                      "action": "Determine budget including all ownership costs"
+                    },
+                    {
+                      "step": 2,
+                      "action": "Get pre-approved for financing from your bank"
+                    },
+                    {
+                      "step": 3,
+                      "action": "Research vehicles (KBB, Edmunds, Consumer Reports)"
+                    },
+                    {
+                      "step": 4,
+                      "action": "Check vehicle history (Carfax)"
+                    },
+                    {
+                      "step": 5,
+                      "action": "Test drive and get independent mechanic inspection"
+                    },
+                    {
+                      "step": 6,
+                      "action": "Negotiate on total price, not monthly payment"
+                    },
+                    {
+                      "step": 7,
+                      "action": "Review all documents before signing"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "warning",
+                "id": "car-buying-traps",
+                "title": "Common Mistakes",
+                "content": {
+                  "mistakes": [
+                    {
+                      "mistake": "Focusing only on monthly payment",
+                      "defense": "Negotiate total price first"
+                    },
+                    {
+                      "mistake": "Not getting pre-approved",
+                      "defense": "Get bank approval for comparison"
+                    },
+                    {
+                      "mistake": "Buying add-ons in finance office",
+                      "defense": "Decline everything"
+                    },
+                    {
+                      "mistake": "Buying more car than needed",
+                      "defense": "Keep total car costs under 15% of income"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "home-buying",
+            "skill_slug": "home-buying-basics",
+            "title": "Introduction to Home Buying",
+            "order": 2,
+            "estimated_minutes": 15,
+            "xp_reward": 18,
+            "learning_objectives": [
+              "Understand basic requirements",
+              "Know typical costs",
+              "Understand rent vs buy decision"
+            ],
+            "content_blocks": [
+              {
+                "type": "comparison",
+                "id": "rent-vs-buy",
+                "title": "Renting vs Buying",
+                "content": {
+                  "factors_favoring_renting": [
+                    "Planning to stay less than 3-5 years",
+                    "Need flexibility",
+                    "Don't have down payment",
+                    "Credit needs improvement"
+                  ],
+                  "factors_favoring_buying": [
+                    "Planning to stay 5+ years",
+                    "Stable income",
+                    "Have down payment (5-20%)",
+                    "Good credit (670+)"
+                  ],
+                  "key_point": "Renting is not throwing money away. It pays for housing and flexibility."
+                }
+              },
+              {
+                "type": "concept",
+                "id": "home-buying-requirements",
+                "title": "What You Need to Buy a Home",
+                "content": {
+                  "requirements": [
+                    {
+                      "requirement": "Down payment",
+                      "amount": "5-20% of home price",
+                      "note": "20% avoids PMI"
+                    },
+                    {
+                      "requirement": "Good credit score",
+                      "minimum": "620",
+                      "for_best_rates": "740+"
+                    },
+                    {
+                      "requirement": "Stable income",
+                      "proof": "2 years employment history"
+                    },
+                    {
+                      "requirement": "Closing costs",
+                      "amount": "2-5% of home price"
+                    },
+                    {
+                      "requirement": "Reserves",
+                      "amount": "2-6 months mortgage payments"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "affordability",
+                "title": "How Much Can You Afford",
+                "content": {
+                  "rules": [
+                    {
+                      "rule": "28% rule",
+                      "meaning": "Housing costs should not exceed 28% of gross income"
+                    },
+                    {
+                      "rule": "36% rule",
+                      "meaning": "Total debt payments should not exceed 36% of gross income"
+                    }
+                  ],
+                  "caution": "These are maximums. Borrowing less leaves room for savings."
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "crypto-basics",
+        "name": "Cryptocurrency Basics",
+        "description": "Understanding cryptocurrency and blockchain technology",
+        "color": "#F7931A",
+        "estimated_minutes": 30,
+        "order": 10,
+        "prerequisites": [
+          "investing-basics"
+        ],
+        "lessons": [
+          {
+            "id": "crypto-intro",
+            "skill_slug": "what-is-crypto",
+            "title": "Introduction to Cryptocurrency",
+            "order": 1,
+            "estimated_minutes": 12,
+            "xp_reward": 15,
+            "learning_objectives": [
+              "Understand what cryptocurrency is",
+              "Know basic blockchain concepts"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "crypto-definition",
+                "title": "What is Cryptocurrency",
+                "content": {
+                  "definition": "Digital currency using cryptography for security, operating on decentralized networks.",
+                  "key_characteristics": [
+                    "Decentralized: No central authority controls it",
+                    "Digital: Exists only electronically",
+                    "Cryptographic: Secured by complex algorithms",
+                    "Transparent: Transactions recorded on public ledger"
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "blockchain-basics",
+                "title": "Blockchain Technology",
+                "content": {
+                  "definition": "A distributed digital ledger recording transactions across many computers.",
+                  "how_it_works": [
+                    "Transactions grouped into blocks",
+                    "Each block linked to previous (chain)",
+                    "Copies exist on thousands of computers",
+                    "Makes record highly secure and tamper-resistant"
+                  ]
+                }
+              },
+              {
+                "type": "reference_list",
+                "id": "major-cryptos",
+                "title": "Major Cryptocurrencies",
+                "content": {
+                  "cryptocurrencies": [
+                    {
+                      "name": "Bitcoin (BTC)",
+                      "purpose": "Digital gold, store of value",
+                      "note": "Largest by market cap"
+                    },
+                    {
+                      "name": "Ethereum (ETH)",
+                      "purpose": "Smart contracts, decentralized apps",
+                      "note": "Second largest"
+                    },
+                    {
+                      "name": "Stablecoins (USDC, USDT)",
+                      "purpose": "Pegged to US dollar",
+                      "note": "Less volatile"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "crypto-risks",
+            "skill_slug": "crypto-risks",
+            "title": "Cryptocurrency Risks",
+            "order": 2,
+            "estimated_minutes": 12,
+            "xp_reward": 15,
+            "learning_objectives": [
+              "Understand significant risks",
+              "Know how cryptocurrency is taxed",
+              "Recognize scams"
+            ],
+            "content_blocks": [
+              {
+                "type": "warning",
+                "id": "crypto-risks-detail",
+                "title": "Significant Risks",
+                "content": {
+                  "risks": [
+                    {
+                      "risk": "Extreme volatility",
+                      "detail": "Prices can swing 20-50%+ in days",
+                      "example": "Bitcoin dropped from $69,000 to $16,000 in 2022"
+                    },
+                    {
+                      "risk": "No investor protection",
+                      "detail": "No FDIC insurance, if exchange fails funds may be unrecoverable"
+                    },
+                    {
+                      "risk": "Irreversible transactions",
+                      "detail": "Sent to wrong address = funds gone forever"
+                    },
+                    {
+                      "risk": "Lost access",
+                      "detail": "Losing password/keys means permanent loss"
+                    },
+                    {
+                      "risk": "Scams",
+                      "detail": "Fake tokens, rug pulls, phishing common"
+                    }
+                  ],
+                  "bottom_line": "Never invest more than you can afford to lose completely."
+                }
+              },
+              {
+                "type": "concept",
+                "id": "crypto-taxes",
+                "title": "Cryptocurrency and Taxes",
+                "content": {
+                  "irs_treatment": "Cryptocurrency is treated as property, not currency",
+                  "taxable_events": [
+                    {
+                      "event": "Selling crypto for USD",
+                      "tax": "Capital gains tax"
+                    },
+                    {
+                      "event": "Trading one crypto for another",
+                      "tax": "Taxable (surprises many)"
+                    },
+                    {
+                      "event": "Receiving crypto as payment",
+                      "tax": "Income tax on value"
+                    },
+                    {
+                      "event": "Mining or staking rewards",
+                      "tax": "Income tax when received"
+                    }
+                  ],
+                  "not_taxable": "Buying cryptocurrency with USD (track cost basis)"
+                }
+              },
+              {
+                "type": "concept",
+                "id": "crypto-guidelines",
+                "title": "If You Choose to Invest",
+                "content": {
+                  "guidelines": [
+                    "Only invest what you can afford to lose 100%",
+                    "Limit crypto to 5% maximum of portfolio",
+                    "Stick to major cryptocurrencies (Bitcoin, Ethereum)",
+                    "Use regulated US exchanges (Coinbase, Kraken, Gemini)",
+                    "Enable all security features (2FA)",
+                    "Keep detailed records for taxes",
+                    "Never share private keys or seed phrases"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "financial-planning",
+        "name": "Financial Planning",
+        "description": "Creating a comprehensive financial plan",
+        "color": "#CE82FF",
+        "estimated_minutes": 30,
+        "order": 11,
+        "prerequisites": [
+          "money-management",
+          "investing-basics"
+        ],
+        "lessons": [
+          {
+            "id": "financial-goals",
+            "skill_slug": "financial-goals",
+            "title": "Setting Financial Goals",
+            "order": 1,
+            "estimated_minutes": 12,
+            "xp_reward": 15,
+            "learning_objectives": [
+              "Create specific financial goals",
+              "Prioritize goals appropriately"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "goal-types",
+                "title": "Types of Financial Goals",
+                "content": {
+                  "by_timeline": [
+                    {
+                      "type": "Short-term (0-1 year)",
+                      "examples": [
+                        "$1,000 emergency fund",
+                        "Pay off credit card"
+                      ],
+                      "vehicle": "High-yield savings"
+                    },
+                    {
+                      "type": "Medium-term (1-5 years)",
+                      "examples": [
+                        "6-month emergency fund",
+                        "Car down payment"
+                      ],
+                      "vehicle": "Savings, CDs"
+                    },
+                    {
+                      "type": "Long-term (5+ years)",
+                      "examples": [
+                        "House down payment",
+                        "Retirement"
+                      ],
+                      "vehicle": "Investment accounts, 401k, IRA"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "concept",
+                "id": "smart-goals",
+                "title": "SMART Goals Framework",
+                "content": {
+                  "framework": [
+                    {
+                      "letter": "S - Specific",
+                      "good_example": "Save $6,000 for emergency fund"
+                    },
+                    {
+                      "letter": "M - Measurable",
+                      "how": "Include numbers to track progress"
+                    },
+                    {
+                      "letter": "A - Achievable",
+                      "good_example": "Save $6,000 this year ($500/month)"
+                    },
+                    {
+                      "letter": "R - Relevant",
+                      "meaning": "Aligns with your values"
+                    },
+                    {
+                      "letter": "T - Time-bound",
+                      "good_example": "Pay off $3,000 credit card by December 31"
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "procedure",
+                "id": "priority-order",
+                "title": "Financial Goal Priority Order",
+                "content": {
+                  "recommended_order": [
+                    {
+                      "priority": 1,
+                      "goal": "Build $1,000 starter emergency fund",
+                      "why": "Prevents debt spiral"
+                    },
+                    {
+                      "priority": 2,
+                      "goal": "Capture full employer 401(k) match",
+                      "why": "Free money - 100% return"
+                    },
+                    {
+                      "priority": 3,
+                      "goal": "Pay off high-interest debt (above 7%)",
+                      "why": "Guaranteed return"
+                    },
+                    {
+                      "priority": 4,
+                      "goal": "Build 3-6 month emergency fund",
+                      "why": "Complete safety net"
+                    },
+                    {
+                      "priority": 5,
+                      "goal": "Maximize IRA contributions ($7,000/year)",
+                      "why": "Tax-advantaged savings"
+                    },
+                    {
+                      "priority": 6,
+                      "goal": "Maximize 401(k) contributions ($23,000/year)",
+                      "why": "Additional tax-advantaged savings"
+                    },
+                    {
+                      "priority": 7,
+                      "goal": "Invest in taxable brokerage",
+                      "why": "Build wealth beyond limits"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "net-worth",
+            "skill_slug": "net-worth",
+            "title": "Tracking Your Net Worth",
+            "order": 2,
+            "estimated_minutes": 10,
+            "xp_reward": 12,
+            "learning_objectives": [
+              "Calculate net worth",
+              "Track net worth over time"
+            ],
+            "content_blocks": [
+              {
+                "type": "concept",
+                "id": "net-worth-definition",
+                "title": "What is Net Worth",
+                "content": {
+                  "definition": "Total value of everything you own minus everything you owe.",
+                  "formula": "Net Worth = Assets - Liabilities",
+                  "assets": {
+                    "definition": "Things you own with monetary value",
+                    "examples": [
+                      "Cash",
+                      "Investments",
+                      "Property"
+                    ]
+                  },
+                  "liabilities": {
+                    "definition": "Debts you owe",
+                    "examples": [
+                      "Credit cards",
+                      "Student loans",
+                      "Car loans",
+                      "Mortgage"
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "calculation",
+                "id": "net-worth-example",
+                "title": "Net Worth Example",
+                "content": {
+                  "scenario": "Recent graduate, 1 year into career",
+                  "assets": [
+                    {
+                      "item": "Checking",
+                      "value": "$2,500"
+                    },
+                    {
+                      "item": "Savings",
+                      "value": "$4,000"
+                    },
+                    {
+                      "item": "401(k)",
+                      "value": "$6,000"
+                    },
+                    {
+                      "item": "Car value",
+                      "value": "$12,000"
+                    }
+                  ],
+                  "total_assets": "$24,500",
+                  "liabilities": [
+                    {
+                      "item": "Student loans",
+                      "value": "$25,000"
+                    },
+                    {
+                      "item": "Car loan",
+                      "value": "$8,000"
+                    }
+                  ],
+                  "total_liabilities": "$33,000",
+                  "net_worth": "-$8,500",
+                  "interpretation": "Negative net worth is common early in career. Focus on the trend over time."
+                }
+              },
+              {
+                "type": "concept",
+                "id": "tracking-net-worth",
+                "title": "Tracking Over Time",
+                "content": {
+                  "frequency": "Calculate monthly or quarterly",
+                  "tools": [
+                    {
+                      "name": "Personal Capital (Empower)",
+                      "feature": "Links accounts, automatic tracking"
+                    },
+                    {
+                      "name": "Mint",
+                      "feature": "Also includes budgeting"
+                    },
+                    {
+                      "name": "Spreadsheet",
+                      "feature": "Full control"
+                    }
+                  ],
+                  "milestones": [
+                    {
+                      "milestone": "Net worth positive",
+                      "meaning": "Own more than you owe"
+                    },
+                    {
+                      "milestone": "$100,000",
+                      "meaning": "Compound growth accelerates"
+                    },
+                    {
+                      "milestone": "1x annual salary",
+                      "meaning": "One year's income saved"
+                    },
+                    {
+                      "milestone": "25x annual expenses",
+                      "meaning": "Financial independence target"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
