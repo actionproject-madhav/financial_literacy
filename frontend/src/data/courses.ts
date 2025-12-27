@@ -139,6 +139,69 @@ A portfolio is your collection of investments. Like a balanced meal, you want va
           `,
                     interactive: true
                 }
+            },
+            {
+                id: 4,
+                title: "Risk & Reward",
+                type: "lesson",
+                content: {
+                    text: "",
+                    quiz: [
+                        {
+                            question: "What is diversification?",
+                            options: [
+                                "Putting all money in one stock",
+                                "Spreading investments across different assets",
+                                "Only investing in bonds",
+                                "Avoiding the stock market"
+                            ],
+                            correct: 1,
+                            explanation: "Diversification means not putting all your eggs in one basket! 🥚🧺"
+                        }
+                    ]
+                }
+            },
+            {
+                id: 5,
+                title: "Bonus Chest",
+                type: "chest",
+                content: { text: "Bonus rewards!", quiz: [] }
+            },
+            {
+                id: 6,
+                title: "Market Orders",
+                type: "lesson",
+                content: {
+                    text: "",
+                    quiz: [
+                        {
+                            question: "What is a market order?",
+                            options: [
+                                "An order to buy at a specific price",
+                                "An order to buy immediately at current price",
+                                "An order to sell only",
+                                "A type of limit order"
+                            ],
+                            correct: 1,
+                            explanation: "A market order executes immediately at the best available price! ⚡"
+                        }
+                    ]
+                }
+            },
+            {
+                id: 7,
+                title: "Your Investment Plan",
+                type: "lesson",
+                content: {
+                    text: "",
+                    quiz: []
+                }
+            },
+            {
+                id: 8,
+                title: "Unit Complete!",
+                type: "trophy",
+                content: { text: "Congratulations!", quiz: [] }
             }
         ],
         completed: false

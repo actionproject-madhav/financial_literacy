@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Heart, Check, Flag } from 'lucide-react'
+import { X, Heart, Check, Flag, Volume2, Mic, MicOff } from 'lucide-react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { COMPREHENSIVE_COURSES } from '../data/courses'
 import { useUserStore } from '../stores/userStore'
@@ -36,6 +36,87 @@ export const LessonPage = () => {
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedOption, setSelectedOption] = useState<number | null>(null)
   const [status, setStatus] = useState<'idle' | 'correct' | 'wrong'>('idle')
+
+  // Voice accessibility states
+  const [isRecording, setIsRecording] = useState(false)
+  const [voiceAnswer, setVoiceAnswer] = useState('')
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false)
+
+  // Language configuration
+  type LanguageCode = 'en' | 'hi' | 'ne'
+  const [selectedLanguage, setSelectedLanguage] = useState<LanguageCode>('en')
+
+  const languages: Record<LanguageCode, { name: string; flag: string; speechCode: string; nativeName: string }> = {
+    en: { name: 'English', nativeName: 'English', flag: 'https://flagcdn.com/w40/us.png', speechCode: 'en-US' },
+    hi: { name: 'Hindi', nativeName: 'हिन्दी', flag: 'https://flagcdn.com/w40/in.png', speechCode: 'hi-IN' },
+    ne: { name: 'Nepali', nativeName: 'नेपाली', flag: 'https://flagcdn.com/w40/np.png', speechCode: 'ne-NP' }
+  }
+
+  const currentLang = languages[selectedLanguage]
+
+  // Cycle through languages
+  const cycleLanguage = () => {
+    const langOrder: LanguageCode[] = ['en', 'hi', 'ne']
+    const currentIndex = langOrder.indexOf(selectedLanguage)
+    const nextIndex = (currentIndex + 1) % langOrder.length
+    setSelectedLanguage(langOrder[nextIndex])
+    setShowLanguageMenu(false)
+  }
+
+  // Text-to-Speech: Read the question aloud in selected language
+  const speakQuestion = (text: string) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel() // Stop any ongoing speech
+      const utterance = new SpeechSynthesisUtterance(text)
+      utterance.lang = currentLang.speechCode
+      utterance.rate = 0.9
+      utterance.pitch = 1
+      utterance.onstart = () => setIsSpeaking(true)
+      utterance.onend = () => setIsSpeaking(false)
+      window.speechSynthesis.speak(utterance)
+    }
+  }
+
+  // Speech-to-Text: Record user's voice answer in selected language
+  const toggleVoiceRecording = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Voice recognition is not supported in this browser. Please use Chrome.')
+      return
+    }
+
+    if (isRecording) {
+      setIsRecording(false)
+      return
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    const recognition = new SpeechRecognition()
+    recognition.continuous = false
+    recognition.interimResults = false
+    recognition.lang = currentLang.speechCode // Use selected language
+
+    recognition.onstart = () => {
+      setIsRecording(true)
+      setVoiceAnswer('')
+    }
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript
+      setVoiceAnswer(transcript)
+      setIsRecording(false)
+    }
+
+    recognition.onerror = () => {
+      setIsRecording(false)
+    }
+
+    recognition.onend = () => {
+      setIsRecording(false)
+    }
+
+    recognition.start()
+  }
 
   // Find course and module based on lessonId
   const moduleId = Number(lessonId)
@@ -170,7 +251,7 @@ export const LessonPage = () => {
                 <img src="/man.gif" alt="Mascot" className="w-24 h-24 sm:w-32 sm:h-32 object-contain" />
               </div>
 
-              {/* Speech Bubble */}
+              {/* Speech Bubble with Voice Button */}
               <div className="relative border-2 border-gray-200 rounded-2xl p-4 sm:p-6 flex-1 bg-white">
                 <div className="absolute top-[-14px] left-1/2 -translate-x-1/2 sm:top-8 sm:left-[-14px] sm:translate-x-0 w-6 h-6 bg-white border-t-2 border-l-2 border-gray-200 transform rotate-45 sm:-rotate-45"></div>
                 {currentStepData.type === 'content' ? (
@@ -178,8 +259,41 @@ export const LessonPage = () => {
                     {renderContent(currentStepData.content || '')}
                   </div>
                 ) : (
-                  <div className="text-lg font-medium text-gray-700">
-                    {currentStepData.question}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="text-lg font-medium text-gray-700 flex-1">
+                      {currentStepData.question}
+                    </div>
+
+                    {/* Voice Controls: Flag + Speaker */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {/* Language Flag Button */}
+                      <button
+                        onClick={cycleLanguage}
+                        className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl border-2 border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300 transition-all"
+                        title={`Current: ${currentLang.name}. Click to change.`}
+                      >
+                        <img
+                          src={currentLang.flag}
+                          alt={currentLang.name}
+                          className="w-6 h-4 rounded object-cover shadow-sm"
+                        />
+                        <span className="text-xs font-bold text-gray-600 hidden sm:inline">
+                          {currentLang.nativeName}
+                        </span>
+                      </button>
+
+                      {/* Speaker Button - Read Question Aloud */}
+                      <button
+                        onClick={() => speakQuestion(currentStepData.question)}
+                        className={`p-2.5 rounded-xl border-2 transition-all ${isSpeaking
+                          ? 'bg-blue-100 border-blue-300 text-blue-600'
+                          : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-500'
+                          }`}
+                        title={`Listen in ${currentLang.name}`}
+                      >
+                        <Volume2 className={`w-5 h-5 ${isSpeaking ? 'animate-pulse' : ''}`} />
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -187,40 +301,93 @@ export const LessonPage = () => {
 
             {/* Quiz Options */}
             {currentStepData.type === 'quiz' && (
-              <div className="grid gap-3 w-full">
-                {currentStepData.options.map((option: string, index: number) => {
-                  const isSelected = selectedOption === index;
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => status === 'idle' && setSelectedOption(index)}
-                      disabled={status !== 'idle'}
-                      className={`
+              <>
+                <div className="grid gap-3 w-full">
+                  {currentStepData.options.map((option: string, index: number) => {
+                    const isSelected = selectedOption === index;
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => status === 'idle' && setSelectedOption(index)}
+                        disabled={status !== 'idle'}
+                        className={`
                         w-full p-3 rounded-xl border-2 border-b-4 text-base font-medium text-left transition-all flex items-center gap-3 group
                         ${isSelected
-                          ? 'bg-[#ddf4ff] border-[#84d8ff] text-[#1cb0f6]'
-                          : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
-                        }
+                            ? 'bg-[#ddf4ff] border-[#84d8ff] text-[#1cb0f6]'
+                            : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                          }
                         ${status !== 'idle' && index === currentStepData.correct ? '!bg-[#d7ffb8] !border-[#58cc02] !text-[#58cc02]' : ''}
                         ${status === 'wrong' && isSelected ? '!bg-[#ffdfe0] !border-[#ff4b4b] !text-[#ff4b4b]' : ''}
                       `}
-                    >
-                      <div className={`
+                      >
+                        <div className={`
                         w-7 h-7 rounded-lg border-2 flex items-center justify-center text-xs font-bold transition-colors flex-shrink-0
                         ${isSelected
-                          ? 'border-[#1cb0f6] text-[#1cb0f6]'
-                          : 'border-gray-200 text-gray-400 group-hover:border-gray-300'
-                        }
+                            ? 'border-[#1cb0f6] text-[#1cb0f6]'
+                            : 'border-gray-200 text-gray-400 group-hover:border-gray-300'
+                          }
                         ${status !== 'idle' && index === currentStepData.correct ? '!border-[#58cc02] !text-[#58cc02]' : ''}
                         ${status === 'wrong' && isSelected ? '!border-[#ff4b4b] !text-[#ff4b4b]' : ''}
                       `}>
-                        {index + 1}
+                          {index + 1}
+                        </div>
+                        {option}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Voice Answer Section */}
+                <div className="mt-6 p-4 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Mic className="w-5 h-5 text-gray-400" />
+                      <span className="font-bold text-gray-600">Or speak your answer</span>
+                      <div className="flex items-center gap-1 px-2 py-1 bg-white border border-gray-200 rounded-lg">
+                        <img src={currentLang.flag} alt={currentLang.name} className="w-4 h-3 rounded object-cover" />
+                        <span className="text-xs text-gray-500">{currentLang.nativeName}</span>
                       </div>
-                      {option}
+                    </div>
+                    <button
+                      onClick={toggleVoiceRecording}
+                      disabled={status !== 'idle'}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all border-b-4 active:border-b-0 active:translate-y-1 ${isRecording
+                        ? 'bg-red-500 border-red-600 text-white'
+                        : 'bg-blue-500 border-blue-600 text-white hover:bg-blue-400 disabled:bg-gray-200 disabled:border-gray-300 disabled:text-gray-400'
+                        }`}
+                    >
+                      {isRecording ? (
+                        <>
+                          <MicOff className="w-4 h-4" />
+                          STOP
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="w-4 h-4" />
+                          RECORD
+                        </>
+                      )}
                     </button>
-                  )
-                })}
-              </div>
+                  </div>
+
+                  {/* Recording Indicator */}
+                  {isRecording && (
+                    <div className="flex items-center gap-3 p-3 bg-red-50 border-2 border-red-200 rounded-xl mb-3">
+                      <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                      <span className="text-red-600 font-medium">Listening in {currentLang.name}... Speak now!</span>
+                    </div>
+                  )}
+
+                  {/* Voice Answer Display */}
+                  {voiceAnswer && (
+                    <div className="p-4 bg-white border-2 border-blue-200 rounded-xl">
+                      <div className="text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">Your spoken answer:</div>
+                      <div className="text-lg font-medium text-gray-800">"{voiceAnswer}"</div>
+                      <div className="text-xs text-gray-400 mt-2">AI will analyze this answer when you click CHECK</div>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </motion.div>
         </AnimatePresence>

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Trophy, Zap, Heart, Star, Lock, Flame, Gem, ArrowLeft } from 'lucide-react'
+import { Trophy, Zap, Heart, Star, Lock, Flame, Gem, ArrowLeft, Sparkles, Brain, Target, CheckCircle2, Circle, MessageSquare, TrendingUp } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useUserStore } from '../stores/userStore'
 import { COMPREHENSIVE_COURSES } from '../data/courses'
@@ -27,6 +27,28 @@ export const LearnPage = () => {
             {/* Main Content Area */}
             <div className="flex-1 flex justify-center xl:pr-96">
                 <div className="w-full max-w-[720px] py-8 px-5">
+                    {/* Daily AI Insight Banner */}
+                    <div className="mb-8">
+                        <div className="bg-[#ddf4ff] border-2 border-[#ddf4ff] rounded-2xl p-0.5 relative overflow-hidden group hover:bg-[#cbeaff] transition-colors">
+                            <div className="p-5 flex items-start gap-4">
+                                <div className="p-2 rounded-xl">
+                                    <img src="/fire.svg" alt="Fire" className="w-8 h-8 object-contain" />
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-xs font-extrabold text-orange-500 uppercase tracking-widest">
+                                            AI Insight of the Day
+                                        </span>
+                                    </div>
+                                    <h3 className="text-gray-800 font-extrabold text-lg mb-1">Credit Score Boost</h3>
+                                    <p className="text-gray-500 text-sm font-medium leading-relaxed">
+                                        Paying your rent online can now boost your credit score. Experian Boost™ averages a 13pt increase for new users.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="space-y-6">
                         {COMPREHENSIVE_COURSES.map((course, index) => {
                             const isUnlocked = index === 0;
@@ -35,13 +57,10 @@ export const LearnPage = () => {
                             const progress = totalModules > 0 ? (completedInCourse / totalModules) * 100 : 0;
 
                             return (
-                                <motion.div
+                                <div
                                     key={course.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.1 }}
                                     className={`rounded-2xl p-0 relative overflow-hidden border-2 transition-transform hover:translate-y-[-2px] ${isUnlocked
-                                        ? 'bg-[#dcfce7] border-[#bbf7d0]' // Green theme
+                                        ? 'bg-[#dcfce7] border-[#dcfce7]' // Green theme
                                         : 'bg-white border-gray-200'
                                         } ${isUnlocked ? '' : 'opacity-100'}`}
                                 >
@@ -51,17 +70,6 @@ export const LearnPage = () => {
                                                 <span className={`text-xs font-extrabold tracking-widest uppercase ${isUnlocked ? 'text-green-600' : 'text-cyan-500'}`}>
                                                     {isUnlocked ? 'SECTION 1, UNIT 1' : `SECTION ${index + 1}, UNIT 1`}
                                                 </span>
-                                                {isUnlocked && (
-                                                    <div className="bg-white/60 px-2 py-1 rounded-lg text-[10px] font-extrabold text-green-700 flex items-center gap-1 cursor-pointer hover:bg-white/80 transition-colors">
-                                                        <Star className="w-3 h-3 fill-current" />
-                                                        SEE DETAILS
-                                                    </div>
-                                                )}
-                                                {!isUnlocked && (
-                                                    <div className="bg-cyan-100 px-2 py-1 rounded-lg text-[10px] font-extrabold text-cyan-600 flex items-center gap-1 cursor-pointer hover:bg-cyan-200 transition-colors">
-                                                        SEE DETAILS
-                                                    </div>
-                                                )}
                                             </div>
                                         </div>
                                         <h3 className="text-2xl font-extrabold text-gray-800 tracking-tight leading-none mb-2">{course.title}</h3>
@@ -76,7 +84,7 @@ export const LearnPage = () => {
                                                         <div className="flex-1 h-4 bg-white rounded-full overflow-hidden shadow-inner">
                                                             <div className="h-full bg-green-500 rounded-full transition-all duration-500" style={{ width: `${Math.max(progress, 15)}%` }} />
                                                         </div>
-                                                        <Trophy className="w-6 h-6 text-yellow-400 fill-current drop-shadow-sm" />
+                                                        <img src="/trophy.svg" alt="Trophy" className="w-12 h-12 drop-shadow-sm" />
                                                     </div>
 
                                                     <button
@@ -140,7 +148,7 @@ export const LearnPage = () => {
                                             />
                                         </div>
                                     </div>
-                                </motion.div>
+                                </div>
                             )
                         })}
                     </div>
@@ -171,6 +179,68 @@ export const LearnPage = () => {
 
                     {/* Widgets */}
                     <div className="space-y-6">
+
+                        {/* AI Financial Coach Widget */}
+                        <div className="border-2 border-indigo-50 rounded-2xl p-0 overflow-hidden bg-indigo-50 hover:bg-indigo-100 transition-colors cursor-pointer group shadow-sm">
+                            <div className="p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h3 className="font-extrabold text-indigo-950 flex items-center gap-2">
+                                        <img src="/profile.svg" alt="Coach" className="w-6 h-6 object-contain" />
+                                        FinAI Coach
+                                    </h3>
+                                    <div className="px-2 py-1 bg-indigo-100 rounded-lg text-[10px] font-bold text-indigo-600 uppercase tracking-wide">
+                                        BETA
+                                    </div>
+                                </div>
+                                <p className="text-sm text-indigo-900/70 font-medium leading-relaxed mb-4">
+                                    Confused about taxes or 401(k)? tailored advice for your situation.
+                                </p>
+                                <div className="flex gap-2">
+                                    <button className="flex-1 py-2 px-3 bg-white border-2 border-indigo-100 rounded-xl text-indigo-600 text-xs font-bold uppercase tracking-wide hover:bg-indigo-50 transition-colors text-center">
+                                        Ask Question
+                                    </button>
+                                    <button className="flex-1 py-2 px-3 bg-indigo-600 border-b-4 border-indigo-700 rounded-xl text-white text-xs font-bold uppercase tracking-wide hover:bg-indigo-500 active:border-b-0 active:translate-y-0.5 transition-all text-center">
+                                        Start Chat
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Immigrant Journey Tracker */}
+                        <div className="border-2 border-gray-200 rounded-2xl p-4 bg-white hover:bg-gray-50 transition-colors">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="font-bold text-gray-900">My American Journey</h3>
+                                <TrendingUp className="w-4 h-4 text-gray-400" />
+                            </div>
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-3 opacity-50">
+                                    <CheckCircle2 className="w-5 h-5 text-green-500 fill-green-100" />
+                                    <span className="text-sm font-bold text-gray-400 line-through">Visa Approved</span>
+                                </div>
+                                <div className="flex items-center gap-3 opacity-50">
+                                    <CheckCircle2 className="w-5 h-5 text-green-500 fill-green-100" />
+                                    <span className="text-sm font-bold text-gray-400 line-through">SSN Obtained</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="relative">
+                                        <div className="w-5 h-5 rounded-full border-2 border-blue-500 flex items-center justify-center bg-blue-50">
+                                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                                        </div>
+                                    </div>
+                                    <span className="text-sm font-bold text-gray-800">Open Bank Account</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <Circle className="w-5 h-5 text-gray-300" />
+                                    <span className="text-sm font-bold text-gray-400">Build Credit Score</span>
+                                </div>
+                            </div>
+                            <div className="mt-4 pt-4 border-t-2 border-gray-100">
+                                <button className="w-full text-center text-gray-400 text-xs font-extrabold uppercase tracking-widest hover:text-gray-600">
+                                    View Full Roadmap
+                                </button>
+                            </div>
+                        </div>
+
                         {/* Try Super */}
                         <div className="border-2 border-gray-200 rounded-2xl p-4 relative overflow-hidden group cursor-pointer hover:bg-gray-50 transition-colors bg-white">
                             <div className="relative z-10">

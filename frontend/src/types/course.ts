@@ -15,7 +15,7 @@ export interface ModuleContent {
 export interface Module {
     id: number;
     title: string;
-    type: 'lesson' | 'video' | 'interactive';
+    type: 'lesson' | 'video' | 'interactive' | 'chest' | 'trophy';
     content: ModuleContent;
 }
 
