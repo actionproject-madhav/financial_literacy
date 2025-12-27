@@ -1,0 +1,231 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "generated_at": "2025-12-27T00:00:00Z",
+    "total_assets": 15,
+    "note": "Sample media assets for FinLit curriculum. Replace URLs with actual CDN URLs."
+  },
+  "assets": [
+    {
+      "asset_id": "img-us-bills-lineup",
+      "type": "image",
+      "urls": {
+        "original": "https://cdn.finlit.app/images/us-bills-lineup.png",
+        "thumbnail": "https://cdn.finlit.app/images/us-bills-lineup-thumb.png",
+        "mobile": "https://cdn.finlit.app/images/us-bills-lineup-mobile.png"
+      },
+      "alt_text": "US dollar bills from $1 to $100 lined up side by side",
+      "caption": "All US bills are the same size - check the number carefully",
+      "dimensions": {"width": 1200, "height": 400},
+      "file_size": 125000,
+      "mime_type": "image/png",
+      "tags": ["currency", "bills", "banking", "us-currency"],
+      "used_in": ["us-currency"]
+    },
+    {
+      "asset_id": "img-us-coins-scale",
+      "type": "image",
+      "urls": {
+        "original": "https://cdn.finlit.app/images/us-coins-scale.png",
+        "thumbnail": "https://cdn.finlit.app/images/us-coins-scale-thumb.png",
+        "mobile": "https://cdn.finlit.app/images/us-coins-scale-mobile.png"
+      },
+      "alt_text": "Four US coins shown to scale: penny, nickel, dime, quarter",
+      "caption": "Notice the dime is smaller than the nickel despite being worth more",
+      "dimensions": {"width": 800, "height": 400},
+      "file_size": 85000,
+      "mime_type": "image/png",
+      "tags": ["currency", "coins", "banking", "us-currency"],
+      "used_in": ["us-currency"]
+    },
+    {
+      "asset_id": "anim-sales-tax-receipt",
+      "type": "animation",
+      "urls": {
+        "original": "https://cdn.finlit.app/animations/sales-tax-receipt.gif"
+      },
+      "alt_text": "Animation showing tax being added to a purchase at checkout",
+      "caption": "Displayed prices don't include sales tax",
+      "dimensions": {"width": 600, "height": 800},
+      "file_size": 450000,
+      "mime_type": "image/gif",
+      "tags": ["taxes", "shopping", "us-currency"],
+      "used_in": ["us-currency"]
+    },
+    {
+      "asset_id": "calc-sales-tax",
+      "type": "calculator",
+      "urls": {},
+      "alt_text": "Interactive sales tax calculator",
+      "component_name": "SalesTaxCalculator",
+      "component_props": {
+        "default_rate": 8.0,
+        "min_rate": 0,
+        "max_rate": 15,
+        "show_breakdown": true
+      },
+      "tags": ["taxes", "calculator", "interactive"],
+      "used_in": ["us-currency"]
+    },
+    {
+      "asset_id": "img-checking-account-features",
+      "type": "image",
+      "urls": {
+        "original": "https://cdn.finlit.app/images/checking-account-features.png",
+        "thumbnail": "https://cdn.finlit.app/images/checking-account-features-thumb.png"
+      },
+      "alt_text": "Diagram showing key features of a checking account",
+      "dimensions": {"width": 1000, "height": 600},
+      "file_size": 180000,
+      "mime_type": "image/png",
+      "tags": ["banking", "checking-account"],
+      "used_in": ["checking-accounts"]
+    },
+    {
+      "asset_id": "img-debit-card-parts",
+      "type": "image",
+      "urls": {
+        "original": "https://cdn.finlit.app/images/debit-card-parts.png",
+        "thumbnail": "https://cdn.finlit.app/images/debit-card-parts-thumb.png"
+      },
+      "alt_text": "Labeled diagram of a debit card showing card number, expiration, CVV, and name",
+      "caption": "Important parts of your debit card",
+      "dimensions": {"width": 800, "height": 500},
+      "file_size": 95000,
+      "mime_type": "image/png",
+      "tags": ["banking", "debit-card"],
+      "used_in": ["using-debit-cards"]
+    },
+    {
+      "asset_id": "calc-compound-interest",
+      "type": "calculator",
+      "urls": {},
+      "alt_text": "Compound interest growth calculator",
+      "component_name": "CompoundInterestCalculator",
+      "component_props": {
+        "initial_amount": 1000,
+        "interest_rate": 2.0,
+        "years": 10,
+        "show_chart": true
+      },
+      "tags": ["savings", "calculator", "interest", "interactive"],
+      "used_in": ["savings-accounts-interest"]
+    },
+    {
+      "asset_id": "chart-compound-growth",
+      "type": "chart",
+      "urls": {},
+      "alt_text": "Chart showing compound interest growth over time",
+      "component_name": "CompoundGrowthChart",
+      "component_props": {
+        "principal": 1000,
+        "rate": 2.0,
+        "years": 10
+      },
+      "tags": ["savings", "chart", "interest"],
+      "used_in": ["savings-accounts-interest"]
+    },
+    {
+      "asset_id": "img-credit-score-factors",
+      "type": "image",
+      "urls": {
+        "original": "https://cdn.finlit.app/images/credit-score-factors.png",
+        "thumbnail": "https://cdn.finlit.app/images/credit-score-factors-thumb.png"
+      },
+      "alt_text": "Pie chart showing the 5 factors that determine credit score",
+      "caption": "Payment history (35%) has the biggest impact on your credit score",
+      "dimensions": {"width": 800, "height": 800},
+      "file_size": 120000,
+      "mime_type": "image/png",
+      "tags": ["credit", "credit-score"],
+      "used_in": ["credit-score-factors"]
+    },
+    {
+      "asset_id": "img-credit-score-ranges",
+      "type": "image",
+      "urls": {
+        "original": "https://cdn.finlit.app/images/credit-score-ranges.png",
+        "thumbnail": "https://cdn.finlit.app/images/credit-score-ranges-thumb.png"
+      },
+      "alt_text": "FICO credit score ranges from 300-850 with colored bands",
+      "caption": "Credit score ranges: Poor (300-579), Fair (580-669), Good (670-739), Very Good (740-799), Excellent (800-850)",
+      "dimensions": {"width": 1000, "height": 300},
+      "file_size": 75000,
+      "mime_type": "image/png",
+      "tags": ["credit", "credit-score"],
+      "used_in": ["understanding-credit-scores"]
+    },
+    {
+      "asset_id": "calc-budget-50-30-20",
+      "type": "calculator",
+      "urls": {},
+      "alt_text": "50/30/20 budget calculator",
+      "component_name": "BudgetCalculator",
+      "component_props": {
+        "rule": "50-30-20",
+        "show_breakdown": true
+      },
+      "tags": ["budgeting", "calculator", "money-management", "interactive"],
+      "used_in": ["creating-budget"]
+    },
+    {
+      "asset_id": "img-stock-vs-bond",
+      "type": "image",
+      "urls": {
+        "original": "https://cdn.finlit.app/images/stock-vs-bond-comparison.png",
+        "thumbnail": "https://cdn.finlit.app/images/stock-vs-bond-comparison-thumb.png"
+      },
+      "alt_text": "Comparison table of stocks vs bonds",
+      "caption": "Stocks have higher potential returns but also higher risk",
+      "dimensions": {"width": 1000, "height": 600},
+      "file_size": 140000,
+      "mime_type": "image/png",
+      "tags": ["investing", "stocks", "bonds"],
+      "used_in": ["stocks-and-bonds"]
+    },
+    {
+      "asset_id": "img-diversification-portfolio",
+      "type": "image",
+      "urls": {
+        "original": "https://cdn.finlit.app/images/diversification-portfolio.png",
+        "thumbnail": "https://cdn.finlit.app/images/diversification-portfolio-thumb.png"
+      },
+      "alt_text": "Pie chart showing a diversified investment portfolio",
+      "caption": "A diversified portfolio spreads investments across different asset types",
+      "dimensions": {"width": 800, "height": 800},
+      "file_size": 110000,
+      "mime_type": "image/png",
+      "tags": ["investing", "diversification"],
+      "used_in": ["diversification"]
+    },
+    {
+      "asset_id": "calc-401k-growth",
+      "type": "calculator",
+      "urls": {},
+      "alt_text": "401(k) retirement savings calculator with employer match",
+      "component_name": "RetirementCalculator",
+      "component_props": {
+        "account_type": "401k",
+        "show_employer_match": true,
+        "show_projection": true
+      },
+      "tags": ["retirement", "401k", "calculator", "interactive"],
+      "used_in": ["401k-plans"]
+    },
+    {
+      "asset_id": "video-how-to-file-taxes",
+      "type": "video",
+      "urls": {
+        "original": "https://cdn.finlit.app/videos/how-to-file-taxes.mp4",
+        "thumbnail": "https://cdn.finlit.app/videos/how-to-file-taxes-thumb.jpg"
+      },
+      "alt_text": "Step-by-step video guide on filing your tax return",
+      "caption": "Watch this 5-minute guide to filing your first US tax return",
+      "dimensions": {"width": 1920, "height": 1080},
+      "file_size": 15000000,
+      "mime_type": "video/mp4",
+      "tags": ["taxes", "video", "tutorial"],
+      "used_in": ["filing-tax-return"]
+    }
+  ]
+}

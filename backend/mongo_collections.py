@@ -28,6 +28,9 @@ class FinLitCollections:
     - question_templates: Dynamic question generation
     - cultural_contexts: Cultural personalization
     - kc_prerequisites: Skill dependencies
+    - curriculum_modules: Curriculum modules/units
+    - curriculum_lessons: Individual lessons within modules
+    - media_assets: Images, videos, animations, calculators
     """
 
     def __init__(self, db):
@@ -52,6 +55,13 @@ class FinLitCollections:
         self.voice_responses = db.voice_responses
         self.misconceptions = db.misconceptions
         self.learner_misconceptions = db.learner_misconceptions
+
+        # Curriculum collections
+        self.curriculum_modules = db.curriculum_modules
+        self.curriculum_lessons = db.curriculum_lessons
+
+        # Media assets collection
+        self.media_assets = db.media_assets
     
     def _to_object_id(self, id_value):
         """Convert string ID to ObjectId, or return as-is if already ObjectId"""
@@ -156,6 +166,25 @@ class FinLitCollections:
         ], unique=True)
         self.learner_misconceptions.create_index([("learner_id", ASCENDING)])
         self.learner_misconceptions.create_index([("resolved", ASCENDING)])
+
+        # Curriculum Modules indexes
+        self.curriculum_modules.create_index([("module_id", ASCENDING)], unique=True)
+        self.curriculum_modules.create_index([("order", ASCENDING)])
+
+        # Curriculum Lessons indexes
+        self.curriculum_lessons.create_index([("lesson_id", ASCENDING)], unique=True)
+        self.curriculum_lessons.create_index([("module_id", ASCENDING)])
+        self.curriculum_lessons.create_index([("skill_slug", ASCENDING)])
+        self.curriculum_lessons.create_index([
+            ("module_id", ASCENDING),
+            ("order", ASCENDING)
+        ])
+
+        # Media Assets indexes
+        self.media_assets.create_index([("asset_id", ASCENDING)], unique=True)
+        self.media_assets.create_index([("type", ASCENDING)])
+        self.media_assets.create_index([("tags", ASCENDING)])
+        self.media_assets.create_index([("used_in", ASCENDING)])
 
         print("All indexes created successfully!")
 
@@ -633,3 +662,88 @@ class FinLitCollections:
         return list(self.voice_responses.find({
             'learner_id': ObjectId(learner_id)
         }).sort('created_at', DESCENDING).limit(limit))
+
+    # ========== MEDIA ASSETS METHODS ==========
+
+    def create_media_asset(
+        self,
+        asset_id: str,
+        asset_type: str,
+        urls: Dict[str, str],
+        **kwargs
+    ) -> str:
+        """
+        Create a media asset record
+
+        Args:
+            asset_id: Unique asset identifier (e.g., "img-us-coins")
+            asset_type: Type of media (image, animation, lottie, video, calculator, etc.)
+            urls: Dictionary of URLs (original, thumbnail, mobile, etc.)
+            **kwargs: Additional fields (alt_text, caption, dimensions, etc.)
+
+        Returns:
+            Media asset MongoDB ID
+        """
+        media_asset = {
+            'asset_id': asset_id,
+            'type': asset_type,
+            'urls': urls,
+            'alt_text': kwargs.get('alt_text', ''),
+            'caption': kwargs.get('caption'),
+            'dimensions': kwargs.get('dimensions'),  # {width: int, height: int}
+            'file_size': kwargs.get('file_size'),  # bytes
+            'mime_type': kwargs.get('mime_type'),
+            'tags': kwargs.get('tags', []),
+            'used_in': kwargs.get('used_in', []),  # lesson IDs or question IDs
+            'component_name': kwargs.get('component_name'),  # For interactive components
+            'component_props': kwargs.get('component_props'),  # Props for components
+            'is_active': kwargs.get('is_active', True),
+            'created_at': datetime.utcnow(),
+            'updated_at': datetime.utcnow()
+        }
+        result = self.media_assets.insert_one(media_asset)
+        return str(result.inserted_id)
+
+    def get_media_asset(self, asset_id: str) -> Optional[Dict]:
+        """Get media asset by asset_id"""
+        return self.media_assets.find_one({'asset_id': asset_id})
+
+    def get_media_asset_by_mongo_id(self, mongo_id: str) -> Optional[Dict]:
+        """Get media asset by MongoDB _id"""
+        return self.media_assets.find_one({'_id': ObjectId(mongo_id)})
+
+    def update_media_asset(self, asset_id: str, updates: Dict) -> bool:
+        """Update media asset"""
+        updates['updated_at'] = datetime.utcnow()
+        result = self.media_assets.update_one(
+            {'asset_id': asset_id},
+            {'$set': updates}
+        )
+        return result.modified_count > 0
+
+    def get_media_assets_by_type(self, asset_type: str) -> List[Dict]:
+        """Get all media assets of a specific type"""
+        return list(self.media_assets.find({'type': asset_type, 'is_active': True}))
+
+    def get_media_assets_by_tags(self, tags: List[str]) -> List[Dict]:
+        """Get media assets that have any of the specified tags"""
+        return list(self.media_assets.find({
+            'tags': {'$in': tags},
+            'is_active': True
+        }))
+
+    def get_media_assets_for_lesson(self, lesson_id: str) -> List[Dict]:
+        """Get all media assets used in a specific lesson"""
+        return list(self.media_assets.find({
+            'used_in': lesson_id,
+            'is_active': True
+        }))
+
+    def delete_media_asset(self, asset_id: str) -> bool:
+        """Soft delete media asset by marking it inactive"""
+        return self.update_media_asset(asset_id, {'is_active': False})
+
+    def get_all_media_assets(self, active_only: bool = True) -> List[Dict]:
+        """Get all media assets"""
+        query = {'is_active': True} if active_only else {}
+        return list(self.media_assets.find(query).sort('created_at', DESCENDING))
