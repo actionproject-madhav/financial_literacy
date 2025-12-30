@@ -28,6 +28,23 @@ load_dotenv()
 
 def pre_generate_all():
     """Pre-generate TTS and translations for all items"""
+    # Check API keys before starting
+    from config.services import config
+    
+    print("🔑 Checking API keys...")
+    if not config.ELEVENLABS_API_KEY:
+        print("❌ ELEVENLABS_API_KEY not found in .env file")
+        print("   Please add: ELEVENLABS_API_KEY=sk-your-key-here")
+        return
+    print(f"   ✅ ElevenLabs API key found: {config.ELEVENLABS_API_KEY[:10]}...{config.ELEVENLABS_API_KEY[-4:]}")
+    
+    if not config.OPENAI_API_KEY:
+        print("❌ OPENAI_API_KEY not found in .env file")
+        print("   Please add: OPENAI_API_KEY=sk-your-key-here")
+        return
+    print(f"   ✅ OpenAI API key found: {config.OPENAI_API_KEY[:10]}...{config.OPENAI_API_KEY[-4:]}")
+    print()
+    
     db = Database()
     if not db.is_connected:
         print("❌ Cannot connect to database. Check your MONGO_URI in .env")
@@ -35,10 +52,17 @@ def pre_generate_all():
     collection = db.collections.learning_items
     
     print("🚀 Pre-generating cache for all learning items...\n")
+    print("   Using ElevenLabs for TTS audio generation")
+    print("   Using OpenAI for text translation\n")
     
     # Initialize services
-    voice_service = VoiceService()
-    cached_voice = CachedVoiceService(voice_service)
+    try:
+        voice_service = VoiceService()
+        cached_voice = CachedVoiceService(voice_service)
+    except ValueError as e:
+        print(f"❌ Failed to initialize VoiceService: {e}")
+        print("   Make sure ELEVENLABS_API_KEY is set correctly in .env")
+        return
     
     # Simple translation client wrapper
     class SimpleTranslateClient:

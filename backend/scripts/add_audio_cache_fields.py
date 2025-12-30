@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """
-Add audio cache and translation cache fields to learning_items collection
+ONE-TIME SETUP: Add cache fields to database schema
 
-This script adds:
-- tts_cache: { language: base64_audio } - Cached TTS audio per language
-- translations: { language: { stem, choices, explanation } } - Cached translations
+⚠️  RUN THIS ONCE BEFORE RUNNING pre_generate_cache.py
+
+This script:
+- Adds `tts_cache` field to learning_items (for storing ElevenLabs TTS audio)
+- Adds `translations` field to learning_items (for storing translated text)
+- Creates database indexes for faster lookups
+
+After running this, use pre_generate_cache.py to actually generate and cache the audio.
 """
 
 import sys
