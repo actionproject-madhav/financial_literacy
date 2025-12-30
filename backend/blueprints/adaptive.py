@@ -2178,6 +2178,499 @@ def resolve_misconception(learner_id, misconception_id):
         return jsonify({'error': str(e)}), 500
 
 
+# ============= WEAKNESS TRACKING & REVIEW QUEUE =============
+
+@adaptive_bp.route('/weaknesses/<learner_id>', methods=['GET'])
+def get_weaknesses(learner_id):
+    """
+    Get learner's weak areas based on incorrect answers and low mastery.
+
+    Query params:
+    - limit: max number of weak areas (default 10)
+
+    Response:
+    {
+        "weak_areas": [
+            {
+                "kc_id": "...",
+                "kc_name": "Credit Score Basics",
+                "domain": "credit",
+                "p_mastery": 0.35,
+                "incorrect_count": 5,
+                "total_attempts": 8,
+                "accuracy": 0.375,
+                "last_wrong_at": "2025-01-15T10:00:00Z",
+                "common_mistakes": [
+                    {"choice": "Higher is better", "count": 3}
+                ],
+                "recommendation": "Focus on understanding what affects credit scores"
+            }
+        ],
+        "summary": {
+            "total_weak_areas": 5,
+            "weakest_domain": "credit",
+            "avg_weak_mastery": 0.32
+        }
+    }
+    """
+    try:
+        db = get_db()
+
+        # Validate learner exists
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        limit = int(request.args.get('limit', 10))
+
+        # Get skill states with low mastery (< 0.6 is considered weak)
+        weak_skills = list(db.collections.learner_skill_states.find({
+            'learner_id': ObjectId(learner_id),
+            'status': {'$in': ['available', 'in_progress']},
+            'p_mastery': {'$lt': 0.6}
+        }).sort('p_mastery', 1).limit(limit))
+
+        weak_areas = []
+        domain_weakness = {}
+
+        for skill in weak_skills:
+            kc = db.collections.knowledge_components.find_one({'_id': skill['kc_id']})
+            if not kc:
+                continue
+
+            # Get incorrect interactions for this KC
+            wrong_interactions = list(db.collections.interactions.find({
+                'learner_id': ObjectId(learner_id),
+                'kc_id': skill['kc_id'],
+                'is_correct': False
+            }).sort('created_at', -1).limit(20))
+
+            # Analyze common wrong answers
+            wrong_choices = {}
+            last_wrong_at = None
+
+            for interaction in wrong_interactions:
+                if not last_wrong_at:
+                    last_wrong_at = interaction.get('created_at')
+
+                response = interaction.get('response_value', {})
+                choice = response.get('selected_choice')
+                if choice is not None:
+                    # Get the choice text from the item
+                    item = db.collections.learning_items.find_one({'_id': interaction['item_id']})
+                    if item and 'content' in item:
+                        choices = item['content'].get('choices', [])
+                        if 0 <= choice < len(choices):
+                            choice_text = choices[choice]
+                            wrong_choices[choice_text] = wrong_choices.get(choice_text, 0) + 1
+
+            # Sort by frequency
+            common_mistakes = [
+                {'choice': choice, 'count': count}
+                for choice, count in sorted(wrong_choices.items(), key=lambda x: -x[1])[:3]
+            ]
+
+            total_attempts = skill.get('total_attempts', 0)
+            correct_count = skill.get('correct_count', 0)
+            incorrect_count = total_attempts - correct_count
+            accuracy = correct_count / total_attempts if total_attempts > 0 else 0
+
+            # Track domain weakness
+            domain = kc.get('domain', 'unknown')
+            if domain not in domain_weakness:
+                domain_weakness[domain] = []
+            domain_weakness[domain].append(skill.get('p_mastery', 0))
+
+            weak_areas.append({
+                'kc_id': str(skill['kc_id']),
+                'kc_name': kc.get('name', 'Unknown'),
+                'domain': domain,
+                'p_mastery': round(skill.get('p_mastery', 0), 3),
+                'incorrect_count': incorrect_count,
+                'total_attempts': total_attempts,
+                'accuracy': round(accuracy, 3),
+                'last_wrong_at': last_wrong_at.isoformat() if last_wrong_at else None,
+                'common_mistakes': common_mistakes,
+                'recommendation': f"Review {kc.get('name', 'this topic')} - focus on the concepts you missed"
+            })
+
+        # Find weakest domain
+        weakest_domain = None
+        lowest_avg = 1.0
+        for domain, masteries in domain_weakness.items():
+            avg = sum(masteries) / len(masteries)
+            if avg < lowest_avg:
+                lowest_avg = avg
+                weakest_domain = domain
+
+        # Calculate average weak mastery
+        avg_weak_mastery = sum(w['p_mastery'] for w in weak_areas) / len(weak_areas) if weak_areas else 0
+
+        return jsonify({
+            'weak_areas': weak_areas,
+            'summary': {
+                'total_weak_areas': len(weak_areas),
+                'weakest_domain': weakest_domain,
+                'avg_weak_mastery': round(avg_weak_mastery, 3)
+            }
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@adaptive_bp.route('/review-queue/<learner_id>', methods=['GET'])
+def get_review_queue(learner_id):
+    """
+    Get review questions based on:
+    1. FSRS due reviews (spaced repetition)
+    2. Previously incorrect answers
+    3. Low mastery areas
+
+    Query params:
+    - limit: max questions (default 10)
+    - include_due: include FSRS due reviews (default true)
+    - include_mistakes: include past mistakes (default true)
+
+    Response:
+    {
+        "review_items": [
+            {
+                "item_id": "...",
+                "item_type": "multiple_choice",
+                "content": {...},
+                "kc_id": "...",
+                "kc_name": "Credit Score Basics",
+                "domain": "credit",
+                "review_reason": "due_for_review" | "past_mistake" | "low_mastery",
+                "p_mastery": 0.45,
+                "last_seen_at": "2025-01-10T...",
+                "times_wrong": 2
+            }
+        ],
+        "queue_stats": {
+            "due_reviews": 3,
+            "mistake_reviews": 4,
+            "low_mastery_reviews": 3,
+            "total": 10
+        }
+    }
+    """
+    try:
+        db = get_db()
+
+        # Validate learner exists
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        limit = int(request.args.get('limit', 10))
+        include_due = request.args.get('include_due', 'true').lower() == 'true'
+        include_mistakes = request.args.get('include_mistakes', 'true').lower() == 'true'
+
+        review_items = []
+        seen_item_ids = set()
+        now = datetime.utcnow()
+
+        queue_stats = {
+            'due_reviews': 0,
+            'mistake_reviews': 0,
+            'low_mastery_reviews': 0,
+            'total': 0
+        }
+
+        # 1. Get FSRS due reviews
+        if include_due:
+            due_skills = list(db.collections.learner_skill_states.find({
+                'learner_id': ObjectId(learner_id),
+                'next_review_at': {'$lte': now},
+                'status': {'$in': ['in_progress', 'mastered']}
+            }).sort('next_review_at', 1).limit(limit))
+
+            for skill in due_skills:
+                if len(review_items) >= limit:
+                    break
+
+                # Get a random item for this KC
+                items = list(db.collections.learning_items.aggregate([
+                    {'$lookup': {
+                        'from': 'item_kc_mappings',
+                        'localField': '_id',
+                        'foreignField': 'item_id',
+                        'as': 'mapping'
+                    }},
+                    {'$unwind': '$mapping'},
+                    {'$match': {
+                        'mapping.kc_id': skill['kc_id'],
+                        'item_type': 'multiple_choice'
+                    }},
+                    {'$sample': {'size': 1}}
+                ]))
+
+                if items and str(items[0]['_id']) not in seen_item_ids:
+                    item = items[0]
+                    kc = db.collections.knowledge_components.find_one({'_id': skill['kc_id']})
+
+                    review_items.append({
+                        'item_id': str(item['_id']),
+                        'item_type': item.get('item_type', 'multiple_choice'),
+                        'content': item.get('content', {}),
+                        'kc_id': str(skill['kc_id']),
+                        'kc_name': kc.get('name') if kc else 'Unknown',
+                        'domain': kc.get('domain') if kc else 'unknown',
+                        'review_reason': 'due_for_review',
+                        'p_mastery': round(skill.get('p_mastery', 0), 3),
+                        'last_seen_at': skill.get('last_reviewed_at').isoformat() if skill.get('last_reviewed_at') else None,
+                        'times_wrong': 0
+                    })
+                    seen_item_ids.add(str(item['_id']))
+                    queue_stats['due_reviews'] += 1
+
+        # 2. Get items the learner got wrong recently
+        if include_mistakes and len(review_items) < limit:
+            wrong_interactions = list(db.collections.interactions.aggregate([
+                {'$match': {
+                    'learner_id': ObjectId(learner_id),
+                    'is_correct': False
+                }},
+                {'$group': {
+                    '_id': '$item_id',
+                    'times_wrong': {'$sum': 1},
+                    'last_wrong': {'$max': '$created_at'},
+                    'kc_id': {'$first': '$kc_id'}
+                }},
+                {'$sort': {'times_wrong': -1, 'last_wrong': -1}},
+                {'$limit': limit * 2}  # Get more to filter
+            ]))
+
+            for wrong in wrong_interactions:
+                if len(review_items) >= limit:
+                    break
+
+                item_id = str(wrong['_id'])
+                if item_id in seen_item_ids:
+                    continue
+
+                item = db.collections.learning_items.find_one({'_id': wrong['_id']})
+                if not item:
+                    continue
+
+                kc = db.collections.knowledge_components.find_one({'_id': wrong['kc_id']})
+                skill_state = db.collections.learner_skill_states.find_one({
+                    'learner_id': ObjectId(learner_id),
+                    'kc_id': wrong['kc_id']
+                })
+
+                review_items.append({
+                    'item_id': item_id,
+                    'item_type': item.get('item_type', 'multiple_choice'),
+                    'content': item.get('content', {}),
+                    'kc_id': str(wrong['kc_id']),
+                    'kc_name': kc.get('name') if kc else 'Unknown',
+                    'domain': kc.get('domain') if kc else 'unknown',
+                    'review_reason': 'past_mistake',
+                    'p_mastery': round(skill_state.get('p_mastery', 0), 3) if skill_state else 0,
+                    'last_seen_at': wrong['last_wrong'].isoformat() if wrong.get('last_wrong') else None,
+                    'times_wrong': wrong['times_wrong']
+                })
+                seen_item_ids.add(item_id)
+                queue_stats['mistake_reviews'] += 1
+
+        # 3. Get items from low mastery KCs
+        if len(review_items) < limit:
+            low_mastery_skills = list(db.collections.learner_skill_states.find({
+                'learner_id': ObjectId(learner_id),
+                'p_mastery': {'$lt': 0.5},
+                'status': {'$in': ['available', 'in_progress']}
+            }).sort('p_mastery', 1).limit(limit))
+
+            for skill in low_mastery_skills:
+                if len(review_items) >= limit:
+                    break
+
+                # Get a random item for this KC
+                items = list(db.collections.learning_items.aggregate([
+                    {'$lookup': {
+                        'from': 'item_kc_mappings',
+                        'localField': '_id',
+                        'foreignField': 'item_id',
+                        'as': 'mapping'
+                    }},
+                    {'$unwind': '$mapping'},
+                    {'$match': {
+                        'mapping.kc_id': skill['kc_id'],
+                        'item_type': 'multiple_choice',
+                        '_id': {'$nin': [ObjectId(id) for id in seen_item_ids]}
+                    }},
+                    {'$sample': {'size': 1}}
+                ]))
+
+                if items:
+                    item = items[0]
+                    kc = db.collections.knowledge_components.find_one({'_id': skill['kc_id']})
+
+                    review_items.append({
+                        'item_id': str(item['_id']),
+                        'item_type': item.get('item_type', 'multiple_choice'),
+                        'content': item.get('content', {}),
+                        'kc_id': str(skill['kc_id']),
+                        'kc_name': kc.get('name') if kc else 'Unknown',
+                        'domain': kc.get('domain') if kc else 'unknown',
+                        'review_reason': 'low_mastery',
+                        'p_mastery': round(skill.get('p_mastery', 0), 3),
+                        'last_seen_at': skill.get('updated_at').isoformat() if skill.get('updated_at') else None,
+                        'times_wrong': 0
+                    })
+                    seen_item_ids.add(str(item['_id']))
+                    queue_stats['low_mastery_reviews'] += 1
+
+        queue_stats['total'] = len(review_items)
+
+        return jsonify({
+            'review_items': review_items,
+            'queue_stats': queue_stats
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@adaptive_bp.route('/recommend-next/<learner_id>', methods=['GET'])
+def recommend_next_lesson(learner_id):
+    """
+    Recommend the next best lesson based on:
+    1. Personalization (goals, background)
+    2. Current mastery levels
+    3. Learning path optimization
+
+    Response:
+    {
+        "recommended_lessons": [
+            {
+                "kc_id": "...",
+                "kc_name": "Understanding APR",
+                "domain": "credit",
+                "reason": "Builds on your credit score knowledge",
+                "priority_score": 85,
+                "estimated_time_minutes": 15,
+                "difficulty_tier": 2
+            }
+        ],
+        "learning_path": {
+            "current_focus": "credit",
+            "next_domains": ["taxes", "investing"],
+            "mastery_by_domain": {...}
+        }
+    }
+    """
+    try:
+        db = get_db()
+
+        # Validate learner exists
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        # Get all skill states
+        skill_states = {
+            str(s['kc_id']): s
+            for s in db.collections.learner_skill_states.find({
+                'learner_id': ObjectId(learner_id)
+            })
+        }
+
+        # Get all KCs
+        all_kcs = list(db.collections.knowledge_components.find({'is_active': True}))
+
+        # Calculate domain mastery
+        domain_mastery = {}
+        for kc in all_kcs:
+            domain = kc.get('domain', 'unknown')
+            if domain not in domain_mastery:
+                domain_mastery[domain] = {'total': 0, 'sum_mastery': 0, 'kcs': []}
+
+            kc_id = str(kc['_id'])
+            state = skill_states.get(kc_id, {})
+            mastery = state.get('p_mastery', 0)
+
+            domain_mastery[domain]['total'] += 1
+            domain_mastery[domain]['sum_mastery'] += mastery
+            domain_mastery[domain]['kcs'].append({
+                'kc_id': kc_id,
+                'kc': kc,
+                'state': state
+            })
+
+        # Calculate average mastery per domain
+        for domain in domain_mastery:
+            total = domain_mastery[domain]['total']
+            domain_mastery[domain]['avg_mastery'] = (
+                domain_mastery[domain]['sum_mastery'] / total if total > 0 else 0
+            )
+
+        # Use personalization to determine priorities
+        from services.personalization import get_personalized_course_order
+        available_domains = list(domain_mastery.keys())
+        recommendations, _ = get_personalized_course_order(learner, available_domains)
+
+        # Build recommended lessons list
+        recommended_lessons = []
+
+        # Sort recommendations by priority
+        for rec in sorted(recommendations, key=lambda x: -x['priority_score'])[:3]:
+            domain = rec['domain']
+            domain_data = domain_mastery.get(domain, {})
+
+            # Find the next lesson in this domain (lowest mastery, not mastered)
+            for kc_data in sorted(domain_data.get('kcs', []),
+                                  key=lambda x: x['state'].get('p_mastery', 0)):
+                state = kc_data['state']
+                if state.get('status') not in ['mastered']:
+                    kc = kc_data['kc']
+                    recommended_lessons.append({
+                        'kc_id': kc_data['kc_id'],
+                        'kc_name': kc.get('name', 'Unknown'),
+                        'domain': domain,
+                        'reason': rec['reason'],
+                        'priority_score': rec['priority_score'],
+                        'estimated_time_minutes': kc.get('estimated_minutes', 15),
+                        'difficulty_tier': kc.get('difficulty_tier', 1),
+                        'current_mastery': round(state.get('p_mastery', 0), 3)
+                    })
+                    break
+
+        # Determine current focus domain (lowest average mastery among high-priority domains)
+        current_focus = None
+        for rec in recommendations:
+            if rec['recommendation_type'] == 'priority':
+                current_focus = rec['domain']
+                break
+
+        if not current_focus and recommendations:
+            current_focus = recommendations[0]['domain']
+
+        # Get next domains
+        next_domains = [
+            r['domain'] for r in recommendations[1:4]
+            if r['recommendation_type'] in ['priority', 'suggested']
+        ]
+
+        return jsonify({
+            'recommended_lessons': recommended_lessons,
+            'learning_path': {
+                'current_focus': current_focus,
+                'next_domains': next_domains,
+                'mastery_by_domain': {
+                    domain: round(data['avg_mastery'], 3)
+                    for domain, data in domain_mastery.items()
+                }
+            }
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # Health check endpoint
 @adaptive_bp.route('/health', methods=['GET'])
 def health_check():

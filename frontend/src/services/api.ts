@@ -163,6 +163,69 @@ export const adaptiveApi = {
       method: 'POST',
       body: JSON.stringify({ learner_id: learnerId }),
     }),
+
+  // Weakness tracking and review queue
+  getWeaknesses: (learnerId: string, limit = 10) =>
+    fetchApi<{
+      weak_areas: {
+        kc_id: string;
+        kc_name: string;
+        domain: string;
+        p_mastery: number;
+        incorrect_count: number;
+        total_attempts: number;
+        accuracy: number;
+        last_wrong_at: string | null;
+        common_mistakes: { choice: string; count: number }[];
+        recommendation: string;
+      }[];
+      summary: {
+        total_weak_areas: number;
+        weakest_domain: string | null;
+        avg_weak_mastery: number;
+      };
+    }>(`/api/adaptive/weaknesses/${learnerId}?limit=${limit}`),
+
+  getReviewQueue: (learnerId: string, limit = 10) =>
+    fetchApi<{
+      review_items: {
+        item_id: string;
+        item_type: string;
+        content: any;
+        kc_id: string;
+        kc_name: string;
+        domain: string;
+        review_reason: 'due_for_review' | 'past_mistake' | 'low_mastery';
+        p_mastery: number;
+        last_seen_at: string | null;
+        times_wrong: number;
+      }[];
+      queue_stats: {
+        due_reviews: number;
+        mistake_reviews: number;
+        low_mastery_reviews: number;
+        total: number;
+      };
+    }>(`/api/adaptive/review-queue/${learnerId}?limit=${limit}`),
+
+  getRecommendedNext: (learnerId: string) =>
+    fetchApi<{
+      recommended_lessons: {
+        kc_id: string;
+        kc_name: string;
+        domain: string;
+        reason: string;
+        priority_score: number;
+        estimated_time_minutes: number;
+        difficulty_tier: number;
+        current_mastery: number;
+      }[];
+      learning_path: {
+        current_focus: string | null;
+        next_domains: string[];
+        mastery_by_domain: Record<string, number>;
+      };
+    }>(`/api/adaptive/recommend-next/${learnerId}`),
 };
 
 // Voice API - Uses backend ElevenLabs integration
@@ -431,7 +494,7 @@ export const curriculumApi = {
   },
   getCourses: (learnerId?: string) => {
     const params = learnerId ? `?learner_id=${learnerId}` : '';
-    return fetchApi<{ courses: Course[] }>(`/api/curriculum/courses${params}`);
+    return fetchApi<{ courses: Course[]; personalization?: PersonalizationSummary }>(`/api/curriculum/courses${params}`);
   },
 
   getCourseLessons: (domain: string, learnerId?: string) => {

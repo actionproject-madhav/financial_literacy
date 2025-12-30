@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Heart, Lock, ArrowLeft, TrendingUp, CheckCircle2, Circle, Target, Sparkles } from 'lucide-react'
+import { Heart, Lock, ArrowLeft, TrendingUp, CheckCircle2, Circle, Target, Sparkles, RotateCcw, Brain } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useUserStore } from '../stores/userStore'
-import { curriculumApi, Course } from '../services/api'
+import { curriculumApi, adaptiveApi, Course } from '../services/api'
 import { LanguageSelector } from '../components/LanguageSelector'
 import { useLanguage } from '../contexts/LanguageContext'
 import { TranslatedText } from '../components/TranslatedText'
@@ -51,6 +51,7 @@ export const LearnPage = () => {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [personalization, setPersonalization] = useState<PersonalizationSummary | null>(null)
+    const [reviewStats, setReviewStats] = useState<{ due: number; mistakes: number; total: number } | null>(null)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -66,6 +67,20 @@ export const LearnPage = () => {
                 // Store personalization summary if available
                 if (response.personalization) {
                     setPersonalization(response.personalization)
+                }
+
+                // Fetch review queue stats
+                if (learnerId) {
+                    try {
+                        const reviewResponse = await adaptiveApi.getReviewQueue(learnerId, 10)
+                        setReviewStats({
+                            due: reviewResponse.queue_stats.due_reviews,
+                            mistakes: reviewResponse.queue_stats.mistake_reviews,
+                            total: reviewResponse.queue_stats.total
+                        })
+                    } catch {
+                        // Silently fail - review stats are optional
+                    }
                 }
 
                 setError(null)
@@ -399,6 +414,35 @@ export const LearnPage = () => {
                                 </button>
                             </div>
                         </div>
+
+                        {/* Due Reviews Widget */}
+                        {reviewStats && reviewStats.total > 0 && (
+                            <div className="border-2 border-purple-200 rounded-2xl p-0 overflow-hidden bg-purple-50 hover:bg-purple-100 transition-colors cursor-pointer group shadow-sm" onClick={() => navigate('/review')}>
+                                <div className="p-4">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h3 className="font-extrabold text-gray-800 flex items-center gap-2">
+                                            <Brain className="w-5 h-5 text-purple-600" />
+                                            Review Time
+                                        </h3>
+                                        <div className="px-2 py-1 bg-purple-600 rounded-lg text-[10px] font-bold text-white uppercase tracking-wide">
+                                            {reviewStats.total} DUE
+                                        </div>
+                                    </div>
+                                    <p className="text-sm text-gray-600 font-medium leading-relaxed mb-3">
+                                        {reviewStats.due > 0 && `${reviewStats.due} spaced reviews`}
+                                        {reviewStats.due > 0 && reviewStats.mistakes > 0 && ' + '}
+                                        {reviewStats.mistakes > 0 && `${reviewStats.mistakes} past mistakes`}
+                                        {reviewStats.due === 0 && reviewStats.mistakes === 0 && 'Practice your weak areas'}
+                                    </p>
+                                    <button
+                                        className="w-full py-2.5 px-3 bg-purple-600 border-b-4 border-purple-700 rounded-xl text-white text-xs font-bold uppercase tracking-wide hover:bg-purple-500 active:border-b-0 active:translate-y-0.5 transition-all text-center flex items-center justify-center gap-2"
+                                    >
+                                        <RotateCcw className="w-4 h-4" />
+                                        Start Review
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Try Super */}
                         <div className="border-2 border-gray-200 rounded-2xl p-4 relative overflow-hidden group cursor-pointer hover:bg-gray-50 transition-colors bg-white">
