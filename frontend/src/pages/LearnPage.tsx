@@ -5,6 +5,22 @@ import { useNavigate } from 'react-router-dom'
 import { useUserStore } from '../stores/userStore'
 import { curriculumApi, Course } from '../services/api'
 
+// Avatar mapping for sections - using human avatars
+const SECTION_AVATARS: Record<string, string> = {
+    'banking': 'https://api.dicebear.com/7.x/avataaars/svg?seed=banking&backgroundColor=b6e3f4',
+    'credit': 'https://api.dicebear.com/7.x/avataaars/svg?seed=credit&backgroundColor=c0aede',
+    'taxes': 'https://api.dicebear.com/7.x/avataaars/svg?seed=taxes&backgroundColor=ffd5dc',
+    'investing': 'https://api.dicebear.com/7.x/avataaars/svg?seed=investing&backgroundColor=ffdfbf',
+    'immigration_finance': 'https://api.dicebear.com/7.x/avataaars/svg?seed=immigration&backgroundColor=d1d4f9',
+    'budgeting': 'https://api.dicebear.com/7.x/avataaars/svg?seed=budgeting&backgroundColor=c5e1a5',
+    'retirement': 'https://api.dicebear.com/7.x/avataaars/svg?seed=retirement&backgroundColor=ffecb3',
+    'insurance': 'https://api.dicebear.com/7.x/avataaars/svg?seed=insurance&backgroundColor=b2dfdb',
+    'consumer_protection': 'https://api.dicebear.com/7.x/avataaars/svg?seed=protection&backgroundColor=f8bbd0',
+    'major_purchases': 'https://api.dicebear.com/7.x/avataaars/svg?seed=purchases&backgroundColor=e1bee7',
+    'cryptocurrency': 'https://api.dicebear.com/7.x/avataaars/svg?seed=crypto&backgroundColor=ffe0b2',
+    'financial_planning': 'https://api.dicebear.com/7.x/avataaars/svg?seed=planning&backgroundColor=c5cae9',
+}
+
 export const LearnPage = () => {
     const { user, learnerId } = useUserStore()
     const navigate = useNavigate()
@@ -189,7 +205,7 @@ export const LearnPage = () => {
                                             )}
 
                                             <img
-                                                src={`https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${course.id}&backgroundColor=transparent`}
+                                                src={SECTION_AVATARS[course.id] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${course.id}&backgroundColor=e0e0e0`}
                                                 alt={course.title}
                                                 className={`w-28 h-28 md:w-32 md:h-32 object-contain ${!isUnlocked && 'grayscale opacity-60'}`}
                                             />

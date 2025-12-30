@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, BookOpen, Flame, Heart, Gem } from 'lucide-react'
+import { ArrowLeft, BookOpen, Flame, Heart, Gem, Zap, Clock, Target } from 'lucide-react'
 import { useUserStore } from '../stores/userStore'
 import { curriculumApi, Lesson } from '../services/api'
 import { cn } from '../utils/cn'
@@ -241,7 +241,7 @@ export const SectionPage = () => {
                             <div className="space-y-4">
                                 {/* Quest 1: XP */}
                                 <div className="flex items-center gap-3">
-                                    <img src="/generated_icons/xp_bolt.png" className="w-10 h-10 object-contain" alt="XP" />
+                                    <Zap className="w-10 h-10 text-yellow-400" />
                                     <div className="flex-1">
                                         <div className="font-bold text-gray-700 text-sm mb-1">Earn 10 XP</div>
                                         <div className="relative w-full bg-gray-100 h-6 rounded-full overflow-hidden border border-gray-200">
@@ -256,7 +256,7 @@ export const SectionPage = () => {
 
                                 {/* Quest 2: Time */}
                                 <div className="flex items-center gap-3">
-                                    <img src="/generated_icons/timer_clock.png" className="w-10 h-10 object-contain" alt="Time" />
+                                    <Clock className="w-10 h-10 text-blue-400" />
                                     <div className="flex-1">
                                         <div className="font-bold text-gray-700 text-sm mb-1">Spend 5 minutes learning</div>
                                         <div className="relative w-full bg-gray-100 h-6 rounded-full overflow-hidden border border-gray-200">
@@ -271,7 +271,7 @@ export const SectionPage = () => {
 
                                 {/* Quest 3: Score */}
                                 <div className="flex items-center gap-3">
-                                    <img src="/generated_icons/target_icon.png" className="w-10 h-10 object-contain" alt="Score" />
+                                    <Target className="w-10 h-10 text-green-400" />
                                     <div className="flex-1">
                                         <div className="font-bold text-gray-700 text-sm mb-1">Score 80% or higher</div>
                                         <div className="relative w-full bg-gray-100 h-6 rounded-full overflow-hidden border border-gray-200">

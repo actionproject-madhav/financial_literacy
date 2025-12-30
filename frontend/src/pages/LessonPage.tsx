@@ -548,7 +548,7 @@ export const LessonPage = () => {
                     animate={{ scale: 1 }}
                     className="mb-8"
                   >
-                    <img src="/fire.svg" alt="Streak!" className="w-48 h-48 object-contain" />
+                    <img src="/fire.svg" alt="Streak!" className="w-64 h-64 object-contain" />
                   </motion.div>
                   <h1 className="text-4xl font-black text-[#ffc840] mb-2">{streak} in a row!</h1>
                   <p className="text-xl font-bold text-gray-500">You're on fire! Keep going!</p>
