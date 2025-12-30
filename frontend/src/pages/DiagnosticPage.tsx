@@ -151,14 +151,22 @@ export const DiagnosticPage = () => {
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-lg text-center"
         >
-          {/* Icon */}
+          {/* Lottie animation for knowledge check */}
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
-            className="w-24 h-24 bg-[#1CB0F6] rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_6px_0_#1899D6]"
+            className="w-32 h-32 bg-[#1CB0F6] rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_6px_0_#1899D6] overflow-hidden"
           >
-            <Brain className="w-12 h-12 text-white" />
+            <LottieAnimation
+              src="chart.json"
+              className="w-24 h-24"
+              loop={true}
+              autoplay={true}
+              fallback={
+                <Brain className="w-12 h-12 text-white" />
+              }
+            />
           </motion.div>
 
           <h1 className="text-[32px] font-bold text-[#4B4B4B] mb-3" style={{ lineHeight: '40px' }}>
@@ -173,20 +181,44 @@ export const DiagnosticPage = () => {
             <h3 className="font-bold text-[15px] text-[#4B4B4B] mb-3">What to expect:</h3>
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-[#DDF4FF] rounded-full flex items-center justify-center flex-shrink-0">
-                  <Target className="w-4 h-4 text-[#1CB0F6]" />
+                <div className="w-12 h-12 bg-[#DDF4FF] rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <LottieAnimation
+                    src="Target.json"
+                    className="w-full h-full"
+                    loop={true}
+                    autoplay={true}
+                    fallback={
+                      <Target className="w-6 h-6 text-[#1CB0F6]" />
+                    }
+                  />
                 </div>
                 <span className="text-[14px] text-[#737373]">~12 quick questions across all topics</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-[#D7FFB8] rounded-full flex items-center justify-center flex-shrink-0">
-                  <Check className="w-4 h-4 text-[#58CC02]" />
+                <div className="w-12 h-12 bg-[#D7FFB8] rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <LottieAnimation
+                    src="shield.json"
+                    className="w-full h-full"
+                    loop={true}
+                    autoplay={true}
+                    fallback={
+                      <Check className="w-6 h-6 text-[#58CC02]" />
+                    }
+                  />
                 </div>
                 <span className="text-[14px] text-[#737373]">No penalty for wrong answers</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-[#F3E5FF] rounded-full flex items-center justify-center flex-shrink-0">
-                  <TrendingUp className="w-4 h-4 text-[#8549BA]" />
+                <div className="w-12 h-12 bg-[#F3E5FF] rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <LottieAnimation
+                    src="growth.json"
+                    className="w-full h-full"
+                    loop={true}
+                    autoplay={true}
+                    fallback={
+                      <TrendingUp className="w-6 h-6 text-[#8549BA]" />
+                    }
+                  />
                 </div>
                 <span className="text-[14px] text-[#737373]">We'll customize your learning path</span>
               </div>
@@ -256,16 +288,16 @@ export const DiagnosticPage = () => {
                   const isStrong = score >= 0.75
 
                   return (
-                    <div key={domain} className="flex items-center gap-3">
-                      {/* Lottie animation for domain icon */}
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden" style={{ backgroundColor: config.bgColor }}>
+                    <div key={domain} className="flex items-center gap-4">
+                      {/* Lottie animation for domain icon - larger and more visible */}
+                      <div className="w-16 h-16 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: config.bgColor }}>
                         <LottieAnimation
                           src={config.lottieFile}
                           className="w-full h-full"
                           loop={true}
                           autoplay={true}
                           fallback={
-                            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: config.color }} />
+                            <div className="w-12 h-12 rounded-full" style={{ backgroundColor: config.color }} />
                           }
                         />
                       </div>
@@ -367,25 +399,25 @@ export const DiagnosticPage = () => {
 
       {/* Domain Badge */}
       {domainConfig && (
-        <div className="text-center mb-4 px-4">
-          <span
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-bold text-[13px]"
+        <div className="text-center mb-6 px-4">
+          <div
+            className="inline-flex items-center gap-3 px-5 py-3 rounded-full font-bold text-[15px]"
             style={{ backgroundColor: domainConfig.bgColor, color: domainConfig.color }}
           >
-            {/* Lottie animation for domain icon */}
-            <div className="w-5 h-5 rounded-full flex items-center justify-center overflow-hidden">
+            {/* Lottie animation for domain icon - larger and more visible */}
+            <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
               <LottieAnimation
                 src={domainConfig.lottieFile}
                 className="w-full h-full"
                 loop={true}
                 autoplay={true}
                 fallback={
-                  <span className="w-5 h-5 rounded-full" style={{ backgroundColor: domainConfig.color, opacity: 0.3 }} />
+                  <span className="w-8 h-8 rounded-full" style={{ backgroundColor: domainConfig.color, opacity: 0.3 }} />
                 }
               />
             </div>
             {domainConfig.name}
-          </span>
+          </div>
         </div>
       )}
 

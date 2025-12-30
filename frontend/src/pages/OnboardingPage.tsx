@@ -105,36 +105,45 @@ const GoalOption: React.FC<GoalOptionProps> = ({ title, lottieFile, selected, on
     whileTap={{ scale: 0.95 }}
     onClick={onClick}
     className={`
-      px-4 py-3 rounded-[16px] border-2 transition-all duration-200 flex items-center gap-2
+      w-full max-w-[140px] p-4 rounded-[16px] border-2 transition-all duration-200
+      flex flex-col items-center gap-3 relative
       ${selected
-        ? 'border-[#58CC02] bg-[#D7FFB8] shadow-[0_3px_0_#46A302]'
-        : 'border-[#E5E5E5] bg-white hover:border-[#AFAFAF] shadow-[0_3px_0_#E5E5E5]'
+        ? 'border-[#58CC02] bg-[#D7FFB8] shadow-[0_4px_0_#46A302]'
+        : 'border-[#E5E5E5] bg-white hover:border-[#AFAFAF] shadow-[0_4px_0_#E5E5E5]'
       }
-      active:shadow-none active:translate-y-[3px]
+      active:shadow-none active:translate-y-[4px]
     `}
   >
-    {/* Lottie animation for goal icons */}
+    {/* Large Lottie animation - prominent and visible */}
     {lottieFile ? (
-      <div className={`w-6 h-6 rounded-md flex items-center justify-center overflow-hidden ${selected ? 'bg-[#58CC02]' : 'bg-[#E5E5E5]'}`}>
+      <div className="w-16 h-16 flex items-center justify-center overflow-hidden">
         <LottieAnimation
           src={lottieFile}
           className="w-full h-full"
           loop={true}
           autoplay={true}
           fallback={
-            <div className={`w-3 h-3 rounded-full ${selected ? 'bg-white' : 'bg-[#AFAFAF]'}`} />
+            <div className={`w-12 h-12 rounded-full ${selected ? 'bg-[#58CC02]' : 'bg-[#E5E5E5]'}`} />
           }
         />
       </div>
     ) : (
-      <div className={`w-6 h-6 rounded-md flex items-center justify-center ${selected ? 'bg-[#58CC02]' : 'bg-[#E5E5E5]'}`}>
-        <div className={`w-3 h-3 rounded-full ${selected ? 'bg-white' : 'bg-[#AFAFAF]'}`} />
+      <div className={`w-16 h-16 rounded-full flex items-center justify-center ${selected ? 'bg-[#58CC02]' : 'bg-[#E5E5E5]'}`}>
+        <div className={`w-12 h-12 rounded-full ${selected ? 'bg-white' : 'bg-[#AFAFAF]'}`} />
       </div>
     )}
-    <span className={`font-bold text-[14px] ${selected ? 'text-[#46A302]' : 'text-[#4B4B4B]'}`}>
+    
+    {/* Title text */}
+    <span className={`font-bold text-[14px] text-center leading-tight ${selected ? 'text-[#46A302]' : 'text-[#4B4B4B]'}`}>
       {title}
     </span>
-    {selected && <Check className="w-4 h-4 text-[#58CC02]" />}
+    
+    {/* Check mark indicator */}
+    {selected && (
+      <div className="absolute top-2 right-2 w-6 h-6 bg-[#58CC02] rounded-full flex items-center justify-center">
+        <Check className="w-4 h-4 text-white" />
+      </div>
+    )}
   </motion.button>
 );
 
@@ -768,7 +777,7 @@ export const OnboardingPage: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap gap-3 mb-8 justify-center">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-8">
                   {FINANCIAL_GOALS.map((goal) => (
                     <GoalOption
                       key={goal.code}
