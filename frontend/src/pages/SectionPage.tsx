@@ -88,7 +88,7 @@ export const SectionPage = () => {
                                 >
                                     <ArrowLeft className="w-5 h-5 stroke-[3] text-[#b8f28b] hover:text-white" />
                                 </button>
-                                {course.emoji} {course.level.toUpperCase()}
+                                {course.level.toUpperCase()}
                             </div>
                             <h1 className="text-white text-2xl font-extrabold tracking-tight leading-none pl-6">
                                 {course.title}

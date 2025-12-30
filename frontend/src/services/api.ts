@@ -238,7 +238,6 @@ export const healthApi = {
 export interface Course {
   id: string;
   title: string;
-  emoji: string;
   description: string;
   level: string;
   order: number;
@@ -295,7 +294,6 @@ export const curriculumApi = {
       course: {
         id: string;
         title: string;
-        emoji: string;
         description: string;
         level: string;
       };

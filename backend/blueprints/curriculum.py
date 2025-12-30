@@ -22,42 +22,36 @@ def get_db():
 DOMAIN_METADATA = {
     'banking': {
         'title': 'Banking Basics',
-        'emoji': '🏦',
         'description': 'Master US banking fundamentals - accounts, fees, and everyday transactions.',
         'level': 'beginner',
         'order': 1
     },
     'credit': {
         'title': 'Credit Mastery',
-        'emoji': '💳',
         'description': 'Build and maintain excellent credit in the US financial system.',
         'level': 'beginner',
         'order': 2
     },
     'taxes': {
         'title': 'US Tax System',
-        'emoji': '📋',
         'description': 'Navigate the US tax system with confidence - filing, deductions, and compliance.',
         'level': 'intermediate',
         'order': 3
     },
     'investing': {
         'title': 'Investing Fundamentals',
-        'emoji': '📈',
         'description': 'Start your investment journey with stocks, bonds, and retirement accounts.',
         'level': 'intermediate',
         'order': 4
     },
     'immigration_finance': {
         'title': 'Immigration Finance',
-        'emoji': '🌍',
         'description': 'Financial strategies specifically for immigrants and visa holders.',
         'level': 'beginner',
         'order': 5
     },
     'budgeting': {
         'title': 'Budgeting & Saving',
-        'emoji': '💰',
         'description': 'Create and maintain a budget that works for your goals.',
         'level': 'beginner',
         'order': 6
@@ -79,7 +73,6 @@ def get_courses():
             {
                 "id": "banking",
                 "title": "Banking Basics",
-                "emoji": "🏦",
                 "description": "...",
                 "level": "beginner",
                 "lessons_count": 5,
@@ -147,7 +140,6 @@ def get_courses():
 
             metadata = DOMAIN_METADATA.get(domain, {
                 'title': domain.replace('_', ' ').title(),
-                'emoji': '📚',
                 'description': f'Learn about {domain}',
                 'level': 'beginner',
                 'order': 99
@@ -173,7 +165,6 @@ def get_courses():
             courses.append({
                 'id': domain,
                 'title': metadata['title'],
-                'emoji': metadata['emoji'],
                 'description': metadata['description'],
                 'level': metadata['level'],
                 'order': metadata['order'],
@@ -231,7 +222,6 @@ def get_course_lessons(domain):
         # Get course metadata
         metadata = DOMAIN_METADATA.get(domain, {
             'title': domain.replace('_', ' ').title(),
-            'emoji': '📚',
             'description': f'Learn about {domain}',
             'level': 'beginner',
             'order': 99
@@ -311,7 +301,6 @@ def get_course_lessons(domain):
             'course': {
                 'id': domain,
                 'title': metadata['title'],
-                'emoji': metadata['emoji'],
                 'description': metadata['description'],
                 'level': metadata['level']
             },
