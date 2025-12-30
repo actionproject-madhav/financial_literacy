@@ -50,7 +50,7 @@ const OptionCard: React.FC<OptionCardProps> = ({ icon, title, description, selec
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
     className={`
-      w-full p-4 rounded-[16px] border-2 text-left transition-all duration-200
+      w-full p-4 rounded-[16px] border-2 text-left transition-all duration-200 relative
       ${selected
         ? 'border-[#1CB0F6] bg-[#DDF4FF] shadow-[0_4px_0_#1899D6]'
         : 'border-[#E5E5E5] bg-white hover:border-[#AFAFAF] shadow-[0_4px_0_#E5E5E5]'
@@ -58,23 +58,23 @@ const OptionCard: React.FC<OptionCardProps> = ({ icon, title, description, selec
       active:shadow-none active:translate-y-[4px]
     `}
   >
-    <div className="flex items-center gap-3">
-      {/* Country flags use emoji, experience levels use Lottie */}
-      {emoji && <span className="text-2xl">{emoji}</span>}
+    <div className="flex items-center gap-4">
+      {/* Country flags use emoji, experience levels use large Lottie */}
+      {emoji && <span className="text-3xl flex-shrink-0">{emoji}</span>}
       {lottieFile && (
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden ${selected ? 'bg-[#1CB0F6]' : 'bg-[#E5E5E5]'}`}>
+        <div className="w-16 h-16 flex items-center justify-center overflow-hidden flex-shrink-0">
           <LottieAnimation
             src={lottieFile}
             className="w-full h-full"
             loop={true}
             autoplay={true}
             fallback={
-              <div className={`w-4 h-4 rounded-full ${selected ? 'bg-white' : 'bg-[#AFAFAF]'}`} />
+              <div className={`w-12 h-12 rounded-full ${selected ? 'bg-[#1CB0F6]' : 'bg-[#E5E5E5]'}`} />
             }
           />
         </div>
       )}
-      {icon && <span className={`${selected ? 'text-[#1CB0F6]' : 'text-[#737373]'}`}>{icon}</span>}
+      {icon && <span className={`text-2xl flex-shrink-0 ${selected ? 'text-[#1CB0F6]' : 'text-[#737373]'}`}>{icon}</span>}
       <div className="flex-1">
         <p className={`font-bold text-[15px] ${selected ? 'text-[#1899D6]' : 'text-[#4B4B4B]'}`}>
           {title}
@@ -84,7 +84,7 @@ const OptionCard: React.FC<OptionCardProps> = ({ icon, title, description, selec
         )}
       </div>
       {selected && (
-        <div className="w-6 h-6 bg-[#1CB0F6] rounded-full flex items-center justify-center">
+        <div className="w-6 h-6 bg-[#1CB0F6] rounded-full flex items-center justify-center flex-shrink-0">
           <Check className="w-4 h-4 text-white" />
         </div>
       )}
@@ -116,20 +116,20 @@ const GoalOption: React.FC<GoalOptionProps> = ({ title, lottieFile, selected, on
   >
     {/* Large Lottie animation - prominent and visible */}
     {lottieFile ? (
-      <div className="w-16 h-16 flex items-center justify-center overflow-hidden">
+      <div className="w-24 h-24 flex items-center justify-center overflow-hidden">
         <LottieAnimation
           src={lottieFile}
           className="w-full h-full"
           loop={true}
           autoplay={true}
           fallback={
-            <div className={`w-12 h-12 rounded-full ${selected ? 'bg-[#58CC02]' : 'bg-[#E5E5E5]'}`} />
+            <div className={`w-16 h-16 rounded-full ${selected ? 'bg-[#58CC02]' : 'bg-[#E5E5E5]'}`} />
           }
         />
       </div>
     ) : (
-      <div className={`w-16 h-16 rounded-full flex items-center justify-center ${selected ? 'bg-[#58CC02]' : 'bg-[#E5E5E5]'}`}>
-        <div className={`w-12 h-12 rounded-full ${selected ? 'bg-white' : 'bg-[#AFAFAF]'}`} />
+      <div className={`w-24 h-24 rounded-full flex items-center justify-center ${selected ? 'bg-[#58CC02]' : 'bg-[#E5E5E5]'}`}>
+        <div className={`w-16 h-16 rounded-full ${selected ? 'bg-white' : 'bg-[#AFAFAF]'}`} />
       </div>
     )}
     

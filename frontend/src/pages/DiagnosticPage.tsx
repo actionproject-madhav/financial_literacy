@@ -400,23 +400,26 @@ export const DiagnosticPage = () => {
       {/* Domain Badge */}
       {domainConfig && (
         <div className="text-center mb-6 px-4">
-          <div
-            className="inline-flex items-center gap-3 px-5 py-3 rounded-full font-bold text-[15px]"
-            style={{ backgroundColor: domainConfig.bgColor, color: domainConfig.color }}
-          >
-            {/* Lottie animation for domain icon - larger and more visible */}
-            <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+          <div className="flex flex-col items-center gap-3">
+            {/* Large Lottie animation - prominent above the badge */}
+            <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden" style={{ backgroundColor: domainConfig.bgColor }}>
               <LottieAnimation
                 src={domainConfig.lottieFile}
                 className="w-full h-full"
                 loop={true}
                 autoplay={true}
                 fallback={
-                  <span className="w-8 h-8 rounded-full" style={{ backgroundColor: domainConfig.color, opacity: 0.3 }} />
+                  <div className="w-16 h-16 rounded-full" style={{ backgroundColor: domainConfig.color, opacity: 0.3 }} />
                 }
               />
             </div>
-            {domainConfig.name}
+            {/* Domain name badge */}
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-bold text-[15px]"
+              style={{ backgroundColor: domainConfig.bgColor, color: domainConfig.color }}
+            >
+              {domainConfig.name}
+            </div>
           </div>
         </div>
       )}
