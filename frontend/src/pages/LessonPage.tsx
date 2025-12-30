@@ -75,12 +75,12 @@ export const LessonPage = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // Language configuration
-  type LanguageCode = 'en' | 'hi' | 'ne'
+  type LanguageCode = 'en' | 'es' | 'ne'
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageCode>('en')
 
   const languages: Record<LanguageCode, { name: string; flag: string; nativeName: string; apiCode: string }> = {
     en: { name: 'English', nativeName: 'English', flag: 'https://flagcdn.com/w40/us.png', apiCode: 'eng' },
-    hi: { name: 'Hindi', nativeName: 'हिन्दी', flag: 'https://flagcdn.com/w40/in.png', apiCode: 'hin' },
+    es: { name: 'Spanish', nativeName: 'Español', flag: 'https://flagcdn.com/w40/es.png', apiCode: 'spa' },
     ne: { name: 'Nepali', nativeName: 'नेपाली', flag: 'https://flagcdn.com/w40/np.png', apiCode: 'nep' }
   }
 
@@ -132,7 +132,7 @@ export const LessonPage = () => {
 
   // Cycle through languages
   const cycleLanguage = () => {
-    const langOrder: LanguageCode[] = ['en', 'hi', 'ne']
+    const langOrder: LanguageCode[] = ['en', 'es', 'ne']
     const currentIndex = langOrder.indexOf(selectedLanguage)
     const nextIndex = (currentIndex + 1) % langOrder.length
     setSelectedLanguage(langOrder[nextIndex])
@@ -179,7 +179,7 @@ export const LessonPage = () => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel()
       const utterance = new SpeechSynthesisUtterance(text)
-      utterance.lang = selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'hi' ? 'hi-IN' : 'ne-NP'
+      utterance.lang = selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : 'ne-NP'
       utterance.rate = 0.9
       utterance.onstart = () => setIsSpeaking(true)
       utterance.onend = () => setIsSpeaking(false)
@@ -235,7 +235,7 @@ export const LessonPage = () => {
           // Transcribe using backend ElevenLabs
           setIsTranscribing(true)
           try {
-            const result = await voiceApi.transcribe(base64, selectedLanguage)
+            const result = await voiceApi.transcribe(base64, currentLang.apiCode)
             if (result) {
               setVoiceAnswer(result.transcription)
               setVoiceConfidence(result.confidence)

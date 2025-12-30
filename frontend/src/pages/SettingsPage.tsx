@@ -21,6 +21,7 @@ import { cn } from '../utils/cn';
 import { useUserStore } from '../stores/userStore';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { authApi } from '../services/api';
+import { LanguageSelector } from '../components/LanguageSelector';
 
 interface SettingsSection {
   id: string;
@@ -96,7 +97,7 @@ export const SettingsPage: React.FC = () => {
         {
           id: 'language',
           label: 'Language',
-          description: 'English (US)',
+          description: 'Change app language',
           icon: <Globe className="w-5 h-5" />,
           type: 'link',
         },
@@ -259,7 +260,11 @@ export const SettingsPage: React.FC = () => {
           </div>
         )}
 
-        {(item.type === 'link' || item.type === 'button') && !item.danger && (
+        {item.type === 'link' && item.id === 'language' && (
+          <LanguageSelector />
+        )}
+        
+        {(item.type === 'link' || item.type === 'button') && !item.danger && item.id !== 'language' && (
           <ChevronRight className="w-5 h-5 text-[#737373]" />
         )}
       </button>

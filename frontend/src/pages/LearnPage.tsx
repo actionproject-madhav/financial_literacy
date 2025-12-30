@@ -4,6 +4,7 @@ import { Heart, Lock, ArrowLeft, TrendingUp, CheckCircle2, Circle } from 'lucide
 import { useNavigate } from 'react-router-dom'
 import { useUserStore } from '../stores/userStore'
 import { curriculumApi, Course } from '../services/api'
+import { LanguageSelector } from '../components/LanguageSelector'
 
 // Avatar mapping for sections - using human avatars
 const SECTION_AVATARS: Record<string, string> = {
@@ -223,9 +224,7 @@ export const LearnPage = () => {
                 <div className="p-8 space-y-8">
                     {/* Stats Header */}
                     <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-2 px-3 rounded-xl transition-colors">
-                            <img src="https://flagcdn.com/w40/us.png" alt="US" className="w-8 h-6 rounded-md object-cover shadow-sm" />
-                        </div>
+                        <LanguageSelector />
                         <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-2 px-3 rounded-xl transition-colors">
                             <img src="/fire.svg" alt="Streak" className="w-6 h-6 object-contain" />
                             <span className="font-bold text-gray-500">{user.streak}</span>
