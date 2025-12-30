@@ -11,6 +11,7 @@ from blueprints.chat import chat_bp
 from blueprints.quests import quests_bp
 from blueprints.leaderboard import leaderboard_bp
 from blueprints.streaks import streaks_bp
+from blueprints.translate import translate_bp
 
 # Create Flask app
 app = Flask(__name__)
@@ -71,6 +72,7 @@ app.register_blueprint(chat_bp)
 app.register_blueprint(quests_bp)
 app.register_blueprint(leaderboard_bp)
 app.register_blueprint(streaks_bp)
+app.register_blueprint(translate_bp)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

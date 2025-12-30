@@ -3,6 +3,7 @@ import { X, Send, MessageCircle, ChevronRight, Minimize2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { chatApi, ChatMessage } from '../services/api';
 import { useUserStore } from '../stores/userStore';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface FinAICoachPanelProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface FinAICoachPanelProps {
 
 export function FinAICoachPanel({ isOpen, onClose }: FinAICoachPanelProps) {
   const { learnerId } = useUserStore();
+  const { selectedLanguage } = useLanguage();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -50,6 +52,7 @@ export function FinAICoachPanel({ isOpen, onClose }: FinAICoachPanelProps) {
         message: messageText.trim(),
         learner_id: learnerId || undefined,
         conversation_id: conversationId || undefined,
+        language: selectedLanguage,  // Pass current language
       });
 
       const assistantMessage: ChatMessage = {

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { useUserStore } from '../stores/userStore'
 import { curriculumApi, Course } from '../services/api'
 import { LanguageSelector } from '../components/LanguageSelector'
+import { useLanguage } from '../contexts/LanguageContext'
 
 // Avatar mapping for sections - using human avatars
 const SECTION_AVATARS: Record<string, string> = {
@@ -25,6 +26,7 @@ const SECTION_AVATARS: Record<string, string> = {
 export const LearnPage = () => {
     const { user, learnerId } = useUserStore()
     const navigate = useNavigate()
+    const { t } = useLanguage()
     const [courses, setCourses] = useState<Course[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -54,7 +56,7 @@ export const LearnPage = () => {
             <div className="flex items-center justify-center min-h-screen bg-white">
                 <div className="text-center">
                     <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-500 font-medium">Loading courses...</p>
+                    <p className="text-gray-500 font-medium">{t('common.loading')}</p>
                 </div>
             </div>
         )
@@ -69,7 +71,7 @@ export const LearnPage = () => {
                         onClick={() => window.location.reload()}
                         className="px-4 py-2 bg-green-500 text-white rounded-lg font-bold"
                     >
-                        Retry
+                        {t('common.retry')}
                     </button>
                 </div>
             </div>
@@ -85,7 +87,7 @@ export const LearnPage = () => {
                     className="flex items-center gap-3 text-gray-400 hover:text-gray-600 transition-colors group"
                 >
                     <ArrowLeft className="w-5 h-5 group-hover:bg-gray-100 rounded-full transition-colors" strokeWidth={3} />
-                    <span className="font-bold uppercase tracking-widest text-sm">Back</span>
+                    <span className="font-bold uppercase tracking-widest text-sm">{t('common.back')}</span>
                 </button>
             </div>
 
@@ -131,7 +133,7 @@ export const LearnPage = () => {
                                         <div className="flex items-center justify-between mb-1">
                                             <div className="flex items-center gap-2">
                                                 <span className={`text-xs font-extrabold tracking-widest uppercase ${isUnlocked ? 'text-green-600' : 'text-cyan-500'}`}>
-                                                    {isUnlocked ? `SECTION ${index + 1}` : `SECTION ${index + 1}`} · {course.lessons_count} LESSONS
+                                                    {t('learn.section')} {index + 1} · {course.lessons_count} {t('learn.lessons')}
                                                 </span>
                                             </div>
                                         </div>
@@ -158,17 +160,17 @@ export const LearnPage = () => {
                                                         onClick={() => navigate(`/section/${course.id}`)}
                                                         className="w-full py-3.5 bg-green-500 text-white font-bold text-sm rounded-xl border-b-4 border-green-600 hover:bg-green-400 hover:border-green-500 active:border-b-0 active:translate-y-1 transition-all uppercase tracking-widest shadow-sm"
                                                     >
-                                                        {progress > 0 ? 'Continue' : 'Start'}
+                                                        {progress > 0 ? t('common.continue') : t('common.start')}
                                                     </button>
                                                 </>
                                             ) : (
                                                 <>
                                                     <div className="flex items-center gap-2 text-gray-400 font-bold bg-gray-100 px-4 py-3 rounded-xl mb-4 w-fit border-2 border-gray-100">
                                                         <Lock className="w-5 h-5" />
-                                                        <span className="tracking-widest text-xs">LOCKED</span>
+                                                        <span className="tracking-widest text-xs">{t('learn.locked').toUpperCase()}</span>
                                                     </div>
                                                     <button disabled className="w-full py-3.5 bg-gray-200 text-gray-400 font-bold text-sm rounded-xl border-b-4 border-gray-300 cursor-not-allowed uppercase tracking-widest">
-                                                        Complete Previous
+                                                        {t('learn.complete_previous')}
                                                     </button>
                                                 </>
                                             )}
@@ -184,7 +186,7 @@ export const LearnPage = () => {
                                                     className="absolute -top-16 -left-4 z-20"
                                                 >
                                                     <div className="relative bg-white border-2 border-gray-200 px-4 py-2 rounded-2xl shadow-sm">
-                                                        <p className="text-sm font-bold text-gray-700 whitespace-nowrap">Let's go!</p>
+                                                        <p className="text-sm font-bold text-gray-700 whitespace-nowrap">{t('learn.lets_go')}</p>
                                                         <div className="absolute -bottom-[9px] right-6 w-4 h-4 bg-white border-r-2 border-b-2 border-gray-200 transform rotate-45"></div>
                                                         <div className="absolute -bottom-[2px] right-6 w-4 h-2 bg-white transform"></div>
                                                     </div>

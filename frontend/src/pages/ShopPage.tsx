@@ -6,6 +6,7 @@ import { GemDisplay } from '../components/gamification/GemDisplay';
 import { useUserStore } from '../stores/userStore';
 import { ShoppingBag, Zap, Heart, Flame, Crown, Star, Shield, Filter, Search, Plus } from 'lucide-react';
 import { cn } from '../utils/cn';
+import { TranslatedText } from '../components/TranslatedText';
 
 // --- Types & Data ---
 
@@ -184,7 +185,7 @@ export const ShopPage: React.FC = () => {
                   transition={{ delay: 0.3 }}
                   className="text-3xl lg:text-4xl font-extrabold text-[#5B3E2B] mb-3 leading-tight"
                 >
-                  Effortlessly Manage Your Power-ups!
+                  <TranslatedText>Effortlessly Manage Your Power-ups!</TranslatedText>
                 </motion.h2>
                 <motion.p
                   initial={{ opacity: 0 }}
@@ -192,7 +193,7 @@ export const ShopPage: React.FC = () => {
                   transition={{ delay: 0.4 }}
                   className="text-[#8D6E58] font-medium text-sm lg:text-base max-w-md leading-relaxed"
                 >
-                  Quick access to every power-up—add, update, and organize your inventory with ease.
+                  <TranslatedText>Quick access to every power-up—add, update, and organize your inventory with ease.</TranslatedText>
                 </motion.p>
               </div>
 

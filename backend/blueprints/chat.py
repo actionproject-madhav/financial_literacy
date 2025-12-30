@@ -32,7 +32,7 @@ def get_llm_service():
 
 
 # System prompt for the FinAI Coach
-COACH_SYSTEM_PROMPT = """You are FinAI Coach, a friendly and knowledgeable financial literacy assistant specifically designed to help immigrants navigate the US financial system.
+COACH_SYSTEM_PROMPT =COACH_SYSTEM_PROMPT_BASE = """You are FinAI Coach, a friendly and knowledgeable financial literacy assistant specifically designed to help immigrants navigate the US financial system.
 
 Your role is to:
 1. Answer questions about US banking, credit, taxes, investing, and financial planning
@@ -52,6 +52,20 @@ Guidelines:
 
 You are NOT a licensed financial advisor. Always remind users to consult professionals for major financial decisions."""
 
+LANGUAGE_INSTRUCTIONS = {
+    'en': '\n\nRespond in English.',
+    'es': '\n\nRespond in Spanish (Español). Use natural, conversational Spanish appropriate for financial topics.',
+    'ne': '\n\nRespond in Nepali (नेपाली). Use natural, conversational Nepali appropriate for financial topics. Use Devanagari script.'
+}
+
+def get_coach_system_prompt(language='en'):
+    """Get system prompt with language instruction"""
+    base_prompt = COACH_SYSTEM_PROMPT_BASE
+    lang_instruction = LANGUAGE_INSTRUCTIONS.get(language, LANGUAGE_INSTRUCTIONS['en'])
+    return base_prompt + lang_instruction
+
+COACH_SYSTEM_PROMPT = COACH_SYSTEM_PROMPT_BASE  # For backwards compatibility
+
 
 @chat_bp.route('/message', methods=['POST'])
 def send_message():
@@ -63,6 +77,7 @@ def send_message():
         "learner_id": "optional - for personalization",
         "message": "User's question or message",
         "conversation_id": "optional - to continue a conversation",
+        "language": "optional - user's preferred language (en, es, ne)",
         "context": {
             "current_lesson": "optional - what they're learning",
             "visa_type": "optional - for personalized advice"
@@ -88,6 +103,7 @@ def send_message():
 
         learner_id = data.get('learner_id')
         conversation_id = data.get('conversation_id')
+        language = data.get('language', 'en')  # Default to English
         context = data.get('context', {})
 
         db = get_db()
@@ -126,8 +142,8 @@ def send_message():
             except:
                 pass
 
-        # Build the prompt with conversation history
-        prompt_parts = [COACH_SYSTEM_PROMPT]
+        # Build the prompt with conversation history and language instruction
+        prompt_parts = [get_coach_system_prompt(language)]
 
         if learner_context:
             prompt_parts.append(f"\nUser context:{learner_context}")

@@ -6,6 +6,8 @@ import { useUserStore } from '../stores/userStore'
 import { curriculumApi, adaptiveApi, voiceApi, Question } from '../services/api'
 import confetti from 'canvas-confetti'
 import { CelebrationOverlay } from '../components/CelebrationOverlay'
+import { useLanguage } from '../contexts/LanguageContext'
+import { useTranslateContent } from '../hooks/useTranslateContent'
 
 interface StepBase {
   type: 'content' | 'quiz';
@@ -42,6 +44,7 @@ export const LessonPage = () => {
 
   // Store actions
   const { user, learnerId, setUser, addXP, loseHeart } = useUserStore()
+  const { selectedLanguage: globalLanguage } = useLanguage()
 
   const [lesson, setLesson] = useState<LessonInfo | null>(null)
   const [steps, setSteps] = useState<Step[]>([])
@@ -74,17 +77,14 @@ export const LessonPage = () => {
   const audioChunks = useRef<Blob[]>([])
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  // Language configuration
-  type LanguageCode = 'en' | 'es' | 'ne'
-  const [selectedLanguage, setSelectedLanguage] = useState<LanguageCode>('en')
-
-  const languages: Record<LanguageCode, { name: string; flag: string; nativeName: string; apiCode: string }> = {
+  // Language configuration - use global language
+  const languages = {
     en: { name: 'English', nativeName: 'English', flag: 'https://flagcdn.com/w40/us.png', apiCode: 'eng' },
     es: { name: 'Spanish', nativeName: 'Español', flag: 'https://flagcdn.com/w40/es.png', apiCode: 'spa' },
     ne: { name: 'Nepali', nativeName: 'नेपाली', flag: 'https://flagcdn.com/w40/np.png', apiCode: 'nep' }
   }
 
-  const currentLang = languages[selectedLanguage]
+  const currentLang = languages[globalLanguage as keyof typeof languages] || languages.en
 
   // Fetch questions on mount
   useEffect(() => {
@@ -130,13 +130,7 @@ export const LessonPage = () => {
     fetchQuestions()
   }, [lessonId, learnerId, navigate])
 
-  // Cycle through languages
-  const cycleLanguage = () => {
-    const langOrder: LanguageCode[] = ['en', 'es', 'ne']
-    const currentIndex = langOrder.indexOf(selectedLanguage)
-    const nextIndex = (currentIndex + 1) % langOrder.length
-    setSelectedLanguage(langOrder[nextIndex])
-  }
+  // Remove local language cycling - use global language selector instead
 
   // Text-to-Speech using backend ElevenLabs API
   const speakQuestion = async (text: string) => {

@@ -346,6 +346,7 @@ export const chatApi = {
     message: string;
     learner_id?: string;
     conversation_id?: string;
+    language?: string;  // Add language parameter
     context?: {
       current_lesson?: string;
       visa_type?: string;

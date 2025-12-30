@@ -3,6 +3,7 @@ import { LogOut, HelpCircle } from 'lucide-react'
 import { useUserStore } from '../../stores/userStore'
 import { cn } from '../../utils/cn'
 import { useState } from 'react'
+import { useLanguage } from '../../contexts/LanguageContext'
 
 interface SidebarProps {
   onCoachClick?: () => void;
@@ -11,18 +12,19 @@ interface SidebarProps {
 export const Sidebar = ({ onCoachClick }: SidebarProps) => {
   const location = useLocation()
   const { logout } = useUserStore()
+  const { t } = useLanguage()
   const [isOpen, setIsOpen] = useState(false)
 
   const isMobile = window.innerWidth < 1024;
 
   // Using custom SVGs from public folder
   const menuItems = [
-    { icon: '/home-pixel.svg', label: 'Home', path: '/learn' },
-    { icon: '/profile.svg', label: 'Coach', path: '/coach', isButton: true },
-    { icon: '/leaderboard.svg', label: 'Leaderboard', path: '/leaderboard' },
-    { icon: '/quest.svg', label: 'Quests', path: '/quests' },
-    { icon: '/shop.svg', label: 'Shop', path: '/shop' },
-    { icon: '/profile.svg', label: 'Profile', path: '/profile' },
+    { icon: '/home-pixel.svg', label: t('nav.learn'), path: '/learn' },
+    { icon: '/profile.svg', label: t('nav.coach'), path: '/coach', isButton: true },
+    { icon: '/leaderboard.svg', label: t('nav.leaderboard'), path: '/leaderboard' },
+    { icon: '/quest.svg', label: t('nav.quests'), path: '/quests' },
+    { icon: '/shop.svg', label: t('nav.shop'), path: '/shop' },
+    { icon: '/profile.svg', label: t('nav.profile'), path: '/profile' },
     { icon: '/setting.svg', label: 'Settings', path: '/settings' },
   ]
 
@@ -45,7 +47,7 @@ export const Sidebar = ({ onCoachClick }: SidebarProps) => {
             (item.path === '/learn' && location.pathname.startsWith('/section'))
           )
 
-          if (item.isButton && item.label === 'Coach') {
+          if (item.isButton && item.label === t('nav.coach')) {
             return (
               <button
                 key={item.path}
