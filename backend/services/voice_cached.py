@@ -251,7 +251,27 @@ class CachedVoiceService:
                 # Generate and cache question stem
                 if stem_text:
                     print(f"🎤 Generating TTS: {item_id} stem ({lang})...")
-                    audio = self.voice_service.generate_tts(stem_text, lang)
+                    
+                    # Translate text if language is not English
+                    text_to_speak = stem_text
+                    if lang != 'en':
+                        try:
+                            from services.translation_cached import CachedTranslationService
+                            from blueprints.translate import SimpleTranslateClient
+                            translate_client = SimpleTranslateClient()
+                            translation_service = CachedTranslationService(translate_client)
+                            translated_text = translation_service.get_translation_for_text(
+                                item_id=str(item_id_obj),
+                                text=stem_text,
+                                language=lang
+                            )
+                            if translated_text:
+                                text_to_speak = translated_text
+                                print(f"   ✅ Translated to {lang}: {text_to_speak[:50]}...")
+                        except Exception as e:
+                            print(f"   ⚠️  Translation failed, using original text: {e}")
+                    
+                    audio = self.voice_service.generate_tts(text_to_speak, lang)
                     if audio:
                         self._save_to_cache(item_id_obj, lang, audio)
             
@@ -262,7 +282,27 @@ class CachedVoiceService:
                     print(f"⏭️  Skipping {item_id} choice {choice_idx} ({lang}) - already cached")
                 else:
                     print(f"🎤 Generating TTS: {item_id} choice {choice_idx} ({lang})...")
-                    audio = self.voice_service.generate_tts(choice_text, lang)
+                    
+                    # Translate text if language is not English
+                    text_to_speak = choice_text
+                    if lang != 'en':
+                        try:
+                            from services.translation_cached import CachedTranslationService
+                            from blueprints.translate import SimpleTranslateClient
+                            translate_client = SimpleTranslateClient()
+                            translation_service = CachedTranslationService(translate_client)
+                            translated_text = translation_service.get_translation_for_text(
+                                item_id=str(item_id_obj),
+                                text=choice_text,
+                                language=lang
+                            )
+                            if translated_text:
+                                text_to_speak = translated_text
+                                print(f"   ✅ Translated to {lang}: {text_to_speak[:50]}...")
+                        except Exception as e:
+                            print(f"   ⚠️  Translation failed, using original text: {e}")
+                    
+                    audio = self.voice_service.generate_tts(text_to_speak, lang)
                     if audio:
                         self._save_choice_to_cache(item_id_obj, lang, choice_idx, audio)
     

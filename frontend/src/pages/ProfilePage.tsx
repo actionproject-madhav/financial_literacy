@@ -1,5 +1,4 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
 import { Settings, Share2, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
@@ -11,53 +10,119 @@ import { ProgressBar } from '../components/ui/ProgressBar';
 import { StreakCounter } from '../components/gamification/StreakCounter';
 import { XPDisplay } from '../components/gamification/XPDisplay';
 import { AchievementBadge } from '../components/gamification/AchievementBadge';
-import { mockUser as mockDataUser } from '../data/mockData';
 import { useUserStore } from '../stores/userStore';
+import { learnerApi } from '../services/api';
 
-// Extended mock user data for profile page
-const mockUser = {
-  name: 'Rajesh Kumar',
-  email: 'rajesh@example.com',
-  avatar: null,
-  country: 'India',
-  visaType: 'F1',
-  joinDate: '2024-01-15',
-  stats: {
-    streak: 42,
-    totalXP: 4250,
-    lessonsCompleted: 67,
-    skillsMastered: 8,
-    currentLevel: 12,
-    levelProgress: 65,
-  },
-  achievements: [
-    { id: 'streak-7', icon: '🔥', title: 'Week Warrior', description: '7-day streak', unlocked: true },
-    { id: 'streak-30', icon: '🔥', title: 'Monthly Master', description: '30-day streak', unlocked: true },
-    { id: 'perfect', icon: '⭐', title: 'Perfect!', description: '100% accuracy lesson', unlocked: true },
-    { id: 'xp-1000', icon: '⚡', title: 'XP Hunter', description: 'Earn 1000 XP', unlocked: true },
-    { id: 'streak-100', icon: '💎', title: 'Century', description: '100-day streak', unlocked: false, progress: { current: 42, total: 100 } },
-  ],
-};
+interface ProfileStats {
+  learner_id: string;
+  display_name: string;
+  email: string;
+  country_of_origin: string;
+  visa_type: string;
+  total_xp: number;
+  streak_count: number;
+  lessons_completed: number;
+  skills_mastered: number;
+  level: number;
+  level_progress: number;
+  xp_for_current_level: number;
+  xp_for_next_level: number;
+  xp_in_current_level: number;
+  xp_needed_for_level: number;
+}
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user: storeUser } = useUserStore();
-  
-  // Use store user or fallback to mock
-  const displayUser = storeUser || {
-    name: mockDataUser.name,
-    email: mockDataUser.email,
-    country: mockDataUser.country,
-    visaType: mockDataUser.visaType,
-  };
+  const { learnerId, user: storeUser } = useUserStore();
+  const [stats, setStats] = useState<ProfileStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Merge with mock stats
+  // Fetch real profile stats from backend
+  const fetchStats = React.useCallback(async () => {
+    if (!learnerId) {
+      setError('Not logged in');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const profileStats = await learnerApi.getStats(learnerId);
+      setStats(profileStats);
+    } catch (err) {
+      console.error('Failed to fetch profile stats:', err);
+      setError('Failed to load profile data');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [learnerId]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  // Refresh stats when page becomes visible (e.g., after completing a lesson)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && learnerId) {
+        fetchStats();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchStats, learnerId]);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-duo-primary mx-auto mb-4"></div>
+          <p className="text-duo-text-muted">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error || !stats) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error || 'Failed to load profile'}</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Use real data from backend
   const userData = {
-    ...mockUser,
-    name: displayUser.name,
-    email: displayUser.email,
-    country: displayUser.country,
-    visaType: displayUser.visaType,
+    name: stats.display_name || storeUser?.name || 'User',
+    email: stats.email || storeUser?.email || '',
+    country: stats.country_of_origin || storeUser?.country || 'US',
+    visaType: stats.visa_type || storeUser?.visaType || 'Other',
+    stats: {
+      streak: stats.streak_count,
+      totalXP: stats.total_xp,
+      lessonsCompleted: stats.lessons_completed,
+      skillsMastered: stats.skills_mastered,
+      currentLevel: stats.level,
+      levelProgress: stats.level_progress,
+    },
+    // TODO: Fetch real achievements from backend
+    achievements: [
+      { id: 'streak-7', icon: '🔥', title: 'Week Warrior', description: '7-day streak', unlocked: stats.streak_count >= 7 },
+      { id: 'streak-30', icon: '🔥', title: 'Monthly Master', description: '30-day streak', unlocked: stats.streak_count >= 30 },
+      { id: 'perfect', icon: '⭐', title: 'Perfect!', description: '100% accuracy lesson', unlocked: false },
+      { id: 'xp-1000', icon: '⚡', title: 'XP Hunter', description: 'Earn 1000 XP', unlocked: stats.total_xp >= 1000 },
+      { id: 'streak-100', icon: '💎', title: 'Century', description: '100-day streak', unlocked: stats.streak_count >= 100, progress: stats.streak_count < 100 ? { current: stats.streak_count, total: 100 } : undefined },
+    ],
   };
 
   return (

@@ -1416,11 +1416,19 @@ def get_item_tts(item_id):
         db = get_db()
         language = request.args.get('language', 'en')
         choice_index = request.args.get('choice_index', type=int)
+        
+        print(f"🔍 TTS request: item_id={item_id}, language={language}, choice_index={choice_index}")
 
         # Get item
         item = db.collections.learning_items.find_one({'_id': ObjectId(item_id)})
         if not item:
             return jsonify({'error': 'Item not found'}), 404
+        
+        # Check cache status
+        tts_cache = item.get('tts_cache', {})
+        print(f"📦 Cache status for language '{language}': {language in tts_cache}")
+        if language in tts_cache:
+            print(f"   Cache value exists: {bool(tts_cache[language])}, length: {len(str(tts_cache[language])) if tts_cache[language] else 0}")
 
         # Use cached voice service
         voice_service = VoiceService()

@@ -7,8 +7,16 @@ This script:
 2. Translates all questions to Spanish and Nepali
 3. Saves everything to database cache
 
+IMPORTANT:
+- Already cached items are automatically skipped (safe to run multiple times)
+- For non-English languages, text is translated BEFORE TTS generation
+- If quota is exceeded, you can update API key and run again (skips cached items)
+
 Cost: One-time cost to generate everything (~$50-100 for 1000 questions)
 Benefit: Zero cost for future requests (99.9x% cache hit rate)
+
+Usage:
+    python3 scripts/pre_generate_cache.py
 """
 
 import sys

@@ -45,6 +45,25 @@ export const learnerApi = {
   getProfile: (learnerId: string) =>
     fetchApi<any>(`/api/learners/${learnerId}`),
 
+  getStats: (learnerId: string) =>
+    fetchApi<{
+      learner_id: string;
+      display_name: string;
+      email: string;
+      country_of_origin: string;
+      visa_type: string;
+      total_xp: number;
+      streak_count: number;
+      lessons_completed: number;
+      skills_mastered: number;
+      level: number;
+      level_progress: number;
+      xp_for_current_level: number;
+      xp_for_next_level: number;
+      xp_in_current_level: number;
+      xp_needed_for_level: number;
+    }>(`/api/learners/${learnerId}/stats`),
+
   updateProfile: (learnerId: string, data: any) =>
     fetchApi<any>(`/api/learners/${learnerId}`, {
       method: 'PUT',

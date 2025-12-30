@@ -456,6 +456,130 @@ def get_daily_progress(learner_id):
         return jsonify({'error': str(e)}), 500
 
 
+def calculate_level_from_xp(total_xp):
+    """
+    Calculate user level from total XP.
+    Duolingo-style progression:
+    - Level 1: 0 XP
+    - Level 2: 100 XP (100 needed)
+    - Level 3: 300 XP (200 needed)
+    - Level 4: 600 XP (300 needed)
+    - Level 5: 1000 XP (400 needed)
+    - Level 6: 1500 XP (500 needed)
+    - Level 7: 2100 XP (600 needed)
+    - Level 8: 2800 XP (700 needed)
+    - Level 9: 3600 XP (800 needed)
+    - Level 10: 4500 XP (900 needed)
+    - Level 11: 5500 XP (1000 needed)
+    - Level 12: 6600 XP (1100 needed)
+    Formula: XP for level N = sum(100 * i for i in range(1, N))
+    """
+    if total_xp <= 0:
+        return {
+            'level': 1,
+            'xp_for_current_level': 0,
+            'xp_for_next_level': 100,
+            'xp_in_current_level': 0,
+            'xp_needed_for_level': 100,
+            'level_progress': 0
+        }
+    
+    # Find current level
+    level = 1
+    xp_required = 0
+    
+    while xp_required <= total_xp:
+        level += 1
+        xp_required = sum(100 * i for i in range(1, level))
+    
+    level = level - 1  # Adjust for the last increment
+    
+    # Calculate XP thresholds
+    xp_for_current_level = sum(100 * i for i in range(1, level)) if level > 1 else 0
+    xp_for_next_level = sum(100 * i for i in range(1, level + 1))
+    xp_in_current_level = total_xp - xp_for_current_level
+    xp_needed_for_level = xp_for_next_level - xp_for_current_level
+    level_progress = int((xp_in_current_level / xp_needed_for_level) * 100) if xp_needed_for_level > 0 else 0
+    
+    return {
+        'level': level,
+        'xp_for_current_level': xp_for_current_level,
+        'xp_for_next_level': xp_for_next_level,
+        'xp_in_current_level': xp_in_current_level,
+        'xp_needed_for_level': xp_needed_for_level,
+        'level_progress': min(100, max(0, level_progress))
+    }
+
+
+@learners_bp.route('/<learner_id>/stats', methods=['GET'])
+def get_learner_stats(learner_id):
+    """
+    Get comprehensive learner statistics for profile page.
+    
+    Response:
+    {
+        "learner_id": "...",
+        "display_name": "...",
+        "email": "...",
+        "country_of_origin": "US",
+        "visa_type": "Other",
+        "total_xp": 4250,
+        "streak_count": 42,
+        "lessons_completed": 67,
+        "skills_mastered": 8,
+        "level": 12,
+        "level_progress": 65,
+        "xp_for_current_level": 12100,
+        "xp_for_next_level": 14400,
+        "xp_in_current_level": 2750,
+        "xp_needed_for_level": 2300
+    }
+    """
+    try:
+        db = get_db()
+        
+        # Verify learner exists
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+        
+        total_xp = learner.get('total_xp', 0)
+        streak_count = learner.get('streak_count', 0)
+        
+        # Count lessons completed (status = 'mastered')
+        lessons_completed = db.collections.learner_skill_states.count_documents({
+            'learner_id': ObjectId(learner_id),
+            'status': 'mastered'
+        })
+        
+        # Skills mastered is the same as lessons completed (each lesson is a skill/KC)
+        skills_mastered = lessons_completed
+        
+        # Calculate level from XP
+        level_info = calculate_level_from_xp(total_xp)
+        
+        return jsonify({
+            'learner_id': str(learner['_id']),
+            'display_name': learner.get('display_name', 'User'),
+            'email': learner.get('email', ''),
+            'country_of_origin': learner.get('country_of_origin', 'US'),
+            'visa_type': learner.get('visa_type', 'Other'),
+            'total_xp': total_xp,
+            'streak_count': streak_count,
+            'lessons_completed': lessons_completed,
+            'skills_mastered': skills_mastered,
+            'level': level_info['level'],
+            'level_progress': level_info['level_progress'],
+            'xp_for_current_level': level_info['xp_for_current_level'],
+            'xp_for_next_level': level_info['xp_for_next_level'],
+            'xp_in_current_level': level_info['xp_in_current_level'],
+            'xp_needed_for_level': level_info['xp_needed_for_level']
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # Health check
 @learners_bp.route('/health', methods=['GET'])
 def health_check():
