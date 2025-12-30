@@ -78,10 +78,10 @@ export const LessonPage = () => {
   type LanguageCode = 'en' | 'hi' | 'ne'
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageCode>('en')
 
-  const languages: Record<LanguageCode, { name: string; flag: string; nativeName: string }> = {
-    en: { name: 'English', nativeName: 'English', flag: 'https://flagcdn.com/w40/us.png' },
-    hi: { name: 'Hindi', nativeName: 'हिन्दी', flag: 'https://flagcdn.com/w40/in.png' },
-    ne: { name: 'Nepali', nativeName: 'नेपाली', flag: 'https://flagcdn.com/w40/np.png' }
+  const languages: Record<LanguageCode, { name: string; flag: string; nativeName: string; apiCode: string }> = {
+    en: { name: 'English', nativeName: 'English', flag: 'https://flagcdn.com/w40/us.png', apiCode: 'eng' },
+    hi: { name: 'Hindi', nativeName: 'हिन्दी', flag: 'https://flagcdn.com/w40/in.png', apiCode: 'hin' },
+    ne: { name: 'Nepali', nativeName: 'नेपाली', flag: 'https://flagcdn.com/w40/np.png', apiCode: 'nep' }
   }
 
   const currentLang = languages[selectedLanguage]
@@ -306,17 +306,28 @@ export const LessonPage = () => {
 
   // Submit voice answer to backend
   const submitVoiceAnswer = async (stepData: QuizStep): Promise<{ isCorrect: boolean; matchedChoice: number | null } | null> => {
-    if (!learnerId || !audioBase64) return null
+    if (!learnerId || !audioBase64) {
+      console.log('❌ Voice submission skipped:', { learnerId: !!learnerId, audioBase64: !!audioBase64 })
+      return null
+    }
 
     try {
+      console.log('🎤 Submitting voice answer:', {
+        transcription: voiceAnswer,
+        itemId: stepData.itemId,
+        kcId: stepData.kcId
+      })
+
       const result = await voiceApi.submitVoiceAnswer({
         learner_id: learnerId,
         item_id: stepData.itemId,
         kc_id: stepData.kcId,
         session_id: sessionId,
         audio_base64: audioBase64,
-        language_hint: selectedLanguage
+        language_hint: currentLang.apiCode
       })
+
+      console.log('✅ Voice result:', result)
 
       if (result) {
         return {
@@ -325,7 +336,7 @@ export const LessonPage = () => {
         }
       }
     } catch (err) {
-      console.error('Voice submission error:', err)
+      console.error('❌ Voice submission error:', err)
     }
 
     return null
