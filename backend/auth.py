@@ -154,9 +154,17 @@ def get_current_user():
 
 @auth_bp.route('/logout', methods=['POST'])
 def logout():
-    """Logout user"""
-    session.clear()
-    return jsonify({'success': True})
+    """Logout user - clears session on backend"""
+    try:
+        # Clear all session data
+        session.clear()
+        print(f"✅ Logout successful - session cleared")
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        print(f"⚠️  Logout error: {e}")
+        # Still return success even if there's an error clearing session
+        # The session will expire anyway
+        return jsonify({'success': True}), 200
 
 
 def _initialize_learner_skills(learner_id: str):

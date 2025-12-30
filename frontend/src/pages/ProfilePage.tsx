@@ -49,10 +49,19 @@ export const ProfilePage: React.FC = () => {
     try {
       setIsLoading(true);
       setError(null);
+      console.log('[ProfilePage] Fetching stats from database for learner:', learnerId);
       const profileStats = await learnerApi.getStats(learnerId);
+      console.log('[ProfilePage] Stats loaded from database:', {
+        total_xp: profileStats.total_xp,
+        streak_count: profileStats.streak_count,
+        lessons_completed: profileStats.lessons_completed,
+        skills_mastered: profileStats.skills_mastered,
+        level: profileStats.level,
+        level_progress: profileStats.level_progress
+      });
       setStats(profileStats);
     } catch (err) {
-      console.error('Failed to fetch profile stats:', err);
+      console.error('[ProfilePage] Failed to fetch profile stats:', err);
       setError('Failed to load profile data');
     } finally {
       setIsLoading(false);

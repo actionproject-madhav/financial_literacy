@@ -1,9 +1,10 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { LogOut, HelpCircle } from 'lucide-react'
 import { useUserStore } from '../../stores/userStore'
 import { cn } from '../../utils/cn'
 import { useState } from 'react'
 import { useLanguage } from '../../contexts/LanguageContext'
+import { authApi } from '../../services/api'
 
 interface SidebarProps {
   onCoachClick?: () => void;
@@ -11,6 +12,7 @@ interface SidebarProps {
 
 export const Sidebar = ({ onCoachClick }: SidebarProps) => {
   const location = useLocation()
+  const navigate = useNavigate()
   const { logout } = useUserStore()
   const { t } = useLanguage()
   const [isOpen, setIsOpen] = useState(false)
@@ -95,9 +97,19 @@ export const Sidebar = ({ onCoachClick }: SidebarProps) => {
           <span>Help</span>
         </Link>
         <button
-          onClick={() => {
+          onClick={async () => {
+            try {
+              // Clear backend session
+              await authApi.logout();
+            } catch (error: any) {
+              console.error('Logout API error:', error);
+              // Continue with logout even if API call fails
+              // The error might be "URL not found" if backend is down, but we still want to clear local state
+            }
+            // Clear local state (always do this, even if API call failed)
             logout();
-            window.location.href = '/auth';
+            // Navigate to auth page (HashRouter will add # automatically)
+            navigate('/auth');
           }}
           className="w-full flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-red-500 font-bold text-sm uppercase tracking-widest transition-colors rounded-xl hover:bg-red-50"
         >

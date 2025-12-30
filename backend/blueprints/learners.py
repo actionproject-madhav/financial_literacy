@@ -515,6 +515,7 @@ def calculate_level_from_xp(total_xp):
 def get_learner_stats(learner_id):
     """
     Get comprehensive learner statistics for profile page.
+    ALL DATA COMES FROM DATABASE - NO MOCK DATA.
     
     Response:
     {
@@ -523,16 +524,16 @@ def get_learner_stats(learner_id):
         "email": "...",
         "country_of_origin": "US",
         "visa_type": "Other",
-        "total_xp": 4250,
-        "streak_count": 42,
-        "lessons_completed": 67,
-        "skills_mastered": 8,
-        "level": 12,
-        "level_progress": 65,
-        "xp_for_current_level": 12100,
-        "xp_for_next_level": 14400,
-        "xp_in_current_level": 2750,
-        "xp_needed_for_level": 2300
+        "total_xp": 915,  # From learners.total_xp
+        "streak_count": 33,  # From learners.streak_count
+        "lessons_completed": 3,  # Count from learner_skill_states where status='mastered'
+        "skills_mastered": 3,  # Same as lessons_completed
+        "level": 4,  # Calculated from total_xp
+        "level_progress": 78,  # Calculated from total_xp
+        "xp_for_current_level": 600,
+        "xp_for_next_level": 1000,
+        "xp_in_current_level": 315,
+        "xp_needed_for_level": 400
     }
     """
     try:
@@ -543,10 +544,11 @@ def get_learner_stats(learner_id):
         if not learner:
             return jsonify({'error': 'Learner not found'}), 404
         
+        # Get data directly from database - NO MOCK DATA
         total_xp = learner.get('total_xp', 0)
         streak_count = learner.get('streak_count', 0)
         
-        # Count lessons completed (status = 'mastered')
+        # Count lessons completed (status = 'mastered') from database
         lessons_completed = db.collections.learner_skill_states.count_documents({
             'learner_id': ObjectId(learner_id),
             'status': 'mastered'
@@ -555,8 +557,11 @@ def get_learner_stats(learner_id):
         # Skills mastered is the same as lessons completed (each lesson is a skill/KC)
         skills_mastered = lessons_completed
         
-        # Calculate level from XP
+        # Calculate level from XP (real calculation, not mock)
         level_info = calculate_level_from_xp(total_xp)
+        
+        # Log for debugging (can be removed in production)
+        print(f'[get_learner_stats] Learner {learner_id}: XP={total_xp}, Streak={streak_count}, Lessons={lessons_completed}, Level={level_info["level"]}')
         
         return jsonify({
             'learner_id': str(learner['_id']),
@@ -577,6 +582,7 @@ def get_learner_stats(learner_id):
         }), 200
         
     except Exception as e:
+        print(f'[get_learner_stats] Error: {e}')
         return jsonify({'error': str(e)}), 500
 
 

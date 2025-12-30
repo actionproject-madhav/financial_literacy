@@ -71,14 +71,15 @@ export const SettingsPage: React.FC = () => {
   const handleLogout = async () => {
     try {
       await authApi.logout();
-      logout();
-      navigate('/auth');
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Still logout locally even if API call fails
-      logout();
-      navigate('/auth');
+    } catch (error: any) {
+      console.error('Logout API error:', error);
+      // Continue with logout even if API call fails
+      // The error might be "URL not found" if backend is down, but we still want to clear local state
     }
+    // Clear local state (always do this, even if API call failed)
+    logout();
+    // Navigate to auth page using hash router
+    navigate('/auth');
   };
 
   const settingsSections: SettingsSection[] = [
