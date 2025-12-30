@@ -1,18 +1,63 @@
 """
-Personalization Service - LLM-powered content personalization
+Personalization Service - LLM-powered content personalization + Course Prioritization
 
 This service personalizes learning content for individual learners based on:
 - Country of origin
 - Visa type
 - English proficiency
 - Learning history
+- Financial goals
+- Diagnostic test results
 
 Uses LLM to generate culturally relevant explanations and context.
+Also calculates personalized course recommendations based on profile + diagnostic data.
 """
 
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
 from bson import ObjectId
 from .llm_service import get_llm_service
+
+
+# ============= COURSE PRIORITIZATION CONSTANTS =============
+
+# Domain to financial goals mapping
+GOAL_DOMAIN_MAPPING = {
+    'emergency_fund': ['budgeting', 'banking'],
+    'credit_score': ['credit', 'banking'],
+    'retirement': ['retirement', 'investing'],
+    'home_purchase': ['credit', 'budgeting', 'investing'],
+    'investing': ['investing', 'retirement'],
+    'debt_payoff': ['credit', 'budgeting'],
+    'tax_planning': ['taxes'],
+    'remittances': ['banking', 'immigration_finance'],
+}
+
+# Domain difficulty/advancement level (1=basic, 3=advanced)
+DOMAIN_LEVELS = {
+    'banking': 1,
+    'budgeting': 1,
+    'credit': 2,
+    'taxes': 2,
+    'immigration_finance': 2,
+    'investing': 3,
+    'retirement': 3,
+    'insurance': 2,
+    'cryptocurrency': 3,
+}
+
+# Countries where users likely know US basics (US territories, etc.)
+US_FAMILIAR_COUNTRIES = {'USA', 'US', 'PRI', 'GUM', 'VIR', 'ASM'}
+
+
+@dataclass
+class CourseRecommendation:
+    """Represents a personalized course recommendation."""
+    domain: str
+    priority_score: float  # 0-100, higher = show first
+    recommendation_type: str  # 'priority', 'suggested', 'optional', 'mastered'
+    reason: str
+    blur_level: float  # 0 = normal, 0.5 = slight blur, 1 = heavy blur
 
 
 class PersonalizationService:
@@ -332,3 +377,238 @@ Rewritten version:
         except Exception as e:
             print(f"⚠️  Error generating encouragement: {e}")
             return "Great work! Keep it up!"
+
+
+# ============= COURSE PRIORITIZATION SERVICE =============
+
+class CoursePrioritizationService:
+    """
+    Service to calculate personalized course recommendations based on
+    user profile (onboarding) + diagnostic test results.
+    """
+
+    def __init__(self, learner_profile: Dict, diagnostic_results: Optional[Dict] = None):
+        """
+        Initialize with learner profile and optional diagnostic results.
+
+        Args:
+            learner_profile: Dict with keys like country_of_origin, financial_goals,
+                           visa_type, financial_experience_level, etc.
+            diagnostic_results: Optional dict with domain_mastery and domain_priority
+        """
+        self.profile = learner_profile
+
+        # Extract key profile fields
+        self.country = (learner_profile.get('country_of_origin') or '').upper()
+        self.visa_type = learner_profile.get('visa_type') or ''
+        self.goals = learner_profile.get('financial_goals') or []
+        self.experience = learner_profile.get('financial_experience_level') or 'novice'
+        self.has_ssn = learner_profile.get('has_ssn', False)
+        self.sends_remittances = learner_profile.get('sends_remittances', False)
+
+        # Diagnostic data
+        self.domain_mastery = (diagnostic_results or {}).get('domain_mastery') or {}
+        self.domain_priority = (diagnostic_results or {}).get('domain_priority') or []
+        self.diagnostic_completed = learner_profile.get('diagnostic_test_completed', False)
+
+    def is_us_resident(self) -> bool:
+        """Check if user is from US or US territories."""
+        return self.country in US_FAMILIAR_COUNTRIES
+
+    def is_advanced_user(self) -> bool:
+        """Check if user is likely advanced (US citizen, Green Card, experienced)."""
+        advanced_visas = {'GREEN_CARD', 'CITIZEN'}
+        advanced_experience = {'intermediate', 'advanced'}
+        return (
+            self.visa_type in advanced_visas or
+            self.experience in advanced_experience or
+            self.is_us_resident()
+        )
+
+    def get_goal_domains(self) -> List[str]:
+        """Get domains that match user's financial goals."""
+        relevant_domains = set()
+        for goal in self.goals:
+            if goal in GOAL_DOMAIN_MAPPING:
+                relevant_domains.update(GOAL_DOMAIN_MAPPING[goal])
+        return list(relevant_domains)
+
+    def calculate_domain_priority(self, domain: str) -> Tuple[float, str, str]:
+        """
+        Calculate priority score for a domain.
+
+        Returns:
+            Tuple of (priority_score, recommendation_type, reason)
+        """
+        score = 50.0  # Base score
+        reasons = []
+        rec_type = 'suggested'
+
+        # Factor 1: Diagnostic test results (most important if completed)
+        if self.diagnostic_completed and domain in self.domain_mastery:
+            mastery = self.domain_mastery[domain]
+
+            if mastery < 0.3:
+                # Very weak - highest priority
+                score += 40
+                reasons.append("needs focus based on assessment")
+                rec_type = 'priority'
+            elif mastery < 0.5:
+                # Weak - high priority
+                score += 25
+                reasons.append("room for improvement")
+                rec_type = 'priority'
+            elif mastery >= 0.75:
+                # Strong - lower priority
+                score -= 30
+                reasons.append("you're already strong here")
+                rec_type = 'mastered' if mastery >= 0.9 else 'optional'
+
+        # Factor 2: Financial goals alignment
+        goal_domains = self.get_goal_domains()
+        if domain in goal_domains:
+            score += 20
+            reasons.append("matches your goals")
+            if rec_type != 'priority':
+                rec_type = 'suggested'
+
+        # Factor 3: User background (US resident vs immigrant)
+        domain_level = DOMAIN_LEVELS.get(domain, 2)
+
+        if self.is_us_resident() or self.is_advanced_user():
+            # US users / advanced users: prioritize advanced, deprioritize basics
+            if domain_level == 1:  # Basic domain
+                score -= 25
+                if not reasons:
+                    reasons.append("basics you likely know")
+                if rec_type == 'suggested':
+                    rec_type = 'optional'
+            elif domain_level == 3:  # Advanced domain
+                score += 15
+                reasons.append("advanced topic for your level")
+        else:
+            # New immigrants: prioritize basics first
+            if domain_level == 1:
+                score += 15
+                reasons.append("essential foundation")
+            elif domain_level == 3:
+                score -= 10
+                reasons.append("advanced - master basics first")
+
+        # Factor 4: Visa-specific content
+        if domain == 'immigration_finance':
+            if self.visa_type not in {'GREEN_CARD', 'CITIZEN'} and not self.is_us_resident():
+                score += 25
+                reasons.append("relevant to your visa status")
+            else:
+                score -= 20
+                if not reasons:
+                    reasons.append("less relevant for citizens")
+
+        # Factor 5: Remittances
+        if domain == 'banking' and self.sends_remittances:
+            score += 15
+            reasons.append("important for sending money home")
+
+        # Factor 6: No SSN considerations
+        if not self.has_ssn and domain in ['credit', 'taxes']:
+            score -= 5
+            if not reasons:
+                reasons.append("may need SSN first")
+
+        # Clamp score
+        score = max(0, min(100, score))
+
+        # Create reason string
+        reason = reasons[0] if reasons else "general recommendation"
+
+        return score, rec_type, reason
+
+    def get_personalized_recommendations(self, available_domains: List[str]) -> List[CourseRecommendation]:
+        """
+        Get personalized course recommendations for all available domains.
+
+        Args:
+            available_domains: List of domain IDs from the curriculum
+
+        Returns:
+            List of CourseRecommendation sorted by priority (highest first)
+        """
+        recommendations = []
+
+        for domain in available_domains:
+            score, rec_type, reason = self.calculate_domain_priority(domain)
+
+            # Calculate blur level
+            if rec_type == 'priority':
+                blur = 0.0
+            elif rec_type == 'suggested':
+                blur = 0.0
+            elif rec_type == 'optional':
+                blur = 0.3
+            else:  # mastered
+                blur = 0.5
+
+            recommendations.append(CourseRecommendation(
+                domain=domain,
+                priority_score=score,
+                recommendation_type=rec_type,
+                reason=reason,
+                blur_level=blur
+            ))
+
+        # Sort by priority score (highest first)
+        recommendations.sort(key=lambda x: x.priority_score, reverse=True)
+
+        return recommendations
+
+    def get_personalization_summary(self) -> Dict:
+        """Get a summary of the personalization factors for debugging/display."""
+        return {
+            'is_us_resident': self.is_us_resident(),
+            'is_advanced_user': self.is_advanced_user(),
+            'goal_domains': self.get_goal_domains(),
+            'diagnostic_completed': self.diagnostic_completed,
+            'experience_level': self.experience,
+            'visa_type': self.visa_type,
+            'country': self.country,
+        }
+
+
+def get_personalized_course_order(
+    learner_profile: Dict,
+    available_domains: List[str]
+) -> Tuple[List[Dict], Dict]:
+    """
+    Convenience function to get personalized course order.
+
+    Args:
+        learner_profile: Learner document from database (includes diagnostic fields)
+        available_domains: List of domain IDs from curriculum
+
+    Returns:
+        Tuple of (sorted_recommendations as list of dicts, personalization_summary)
+    """
+    # Extract diagnostic results from profile
+    diagnostic_results = {
+        'domain_mastery': learner_profile.get('domain_mastery', {}),
+        'domain_priority': learner_profile.get('domain_priority', []),
+    }
+
+    service = CoursePrioritizationService(learner_profile, diagnostic_results)
+    recommendations = service.get_personalized_recommendations(available_domains)
+    summary = service.get_personalization_summary()
+
+    # Convert to dict format
+    result = [
+        {
+            'domain': r.domain,
+            'priority_score': r.priority_score,
+            'recommendation_type': r.recommendation_type,
+            'reason': r.reason,
+            'blur_level': r.blur_level,
+        }
+        for r in recommendations
+    ]
+
+    return result, summary

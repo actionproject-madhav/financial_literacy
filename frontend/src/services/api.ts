@@ -351,6 +351,21 @@ export interface Course {
   unlocked: boolean;
   progress: number;
   mastered_count: number;
+  // Personalization fields
+  priority_score?: number;
+  recommendation_type?: 'priority' | 'suggested' | 'optional' | 'mastered';
+  recommendation_reason?: string;
+  blur_level?: number;
+}
+
+export interface PersonalizationSummary {
+  is_us_resident?: boolean;
+  is_advanced_user?: boolean;
+  goal_domains?: string[];
+  diagnostic_completed?: boolean;
+  experience_level?: string;
+  visa_type?: string;
+  country?: string;
 }
 
 export interface Lesson {

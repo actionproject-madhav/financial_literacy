@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Heart, Lock, ArrowLeft, TrendingUp, CheckCircle2, Circle, Target, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useUserStore } from '../stores/userStore'
-import { curriculumApi, Course, diagnosticApi } from '../services/api'
+import { curriculumApi, Course } from '../services/api'
 import { LanguageSelector } from '../components/LanguageSelector'
 import { useLanguage } from '../contexts/LanguageContext'
 import { TranslatedText } from '../components/TranslatedText'
@@ -24,54 +24,50 @@ const SECTION_AVATARS: Record<string, string> = {
     'financial_planning': 'https://api.dicebear.com/7.x/avataaars/svg?seed=planning&backgroundColor=c5cae9',
 }
 
-// Diagnostic results type
-interface DiagnosticResults {
-    completed: boolean;
-    domain_mastery: Record<string, number>;
-    domain_priority: string[];
+// Extended Course type with personalization fields
+interface PersonalizedCourse extends Course {
+    priority_score?: number;
+    recommendation_type?: 'priority' | 'suggested' | 'optional' | 'mastered';
+    recommendation_reason?: string;
+    blur_level?: number;
+}
+
+// Personalization summary from API
+interface PersonalizationSummary {
+    is_us_resident?: boolean;
+    is_advanced_user?: boolean;
+    goal_domains?: string[];
+    diagnostic_completed?: boolean;
+    experience_level?: string;
+    visa_type?: string;
+    country?: string;
 }
 
 export const LearnPage = () => {
     const { user, learnerId } = useUserStore()
     const navigate = useNavigate()
     const { t } = useLanguage()
-    const [courses, setCourses] = useState<Course[]>([])
+    const [courses, setCourses] = useState<PersonalizedCourse[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [diagnosticResults, setDiagnosticResults] = useState<DiagnosticResults | null>(null)
+    const [personalization, setPersonalization] = useState<PersonalizationSummary | null>(null)
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true)
 
-                // Fetch courses and diagnostic results in parallel
-                const [coursesResponse, diagnosticResponse] = await Promise.all([
-                    curriculumApi.getCourses(learnerId || undefined),
-                    learnerId ? diagnosticApi.getResults(learnerId).catch(() => null) : Promise.resolve(null)
-                ])
+                // Fetch courses with personalization data from API
+                const response = await curriculumApi.getCourses(learnerId || undefined)
 
-                let sortedCourses = coursesResponse.courses
+                // Courses are already sorted by priority from the API
+                setCourses(response.courses)
 
-                // If diagnostic completed, reorder courses based on priority (weakest first)
-                if (diagnosticResponse?.completed && diagnosticResponse.domain_priority?.length > 0) {
-                    setDiagnosticResults(diagnosticResponse)
-
-                    // Create priority map (lower index = higher priority)
-                    const priorityMap = new Map<string, number>()
-                    diagnosticResponse.domain_priority.forEach((domain, index) => {
-                        priorityMap.set(domain, index)
-                    })
-
-                    // Sort courses: prioritized domains first, then by original order
-                    sortedCourses = [...coursesResponse.courses].sort((a, b) => {
-                        const aPriority = priorityMap.get(a.id) ?? 999
-                        const bPriority = priorityMap.get(b.id) ?? 999
-                        return aPriority - bPriority
-                    })
+                // Store personalization summary if available
+                if (response.personalization) {
+                    setPersonalization(response.personalization)
                 }
 
-                setCourses(sortedCourses)
                 setError(null)
             } catch (err) {
                 console.error('Failed to fetch courses:', err)
@@ -156,11 +152,11 @@ export const LearnPage = () => {
                             const isUnlocked = course.unlocked
                             const progress = course.progress * 100
 
-                            // Check diagnostic results for this course
-                            const domainMastery = diagnosticResults?.domain_mastery?.[course.id]
-                            const priorityIndex = diagnosticResults?.domain_priority?.indexOf(course.id) ?? -1
-                            const isPriority = diagnosticResults?.completed && priorityIndex >= 0 && priorityIndex < 3 && domainMastery !== undefined && domainMastery < 0.5
-                            const isStrong = diagnosticResults?.completed && domainMastery !== undefined && domainMastery >= 0.75
+                            // Use personalization data from API
+                            const isPriority = course.recommendation_type === 'priority'
+                            const isStrong = course.recommendation_type === 'mastered' || course.recommendation_type === 'optional'
+                            const blurLevel = course.blur_level || 0
+                            const reason = course.recommendation_reason || ''
 
                             return (
                                 <div
@@ -170,7 +166,8 @@ export const LearnPage = () => {
                                         : isUnlocked
                                             ? 'bg-[#dcfce7] border-[#dcfce7]'
                                             : 'bg-white border-gray-200'
-                                        } ${isStrong && !isPriority ? 'opacity-75' : ''}`}
+                                        }`}
+                                    style={{ opacity: blurLevel > 0 ? 1 - (blurLevel * 0.4) : 1 }}
                                 >
                                     {/* Priority/Strong badges */}
                                     {isPriority && (
@@ -185,7 +182,7 @@ export const LearnPage = () => {
                                         <div className="absolute top-3 right-3 z-10">
                                             <div className="flex items-center gap-1.5 bg-[#58CC02] text-white px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide">
                                                 <Sparkles className="w-3.5 h-3.5" />
-                                                Strong
+                                                {course.recommendation_type === 'mastered' ? 'Mastered' : 'Strong'}
                                             </div>
                                         </div>
                                     )}
@@ -195,8 +192,8 @@ export const LearnPage = () => {
                                             <div className="flex items-center gap-2">
                                                 <span className={`text-xs font-extrabold tracking-widest uppercase ${isPriority ? 'text-[#1899D6]' : isUnlocked ? 'text-green-600' : 'text-cyan-500'}`}>
                                                     {t('learn.section')} {index + 1} · {course.lessons_count} {t('learn.lessons')}
-                                                    {diagnosticResults?.completed && domainMastery !== undefined && (
-                                                        <span className="ml-2 text-gray-400">· {Math.round(domainMastery * 100)}% mastery</span>
+                                                    {reason && (
+                                                        <span className="ml-2 text-gray-400 normal-case font-bold">· {reason}</span>
                                                     )}
                                                 </span>
                                             </div>

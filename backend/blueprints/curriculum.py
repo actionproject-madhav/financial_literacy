@@ -2,7 +2,7 @@
 Curriculum API Blueprint
 
 Provides endpoints for:
-- Getting all courses (domains)
+- Getting all courses (domains) with personalized recommendations
 - Getting lessons (skills) for a course
 - Getting questions for a lesson
 - Marking lessons as complete
@@ -17,6 +17,12 @@ curriculum_bp = Blueprint('curriculum', __name__, url_prefix='/api/curriculum')
 def get_learning_engine():
     """Get learning engine instance from app context (for future adaptive selection)"""
     return current_app.config.get('LEARNING_ENGINE')
+
+# Import personalization service
+def get_personalization_service():
+    """Get personalization function for course prioritization"""
+    from services.personalization import get_personalized_course_order
+    return get_personalized_course_order
 
 
 def get_db():
@@ -68,10 +74,10 @@ DOMAIN_METADATA = {
 @curriculum_bp.route('/courses', methods=['GET'])
 def get_courses():
     """
-    Get all available courses (domains) with their lessons count and progress.
+    Get all available courses (domains) with their lessons count, progress, and personalization.
 
     Query params:
-    - learner_id: optional, to include learner progress
+    - learner_id: optional, to include learner progress and personalized recommendations
 
     Response:
     {
@@ -84,9 +90,19 @@ def get_courses():
                 "lessons_count": 5,
                 "questions_count": 20,
                 "unlocked": true,
-                "progress": 0.25  // if learner_id provided
+                "progress": 0.25,
+                "priority_score": 75.0,
+                "recommendation_type": "priority",  // priority, suggested, optional, mastered
+                "recommendation_reason": "matches your goals",
+                "blur_level": 0.0
             }
-        ]
+        ],
+        "personalization": {
+            "is_us_resident": false,
+            "is_advanced_user": false,
+            "goal_domains": ["credit", "banking"],
+            ...
+        }
     }
     """
     try:
@@ -137,12 +153,21 @@ def get_courses():
                     'status': state.get('status', 'locked')
                 }
 
+        # Get learner profile for personalization
+        learner_profile = None
+        if learner_id:
+            learner_profile = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+
         # Build courses response
         courses = []
+        available_domains = []
+
         for domain_data in domains:
             domain = domain_data['_id']
             if not domain:
                 continue
+
+            available_domains.append(domain)
 
             metadata = DOMAIN_METADATA.get(domain, {
                 'title': domain.replace('_', ' ').title(),
@@ -178,13 +203,51 @@ def get_courses():
                 'questions_count': questions_count,
                 'unlocked': True,  # For now, all courses unlocked
                 'progress': round(progress, 2),
-                'mastered_count': mastered_count
+                'mastered_count': mastered_count,
+                # Default personalization values (will be updated below)
+                'priority_score': 50.0,
+                'recommendation_type': 'suggested',
+                'recommendation_reason': '',
+                'blur_level': 0.0
             })
 
-        # Sort by order
-        courses.sort(key=lambda x: x['order'])
+        # Apply personalization if learner profile exists
+        personalization_summary = {}
+        if learner_profile:
+            try:
+                get_personalized_order = get_personalization_service()
+                recommendations, personalization_summary = get_personalized_order(
+                    learner_profile,
+                    available_domains
+                )
 
-        return jsonify({'courses': courses}), 200
+                # Create lookup for recommendations
+                rec_lookup = {r['domain']: r for r in recommendations}
+
+                # Update courses with personalization data
+                for course in courses:
+                    rec = rec_lookup.get(course['id'])
+                    if rec:
+                        course['priority_score'] = rec['priority_score']
+                        course['recommendation_type'] = rec['recommendation_type']
+                        course['recommendation_reason'] = rec['reason']
+                        course['blur_level'] = rec['blur_level']
+
+                # Sort courses by priority score (highest first)
+                courses.sort(key=lambda x: x['priority_score'], reverse=True)
+
+            except Exception as e:
+                print(f"⚠️  Personalization error: {e}")
+                # Fall back to default order
+                courses.sort(key=lambda x: x['order'])
+        else:
+            # Sort by default order if no learner profile
+            courses.sort(key=lambda x: x['order'])
+
+        return jsonify({
+            'courses': courses,
+            'personalization': personalization_summary
+        }), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
