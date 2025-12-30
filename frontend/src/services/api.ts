@@ -198,3 +198,93 @@ export const healthApi = {
   checkAdaptive: () =>
     fetchApi<{ status: string }>('/api/adaptive/health').catch(() => null),
 };
+
+// Curriculum API
+export interface Course {
+  id: string;
+  title: string;
+  emoji: string;
+  description: string;
+  level: string;
+  order: number;
+  lessons_count: number;
+  questions_count: number;
+  unlocked: boolean;
+  progress: number;
+  mastered_count: number;
+}
+
+export interface Lesson {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  difficulty_tier: number;
+  bloom_level: string;
+  estimated_minutes: number;
+  icon_url: string | null;
+  questions_count: number;
+  status: 'locked' | 'available' | 'in_progress' | 'mastered';
+  p_mastery: number;
+  total_attempts: number;
+  correct_count: number;
+  order: number;
+}
+
+export interface Question {
+  id: string;
+  item_type: string;
+  content: {
+    stem: string;
+    choices: string[];
+    correct_answer: number;
+    explanation: string;
+    visa_variants?: Record<string, { additional_context: string }>;
+  };
+  difficulty: number;
+  discrimination: number;
+  media_type: string | null;
+  media_url: string | null;
+  allows_personalization: boolean;
+}
+
+export const curriculumApi = {
+  getCourses: (learnerId?: string) => {
+    const params = learnerId ? `?learner_id=${learnerId}` : '';
+    return fetchApi<{ courses: Course[] }>(`/api/curriculum/courses${params}`);
+  },
+
+  getCourseLessons: (domain: string, learnerId?: string) => {
+    const params = learnerId ? `?learner_id=${learnerId}` : '';
+    return fetchApi<{
+      course: {
+        id: string;
+        title: string;
+        emoji: string;
+        description: string;
+        level: string;
+      };
+      lessons: Lesson[];
+    }>(`/api/curriculum/courses/${domain}/lessons${params}`);
+  },
+
+  getLessonQuestions: (kcId: string, learnerId?: string, limit?: number) => {
+    const params = new URLSearchParams();
+    if (learnerId) params.append('learner_id', learnerId);
+    if (limit) params.append('limit', limit.toString());
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    return fetchApi<{
+      lesson: {
+        id: string;
+        slug: string;
+        title: string;
+        description: string;
+        domain: string;
+        difficulty_tier: number;
+        estimated_minutes: number;
+      };
+      questions: Question[];
+      total_count: number;
+    }>(`/api/curriculum/lessons/${kcId}/questions${queryString}`);
+  },
+};
