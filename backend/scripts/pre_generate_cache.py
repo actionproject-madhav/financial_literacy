@@ -8,7 +8,7 @@ This script:
 3. Saves everything to database cache
 
 Cost: One-time cost to generate everything (~$50-100 for 1000 questions)
-Benefit: Zero cost for future requests (99.9% cache hit rate)
+Benefit: Zero cost for future requests (99.9x% cache hit rate)
 """
 
 import sys
@@ -75,28 +75,82 @@ def pre_generate_all():
     languages = ['en', 'es', 'ne']
     tts_count = 0
     translation_count = 0
+    quota_exceeded = False
     
     for idx, item in enumerate(items, 1):
+        if quota_exceeded:
+            print(f"\n⚠️  QUOTA EXCEEDED - Stopping at item {idx-1}/{total}")
+            print(f"   You can run this script again with a new API key to continue")
+            break
+            
         item_id = item['_id']
         item_type = item.get('item_type', 'unknown')
         
         print(f"[{idx}/{total}] Processing {item_type} item {item_id}...")
         
-        # Pre-generate TTS
+        # Check what's already cached before generating
+        tts_cache = item.get('tts_cache', {})
+        already_cached = []
+        needs_generation = []
+        
         for lang in languages:
+            # Check question stem
+            if lang in tts_cache and tts_cache[lang]:
+                already_cached.append(f"stem({lang})")
+            else:
+                needs_generation.append(f"stem({lang})")
+            
+            # Check answer choices
+            content = item.get('content', {})
+            choices = content.get('choices', [])
+            for choice_idx in range(len(choices)):
+                choice_key = f'{lang}_choice_{choice_idx}'
+                if choice_key in tts_cache and tts_cache[choice_key]:
+                    already_cached.append(f"choice{choice_idx}({lang})")
+                else:
+                    needs_generation.append(f"choice{choice_idx}({lang})")
+        
+        if already_cached:
+            print(f"  ⏭️  Already cached: {', '.join(already_cached[:5])}{'...' if len(already_cached) > 5 else ''}")
+        
+        if needs_generation:
+            print(f"  🎤 Generating: {', '.join(needs_generation[:5])}{'...' if len(needs_generation) > 5 else ''}")
+        else:
+            print(f"  ✅ All audio already cached - skipping TTS generation")
+        
+        # Pre-generate TTS (will skip already cached items internally)
+        for lang in languages:
+            if quota_exceeded:
+                break
             try:
                 cached_voice.pre_generate_tts_for_item(item_id, [lang])
                 tts_count += 1
             except Exception as e:
+                error_msg = str(e).lower()
+                # Check for various quota/rate limit error patterns
+                if any(keyword in error_msg for keyword in ['quota', 'rate limit', 'insufficient', 'limit exceeded', '429']):
+                    quota_exceeded = True
+                    print(f"\n⚠️  QUOTA/RATE LIMIT EXCEEDED - Stopping TTS generation")
+                    print(f"   Processed up to item {idx}/{total}")
+                    print(f"   💡 Tip: Update ELEVENLABS_API_KEY in .env and run again")
+                    print(f"   The script will skip already cached items and continue")
+                    break
                 print(f"  ⚠️  TTS error ({lang}): {e}")
         
-        # Pre-translate (skip English)
-        for lang in ['es', 'ne']:
-            try:
-                cached_translation.pre_translate_item(item_id, [lang])
-                translation_count += 1
-            except Exception as e:
-                print(f"  ⚠️  Translation error ({lang}): {e}")
+        # Pre-translate (skip English, and skip if already cached)
+        if not quota_exceeded:
+            translations = item.get('translations', {})
+            for lang in ['es', 'ne']:
+                # Check if already translated
+                if lang in translations and translations[lang].get('stem') and translations[lang].get('choices'):
+                    print(f"  ⏭️  Translation ({lang}) already cached - skipping")
+                    continue
+                
+                try:
+                    cached_translation.pre_translate_item(item_id, [lang])
+                    translation_count += 1
+                except Exception as e:
+                    print(f"  ⚠️  Translation error ({lang}): {e}")
         
         print(f"  ✅ Done\n")
     
