@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Share2, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { IconButton } from '../components/ui/IconButton';
+import { Card, Button, IconButton } from '../components/ui';
 import { Avatar } from '../components/ui/Avatar';
 import { Badge } from '../components/ui/Badge';
 import { ProgressBar } from '../components/ui/ProgressBar';
@@ -116,6 +114,7 @@ export const ProfilePage: React.FC = () => {
     email: stats.email || storeUser?.email || '',
     country: stats.country_of_origin || storeUser?.country || 'US',
     visaType: stats.visa_type || storeUser?.visaType || 'Other',
+    avatar: null, // Avatar not in stats, can be added later
     stats: {
       streak: stats.streak_count,
       totalXP: stats.total_xp,

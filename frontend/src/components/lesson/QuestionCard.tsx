@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, Loader2 } from 'lucide-react';
-import { Card } from '../ui/Card';
-import { Button } from '../ui/Button';
-import { ChoiceButton, ChoiceState } from '../ui/ChoiceButton';
-import { IconButton } from '../ui/IconButton';
+import { Card, Button, ChoiceButton, ChoiceState, IconButton } from '../ui';
 import { cn } from '../../utils/cn';
 
 interface Choice {

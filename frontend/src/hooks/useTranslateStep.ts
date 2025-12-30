@@ -23,7 +23,7 @@ interface TranslatedStep extends QuizStep {
 }
 
 export const useTranslateStep = (originalStep: QuizStep | null): TranslatedStep | null => {
-  const { selectedLanguage } = useLanguage()
+  const { language: selectedLanguage } = useLanguage()
   const [translatedStep, setTranslatedStep] = useState<TranslatedStep | null>(null)
   const [isTranslating, setIsTranslating] = useState(false)
 

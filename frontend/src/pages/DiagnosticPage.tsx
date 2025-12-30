@@ -5,8 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { useUserStore } from '../stores/userStore'
 import { diagnosticApi, DiagnosticItem, DiagnosticResult, DiagnosticResponse } from '../services/api'
 import confetti from 'canvas-confetti'
-import { Button } from '../components/ui/Button'
-import { Card } from '../components/ui/Card'
+import { Button, Card } from '../components/ui'
 import { LottieAnimation } from '../components/LottieAnimation'
 
 // Domain display names, colors, and Lottie animations

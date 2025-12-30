@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import ConfettiExplosion from 'react-confetti-explosion';
 import { Trophy, Star, Zap, Clock, Target } from 'lucide-react';
-import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
+import { Button, Card } from '../ui';
 import { cn } from '../../utils/cn';
 
 interface LessonStats {

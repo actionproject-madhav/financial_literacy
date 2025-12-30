@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flame, X } from 'lucide-react';
-import { Button } from '../ui/Button';
+import { Button } from '../ui';
 import { Confetti } from './Confetti';
 
 interface StreakCelebrationProps {

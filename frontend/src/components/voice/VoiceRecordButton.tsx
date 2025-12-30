@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Square, Loader2, Play, RotateCcw } from 'lucide-react';
 import { useVoiceRecorder } from '../../hooks/useVoiceRecorder';
-import { Button } from '../ui/Button';
+import { Button } from '../ui';
 import { cn } from '../../utils/cn';
 
 interface VoiceRecordButtonProps {

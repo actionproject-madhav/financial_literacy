@@ -5,7 +5,7 @@ import { Menu, Bell } from 'lucide-react';
 import { StreakCounter } from '../gamification/StreakCounter';
 import { GemDisplay } from '../gamification/GemDisplay';
 import { HeartsDisplay } from '../gamification/HeartsDisplay';
-import { IconButton } from '../ui/IconButton';
+import { IconButton } from '../ui';
 import { Avatar } from '../ui/Avatar';
 import { cn } from '../../utils/cn';
 

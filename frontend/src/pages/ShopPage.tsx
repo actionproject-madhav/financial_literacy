@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
+import { Card } from '../components/ui';
+import { Button } from '../components/ui';
 import { GemDisplay } from '../components/gamification/GemDisplay';
 import { useUserStore } from '../stores/userStore';
 import { ShoppingBag, Zap, Heart, Flame, Crown, Star, Shield, Filter, Search, Plus } from 'lucide-react';

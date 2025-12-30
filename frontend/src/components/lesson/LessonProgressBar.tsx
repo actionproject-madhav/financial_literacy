@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
-import { IconButton } from '../ui/IconButton';
+import { IconButton } from '../ui';
 import { HeartsDisplay } from '../gamification/HeartsDisplay';
 import { cn } from '../../utils/cn';
 

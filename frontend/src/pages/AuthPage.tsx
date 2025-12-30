@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui';
+import { Card } from '../components/ui';
 import { authApi, learnerApi } from '../services/api';
 import { useUserStore } from '../stores/userStore';
 

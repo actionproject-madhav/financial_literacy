@@ -2,7 +2,7 @@ import React from 'react';
 import { Check, Crown, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { CircularProgressbarWithChildren } from 'react-circular-progressbar';
-import { Button } from '../ui/Button';
+import { Button } from '../ui';
 import { cn } from '../../utils/cn';
 import 'react-circular-progressbar/dist/styles.css';
 
@@ -101,9 +101,9 @@ export const LessonButton: React.FC<LessonButtonProps> = ({
               }}
             >
               <Button
-                size="rounded"
-                variant={locked ? 'locked' : 'secondary'}
-                className="h-[70px] w-[70px] border-b-8"
+                size="lg"
+                variant={locked ? 'outline' : 'secondary'}
+                className="h-[70px] w-[70px] border-b-8 rounded-full"
               >
                 <Icon
                   className={cn(
@@ -119,9 +119,9 @@ export const LessonButton: React.FC<LessonButtonProps> = ({
           </div>
         ) : (
           <Button
-            size="rounded"
-            variant={locked ? 'locked' : 'secondary'}
-            className="h-[70px] w-[70px] border-b-8"
+            size="lg"
+            variant={locked ? 'outline' : 'secondary'}
+            className="h-[70px] w-[70px] border-b-8 rounded-full"
           >
             <Icon
               className={cn(
