@@ -43,6 +43,27 @@ export const SectionPage = () => {
         fetchLessons()
     }, [sectionId, learnerId])
 
+    // Refresh lessons when page becomes visible (user returns from lesson)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && sectionId && learnerId) {
+                // Refetch lessons to get updated progress
+                curriculumApi.getCourseLessons(sectionId, learnerId)
+                    .then(response => {
+                        setLessons(response.lessons)
+                    })
+                    .catch(err => {
+                        console.error('Failed to refresh lessons:', err)
+                    })
+            }
+        }
+
+        document.addEventListener('visibilitychange', handleVisibilityChange)
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange)
+        }
+    }, [sectionId, learnerId])
+
     if (!user) return null
 
     if (loading) {

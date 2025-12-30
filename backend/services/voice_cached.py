@@ -82,6 +82,24 @@ class CachedVoiceService:
         
         choice_text = choices[choice_index]
         
+        # Translate choice text if language is not English
+        if language != 'en':
+            try:
+                from services.translation_cached import CachedTranslationService
+                from blueprints.translate import SimpleTranslateClient
+                translate_client = SimpleTranslateClient()
+                translation_service = CachedTranslationService(translate_client)
+                translated_text = translation_service.get_translation_for_text(
+                    item_id=str(item_id_obj),
+                    text=choice_text,
+                    language=language
+                )
+                if translated_text:
+                    choice_text = translated_text
+                    print(f"✅ Translated choice to {language}: {choice_text[:50]}...")
+            except Exception as e:
+                print(f"⚠️  Translation failed for choice, using original text: {e}")
+        
         # Generate TTS
         audio_base64 = self.voice_service.generate_tts(choice_text, language)
         
@@ -136,6 +154,24 @@ class CachedVoiceService:
         
         if not text:
             return None
+        
+        # Translate text if language is not English
+        if language != 'en':
+            try:
+                from services.translation_cached import CachedTranslationService
+                from blueprints.translate import SimpleTranslateClient
+                translate_client = SimpleTranslateClient()
+                translation_service = CachedTranslationService(translate_client)
+                translated_text = translation_service.get_translation_for_text(
+                    item_id=str(item_id_obj),
+                    text=text,
+                    language=language
+                )
+                if translated_text:
+                    text = translated_text
+                    print(f"✅ Translated question to {language}: {text[:50]}...")
+            except Exception as e:
+                print(f"⚠️  Translation failed, using original text: {e}")
         
         # Generate TTS using base service
         audio_base64 = self.voice_service.generate_tts(text, language)

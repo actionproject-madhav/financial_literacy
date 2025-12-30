@@ -164,7 +164,9 @@ class FSRSScheduler:
             target_retention = self.TARGET_RETENTION
 
         interval = stability * (math.log(target_retention) / math.log(0.9))
-        return max(1, int(round(interval)))
+        # Cap interval to prevent date overflow (max 10 years = 3650 days)
+        interval = max(1, min(int(round(interval)), 3650))
+        return interval
 
     def schedule_review(self, learner_id: str, kc_id: str, rating: int,
                        reviewed_at: Optional[datetime] = None) -> Dict:
@@ -215,7 +217,19 @@ class FSRSScheduler:
 
         # Calculate next review interval
         interval_days = self.calculate_interval(stability)
-        next_review_date = reviewed_at + timedelta(days=interval_days)
+        # Cap interval to prevent date overflow (max 10 years)
+        interval_days = min(interval_days, 3650)  # Max 10 years
+        interval_days = max(1, interval_days)  # Min 1 day
+        
+        try:
+            next_review_date = reviewed_at + timedelta(days=interval_days)
+            # Ensure date is valid (not too far in future)
+            max_date = datetime.utcnow() + timedelta(days=3650)  # 10 years max
+            if next_review_date > max_date:
+                next_review_date = max_date
+        except (OverflowError, ValueError, OSError) as e:
+            # Fallback to reasonable date if calculation fails
+            next_review_date = reviewed_at + timedelta(days=30)
 
         # Update skill state
         update_data = {

@@ -701,7 +701,8 @@ export const LessonPage = () => {
 
   const handleCelebrationComplete = () => {
     setShowCelebration(false)
-    navigate(`/section/${lesson.domain}`)
+    // Navigate back to section page - it will automatically refresh lessons
+    navigate(`/section/${lesson.domain}`, { replace: true })
   }
 
   // For content steps, always allow next (no check needed)

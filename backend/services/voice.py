@@ -177,7 +177,16 @@ class VoiceService:
             return f"data:audio/mp3;base64,{audio_base64}"
 
         except Exception as e:
-            print(f"Error generating TTS with ElevenLabs: {e}")
+            error_msg = str(e)
+            print(f"Error generating TTS with ElevenLabs: {error_msg}")
+            
+            # Check for specific error types
+            if '401' in error_msg or 'unauthorized' in error_msg.lower() or 'unusual_activity' in error_msg.lower():
+                print("⚠️  ElevenLabs API blocked or unauthorized. Check API key and account status.")
+            elif 'quota' in error_msg.lower() or 'limit' in error_msg.lower():
+                print("⚠️  ElevenLabs quota exceeded. Consider upgrading plan or using fallback TTS.")
+            
+            # Return None to allow fallback handling
             return None
 
     def analyze_audio_confidence(self, audio_base64: str) -> Dict:

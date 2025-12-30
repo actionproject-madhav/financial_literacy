@@ -1428,9 +1428,17 @@ def get_item_tts(item_id):
 
         # Check if requesting a specific choice
         if choice_index is not None:
-            audio_base64 = cached_voice.get_tts_for_choice(item_id, choice_index, language)
-            if not audio_base64:
-                return jsonify({'error': 'Failed to generate choice audio'}), 500
+            try:
+                audio_base64 = cached_voice.get_tts_for_choice(item_id, choice_index, language)
+                if not audio_base64:
+                    return jsonify({'error': 'Failed to generate choice audio'}), 500
+            except Exception as choice_error:
+                error_msg = str(choice_error)
+                if 'unusual_activity' in error_msg.lower() or '401' in error_msg:
+                    return jsonify({
+                        'error': 'ElevenLabs API access denied. Please check your API key and account status.'
+                    }), 500
+                return jsonify({'error': f'Failed to generate choice audio: {error_msg}'}), 500
             
             # Check if it was cached
             tts_cache = item.get('tts_cache', {})
@@ -1443,10 +1451,17 @@ def get_item_tts(item_id):
             }), 200
 
         # Get question stem TTS (cached)
-        audio_base64 = cached_voice.get_tts_for_item(item_id, language)
-        
-        if not audio_base64:
-            return jsonify({'error': 'Failed to generate audio'}), 500
+        try:
+            audio_base64 = cached_voice.get_tts_for_item(item_id, language)
+            if not audio_base64:
+                return jsonify({'error': 'Failed to generate audio'}), 500
+        except Exception as item_error:
+            error_msg = str(item_error)
+            if 'unusual_activity' in error_msg.lower() or '401' in error_msg:
+                return jsonify({
+                    'error': 'ElevenLabs API access denied. Please check your API key and account status.'
+                }), 500
+            return jsonify({'error': f'Failed to generate audio: {error_msg}'}), 500
 
         # Check if it was cached
         tts_cache = item.get('tts_cache', {})
