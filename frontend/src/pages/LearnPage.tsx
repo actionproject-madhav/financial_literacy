@@ -6,6 +6,7 @@ import { useUserStore } from '../stores/userStore'
 import { curriculumApi, Course } from '../services/api'
 import { LanguageSelector } from '../components/LanguageSelector'
 import { useLanguage } from '../contexts/LanguageContext'
+import { TranslatedText } from '../components/TranslatedText'
 
 // Avatar mapping for sections - using human avatars
 const SECTION_AVATARS: Record<string, string> = {
@@ -138,9 +139,13 @@ export const LearnPage = () => {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <h3 className="text-2xl font-extrabold text-gray-800 tracking-tight leading-none mb-2">{course.title}</h3>
+                                            <h3 className="text-2xl font-extrabold text-gray-800 tracking-tight leading-none mb-2">
+                                                <TranslatedText context="course title">{course.title}</TranslatedText>
+                                            </h3>
                                         </div>
-                                        <p className="text-gray-500 text-sm mb-2">{course.description}</p>
+                                        <p className="text-gray-500 text-sm mb-2">
+                                            <TranslatedText context="course description">{course.description}</TranslatedText>
+                                        </p>
                                     </div>
 
                                     <div className="px-4 pb-6 flex justify-between items-end relative z-10">
@@ -224,9 +229,13 @@ export const LearnPage = () => {
             {/* Right Sidebar - Fixed Position */}
             <div className="hidden xl:flex fixed right-0 top-0 w-96 h-screen flex-col border-l-2 border-gray-200 bg-white overflow-y-auto z-40">
                 <div className="p-8 space-y-8">
-                    {/* Stats Header */}
-                    <div className="flex items-center justify-between gap-4">
+                    {/* Language Selector - Full Width */}
+                    <div className="flex justify-end">
                         <LanguageSelector />
+                    </div>
+                    
+                    {/* Stats Header */}
+                    <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-2 px-3 rounded-xl transition-colors">
                             <img src="/fire.svg" alt="Streak" className="w-6 h-6 object-contain" />
                             <span className="font-bold text-gray-500">{user.streak}</span>

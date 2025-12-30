@@ -103,10 +103,10 @@ export const LeaderboardPage: React.FC = () => {
   };
 
   if (loading) {
-    return (
+  return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-gray-500 font-medium">Loading leaderboard...</div>
-      </div>
+        </div>
     );
   }
 
@@ -144,7 +144,7 @@ export const LeaderboardPage: React.FC = () => {
                         isActive ? "w-20 h-20 -mb-2 z-10 drop-shadow-md" : "w-12 h-12"
                       )}
                     />
-                  </div>
+              </div>
                 );
               })}
             </div>
@@ -161,7 +161,7 @@ export const LeaderboardPage: React.FC = () => {
               </svg>
               <span>{formatTimeRemaining(leagueData.time_remaining.days, leagueData.time_remaining.hours)}</span>
             </div>
-          </div>
+      </div>
 
           {/* List */}
           <div className="flex flex-col gap-0.5 relative z-0">
@@ -172,29 +172,29 @@ export const LeaderboardPage: React.FC = () => {
 
               return (
                 <React.Fragment key={entry.learner_id}>
-                  <motion.div
+          <motion.div
                     initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
+            animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.03 }}
-                    className={cn(
+            className={cn(
                       "flex items-center gap-4 py-3 px-4 rounded-xl transition-colors",
                       isCurrentUser
                         ? "bg-white border-2 border-sky-400 z-20 sticky bottom-4 shadow-lg my-2 translate-y-[-2px]"
                         : "hover:bg-gray-50 bg-white border border-transparent"
-                    )}
-                  >
-                    {/* Rank */}
+            )}
+          >
+            {/* Rank */}
                     <div className={cn(
                       "w-8 text-center font-bold text-lg",
                       index === 0 ? "text-yellow-500" :
                         index === 1 ? "text-gray-400" :
                           index === 2 ? "text-orange-500" :
                             "text-gray-400"
-                    )}>
-                      {entry.rank}
-                    </div>
+              )}>
+                {entry.rank}
+            </div>
 
-                    {/* Avatar */}
+            {/* Avatar */}
                     <div className={cn(
                       "w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shadow-sm",
                       index === 0 ? "bg-yellow-400" :
@@ -259,7 +259,7 @@ export const LeaderboardPage: React.FC = () => {
                   <span className="text-xs font-bold text-gray-400">{day}</span>
                   <div className="w-8 h-8 rounded-full bg-gray-200" />
                 </div>
-              ))}
+        ))}
             </div>
           </div>
 
@@ -283,11 +283,11 @@ export const LeaderboardPage: React.FC = () => {
                   <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" />
                 </svg>
               </div>
-              <div>
+            <div>
                 <h3 className="font-extrabold text-gray-800">Streak Society</h3>
                 <p className="text-gray-500 text-sm mt-1 leading-relaxed">
                   Reach a 7 day streak to join the Streak Society and earn exclusive rewards.
-                </p>
+              </p>
               </div>
             </div>
             <button className="w-full py-3 bg-sky-400 text-white font-extrabold rounded-xl text-sm hover:bg-sky-500 transition-colors uppercase tracking-wide">

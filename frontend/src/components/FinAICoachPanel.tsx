@@ -12,7 +12,7 @@ interface FinAICoachPanelProps {
 
 export function FinAICoachPanel({ isOpen, onClose }: FinAICoachPanelProps) {
   const { learnerId } = useUserStore();
-  const { selectedLanguage } = useLanguage();
+  const { language } = useLanguage();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -52,7 +52,7 @@ export function FinAICoachPanel({ isOpen, onClose }: FinAICoachPanelProps) {
         message: messageText.trim(),
         learner_id: learnerId || undefined,
         conversation_id: conversationId || undefined,
-        language: selectedLanguage,  // Pass current language
+        language: language,  // Pass current language
       });
 
       const assistantMessage: ChatMessage = {

@@ -45,9 +45,9 @@ function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <UserProvider>
+      <UserProvider>
           <CoachProvider>
-          <HashRouter
+        <HashRouter
           future={{
             v7_startTransition: true,
             v7_relativeSplatPath: true,
@@ -80,7 +80,7 @@ function App() {
           </Routes>
         </HashRouter>
           </CoachProvider>
-        </UserProvider>
+      </UserProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

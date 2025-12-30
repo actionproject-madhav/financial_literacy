@@ -44,10 +44,11 @@ export const LessonPage = () => {
 
   // Store actions
   const { user, learnerId, setUser, addXP, loseHeart } = useUserStore()
-  const { selectedLanguage: globalLanguage } = useLanguage()
+  const { language: globalLanguage } = useLanguage()
 
   const [lesson, setLesson] = useState<LessonInfo | null>(null)
   const [steps, setSteps] = useState<Step[]>([])
+  const [originalSteps, setOriginalSteps] = useState<Step[]>([]) // Store original English steps
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedOption, setSelectedOption] = useState<number | null>(null)
   const [status, setStatus] = useState<'idle' | 'correct' | 'wrong'>('idle')
@@ -116,6 +117,7 @@ export const LessonPage = () => {
           return
         }
 
+        setOriginalSteps(quizSteps) // Store original English
         setSteps(quizSteps)
         setSessionId(`session-${Date.now()}`)
         setError(null)
@@ -130,7 +132,110 @@ export const LessonPage = () => {
     fetchQuestions()
   }, [lessonId, learnerId, navigate])
 
-  // Remove local language cycling - use global language selector instead
+  // Translate all steps when language changes
+  useEffect(() => {
+    const translateAllSteps = async () => {
+      if (globalLanguage === 'en' || originalSteps.length === 0) {
+        setSteps(originalSteps)
+        return
+      }
+
+      console.log(`🌍 Translating ${originalSteps.length} questions to ${globalLanguage}...`)
+      
+      const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000').replace(/\/+$/, '')
+      console.log(`📡 Using API base: ${API_BASE}`)
+      
+      try {
+        const translatedSteps = await Promise.all(
+          originalSteps.map(async (step, stepIdx) => {
+            if (step.type !== 'quiz') return step
+
+            try {
+              // Translate question, options, and explanation in parallel
+              const [questionRes, ...optionResults] = await Promise.all([
+                fetch(`${API_BASE}/api/translate/content`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    text: step.question,
+                    target_language: globalLanguage,
+                    context: 'financial literacy question'
+                  })
+                }),
+                ...step.options.map((option, idx) =>
+                  fetch(`${API_BASE}/api/translate/content`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      text: option,
+                      target_language: globalLanguage,
+                      context: `answer choice ${idx + 1}`
+                    })
+                  })
+                )
+              ])
+
+              if (!questionRes.ok) {
+                console.error(`❌ Question translation failed: ${questionRes.status}`)
+                return step
+              }
+
+              const questionData = await questionRes.json()
+              console.log(`✅ Question ${stepIdx + 1} translated:`, questionData.translated?.substring(0, 50))
+
+              const translatedOptions = await Promise.all(
+                optionResults.map(async (res, idx) => {
+                  if (!res.ok) {
+                    console.error(`❌ Option ${idx + 1} translation failed: ${res.status}`)
+                    return step.options[idx]
+                  }
+                  const data = await res.json()
+                  return data.translated || data.translated_text || data.text || step.options[idx]
+                })
+              )
+
+              // Translate explanation
+              const explanationRes = await fetch(`${API_BASE}/api/translate/content`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  text: step.explanation,
+                  target_language: globalLanguage,
+                  context: 'question explanation'
+                })
+              })
+
+              if (!explanationRes.ok) {
+                console.error(`❌ Explanation translation failed: ${explanationRes.status}`)
+                return { ...step, question: questionData.translated || step.question, options: translatedOptions, explanation: step.explanation }
+              }
+
+              const explanationData = await explanationRes.json()
+
+              return {
+                ...step,
+                question: questionData.translated || questionData.translated_text || questionData.text || step.question,
+                options: translatedOptions,
+                explanation: explanationData.translated || explanationData.translated_text || explanationData.text || step.explanation
+              }
+            } catch (stepError) {
+              console.error(`❌ Error translating step ${stepIdx + 1}:`, stepError)
+              return step
+            }
+          })
+        )
+
+        setSteps(translatedSteps)
+        console.log(`✅ Translation complete! ${translatedSteps.length} questions translated.`)
+      } catch (error) {
+        console.error('❌ Translation error:', error)
+        console.error('Error details:', error instanceof Error ? error.message : error)
+        setSteps(originalSteps) // Fallback to English
+      }
+    }
+
+    translateAllSteps()
+  }, [globalLanguage, originalSteps])
 
   // Text-to-Speech using backend ElevenLabs API
   const speakQuestion = async (text: string) => {
@@ -140,7 +245,7 @@ export const LessonPage = () => {
 
     try {
       // Use backend TTS with ElevenLabs
-      const result = await voiceApi.generateTTS(text, selectedLanguage)
+      const result = await voiceApi.generateTTS(text, globalLanguage)
 
       if (result?.audio_base64) {
         // Play the audio
@@ -173,7 +278,7 @@ export const LessonPage = () => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel()
       const utterance = new SpeechSynthesisUtterance(text)
-      utterance.lang = selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : 'ne-NP'
+      utterance.lang = globalLanguage === 'en' ? 'en-US' : globalLanguage === 'es' ? 'es-ES' : 'ne-NP'
       utterance.rate = 0.9
       utterance.onstart = () => setIsSpeaking(true)
       utterance.onend = () => setIsSpeaking(false)
@@ -585,11 +690,10 @@ export const LessonPage = () => {
 
                           {/* Voice Controls */}
                           <div className="flex items-center gap-2 flex-shrink-0">
-                            {/* Language Flag Button */}
-                            <button
-                              onClick={cycleLanguage}
-                              className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl border-2 border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300 transition-all"
-                              title={`Current: ${currentLang.name}. Click to change.`}
+                            {/* Language indicator (read-only - use global selector to change) */}
+                            <div
+                              className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl border-2 border-gray-200 bg-gray-50"
+                              title={`Current language: ${currentLang.name}. Use the language selector in settings to change.`}
                             >
                               <img
                                 src={currentLang.flag}
@@ -599,7 +703,7 @@ export const LessonPage = () => {
                               <span className="text-xs font-bold text-gray-600 hidden sm:inline">
                                 {currentLang.nativeName}
                               </span>
-                            </button>
+                            </div>
 
                             {/* Speaker Button */}
                             <button
