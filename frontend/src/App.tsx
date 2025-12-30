@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { UserProvider } from './context/UserContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { CoachProvider } from './contexts/CoachContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { AppShell } from './components/layout/AppShell';
 import { LessonPage } from './pages/LessonPage';
 import { LearnPage } from './pages/LearnPage';
@@ -43,8 +44,9 @@ function App() {
 
   return (
     <ThemeProvider>
-      <UserProvider>
-        <CoachProvider>
+      <LanguageProvider>
+        <UserProvider>
+          <CoachProvider>
           <HashRouter
           future={{
             v7_startTransition: true,
@@ -77,8 +79,9 @@ function App() {
             <Route path="*" element={<Navigate to="/learn" replace />} />
           </Routes>
         </HashRouter>
-        </CoachProvider>
-      </UserProvider>
+          </CoachProvider>
+        </UserProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }
