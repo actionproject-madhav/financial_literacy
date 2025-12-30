@@ -40,6 +40,74 @@ class CachedTranslationService:
                 raise RuntimeError("Cannot connect to database. Check MONGO_URI in .env")
         return self._db
     
+    def get_translation_for_text(
+        self,
+        item_id: str,
+        text: str,
+        language: str = 'es'
+    ) -> Optional[str]:
+        """
+        Get translation for arbitrary text associated with an item (cached)
+        
+        Args:
+            item_id: Learning item ID
+            text: Text to translate
+            language: Target language (es, ne)
+        
+        Returns:
+            Translated text or None
+        """
+        item_id_obj = ObjectId(item_id) if isinstance(item_id, str) else item_id
+        
+        # Get item from database
+        item = self.db.collections.learning_items.find_one({'_id': item_id_obj})
+        if not item:
+            return None
+        
+        # Check cache - look for matching text in translations
+        translations = item.get('translations', {})
+        if language in translations:
+            lang_translations = translations[language]
+            
+            # Check if this text matches the stem
+            content = item.get('content', {})
+            if content.get('stem') == text and 'stem' in lang_translations:
+                return lang_translations['stem']
+            
+            # Check if this text matches any choice
+            choices = content.get('choices', [])
+            if text in choices:
+                choice_idx = choices.index(text)
+                if 'choices' in lang_translations and choice_idx < len(lang_translations['choices']):
+                    return lang_translations['choices'][choice_idx]
+            
+            # Check if this text matches explanation
+            if content.get('explanation') == text and 'explanation' in lang_translations:
+                return lang_translations['explanation']
+        
+        return None
+    
+    def _save_translation_to_cache(self, item_id: str, text: str, language: str, translated: str):
+        """Save arbitrary text translation to cache"""
+        item_id_obj = ObjectId(item_id) if isinstance(item_id, str) else item_id
+        
+        # Get item to determine which field this text belongs to
+        item = self.db.collections.learning_items.find_one({'_id': item_id_obj})
+        if not item:
+            return
+        
+        content = item.get('content', {})
+        
+        # Determine field based on text match
+        if content.get('stem') == text:
+            self._save_to_cache(item_id_obj, language, 'stem', translated)
+        elif content.get('explanation') == text:
+            self._save_to_cache(item_id_obj, language, 'explanation', translated)
+        elif text in content.get('choices', []):
+            # For choices, we need to translate all and save together
+            # This is a simplified version - ideally we'd update just one choice
+            pass  # Will be handled by pre_translate_item
+    
     def get_translation_for_item(
         self,
         item_id: str,

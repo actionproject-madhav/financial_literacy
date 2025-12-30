@@ -95,7 +95,14 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     
     // Coach
     'coach.title': 'FinAI Coach',
-    'coach.subtitle': 'Your personal financial advisor',
+    'coach.subtitle': 'Your financial guide',
+    'coach.greeting': 'How can I help you today?',
+    'coach.description': 'Ask me anything about US banking, credit, taxes, or financial planning.',
+    'coach.popularQuestions': 'Popular Questions',
+    'coach.newChat': 'New Chat',
+    'coach.inputPlaceholder': 'Ask about US finances...',
+    'coach.disclaimer': 'FinAI Coach provides general guidance. Consult professionals for major decisions.',
+    'coach.error': "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
     'coach.ask_question': 'Ask a question...',
     'coach.send': 'Send',
     'coach.examples': 'Example questions:',
@@ -195,7 +202,14 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     
     // Coach
     'coach.title': 'Coach FinAI',
-    'coach.subtitle': 'Tu asesor financiero personal',
+    'coach.subtitle': 'Tu guía financiera',
+    'coach.greeting': '¿Cómo puedo ayudarte hoy?',
+    'coach.description': 'Pregúntame sobre banca estadounidense, crédito, impuestos o planificación financiera.',
+    'coach.popularQuestions': 'Preguntas Populares',
+    'coach.newChat': 'Nuevo Chat',
+    'coach.inputPlaceholder': 'Pregunta sobre finanzas de EE. UU...',
+    'coach.disclaimer': 'El Coach FinAI proporciona orientación general. Consulta a profesionales para decisiones importantes.',
+    'coach.error': 'Lo siento, estoy teniendo problemas para conectarme en este momento. Por favor, inténtalo de nuevo en un momento.',
     'coach.ask_question': 'Haz una pregunta...',
     'coach.send': 'Enviar',
     'coach.examples': 'Preguntas de ejemplo:',
@@ -295,7 +309,14 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     
     // Coach
     'coach.title': 'FinAI कोच',
-    'coach.subtitle': 'तपाईंको व्यक्तिगत वित्तीय सल्लाहकार',
+    'coach.subtitle': 'तपाईंको वित्तीय गाइड',
+    'coach.greeting': 'म आज तपाईंलाई कसरी मद्दत गर्न सक्छु?',
+    'coach.description': 'अमेरिकी बैंकिङ, क्रेडिट, कर, वा वित्तीय योजनाको बारेमा मलाई केही सोध्नुहोस्।',
+    'coach.popularQuestions': 'लोकप्रिय प्रश्नहरू',
+    'coach.newChat': 'नयाँ च्याट',
+    'coach.inputPlaceholder': 'अमेरिकी वित्तको बारेमा सोध्नुहोस्...',
+    'coach.disclaimer': 'FinAI कोचले सामान्य मार्गदर्शन प्रदान गर्दछ। ठूला निर्णयहरूको लागि पेशेवरहरूसँग परामर्श गर्नुहोस्।',
+    'coach.error': 'माफ गर्नुहोस्, मलाई अहिले जडान गर्न समस्या भइरहेको छ। कृपया एकछिन पछि फेरि प्रयास गर्नुहोस्।',
     'coach.ask_question': 'प्रश्न सोध्नुहोस्...',
     'coach.send': 'पठाउनुहोस्',
     'coach.examples': 'उदाहरण प्रश्नहरू:',

@@ -46,16 +46,11 @@ class Database:
                 )
             else:
                 import ssl
-                # Try with more lenient SSL settings for VPN connections
-                # Note: tlsAllowInvalidCertificates=True is less secure but may help with VPN issues
                 self.client = MongoClient(
                     self._mongo_uri,
                     tls=True,
-                    tlsAllowInvalidCertificates=False,  # Keep secure by default
-                    serverSelectionTimeoutMS=30000,
-                    connectTimeoutMS=30000,
-                    socketTimeoutMS=30000,
-                    retryWrites=True
+                    tlsAllowInvalidCertificates=False,
+                    serverSelectionTimeoutMS=30000
                 )
             
             self.db = self.client[self.database_name]
@@ -69,20 +64,7 @@ class Database:
             return True
             
         except Exception as e:
-            error_msg = str(e)
-            print(f"❌ MongoDB connection error: {error_msg}")
-            
-            # Check if it's a network/IP access issue
-            if 'Connection reset' in error_msg or 'SSL handshake failed' in error_msg:
-                print("\n💡 VPN/IP Access Issue Detected")
-                print("   MongoDB Atlas blocks VPN connections by default.")
-                print("\n   Solutions:")
-                print("   1. Whitelist your VPN IP in MongoDB Atlas:")
-                print("      - Go to: Network Access → Add IP Address")
-                print("      - Add your current IP (check with: curl ifconfig.me)")
-                print("   2. Or temporarily disable VPN for MongoDB operations")
-                print("   3. Or allow all IPs (0.0.0.0/0) - less secure but works")
-            
+            print(f"MongoDB connection error: {e}")
             self.client = None
             self.db = None
             return False

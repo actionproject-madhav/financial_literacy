@@ -141,6 +141,8 @@ class FinLitCollections:
             ("date", DESCENDING)
         ], unique=True)
         self.daily_progress.create_index([("learner_id", ASCENDING)])
+        self.daily_progress.create_index([("date", ASCENDING)])  # For weekly queries
+        self.daily_progress.create_index([("learner_id", ASCENDING), ("date", ASCENDING)])  # Compound for leaderboard
 
         # Question Templates indexes
         self.question_templates.create_index([("kc_id", ASCENDING)])

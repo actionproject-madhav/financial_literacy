@@ -1397,44 +1397,64 @@ def generate_tts():
 @adaptive_bp.route('/voice/tts/<item_id>', methods=['GET'])
 def get_item_tts(item_id):
     """
-    Get or generate TTS for a learning item.
+    Get or generate TTS for a learning item (uses cached audio).
 
     Query params:
     - language: language code (default: 'en')
+    - choice_index: optional, index of answer choice (0, 1, 2, 3)
 
     Response:
     {
         "audio_base64": "data:audio/mp3;base64,...",
-        "cached": false
+        "cached": true/false
     }
     """
     try:
         from services import VoiceService
+        from services.voice_cached import CachedVoiceService
 
         db = get_db()
         language = request.args.get('language', 'en')
+        choice_index = request.args.get('choice_index', type=int)
 
         # Get item
         item = db.collections.learning_items.find_one({'_id': ObjectId(item_id)})
         if not item:
             return jsonify({'error': 'Item not found'}), 404
 
-        # Check if we have cached audio
-        # For now, generate on-demand (can add caching later)
-        question_text = item.get('content', {}).get('question', '')
+        # Use cached voice service
+        voice_service = VoiceService()
+        cached_voice = CachedVoiceService(voice_service)
 
-        if not question_text:
-            return jsonify({'error': 'No question text found'}), 400
+        # Check if requesting a specific choice
+        if choice_index is not None:
+            audio_base64 = cached_voice.get_tts_for_choice(item_id, choice_index, language)
+            if not audio_base64:
+                return jsonify({'error': 'Failed to generate choice audio'}), 500
+            
+            # Check if it was cached
+            tts_cache = item.get('tts_cache', {})
+            choice_key = f'{language}_choice_{choice_index}'
+            was_cached = choice_key in tts_cache and tts_cache[choice_key]
+            
+            return jsonify({
+                'audio_base64': audio_base64,
+                'cached': was_cached
+            }), 200
 
-        service = VoiceService()
-        audio_base64 = service.generate_tts(question_text, language)
-
+        # Get question stem TTS (cached)
+        audio_base64 = cached_voice.get_tts_for_item(item_id, language)
+        
         if not audio_base64:
             return jsonify({'error': 'Failed to generate audio'}), 500
 
+        # Check if it was cached
+        tts_cache = item.get('tts_cache', {})
+        was_cached = language in tts_cache and tts_cache[language]
+
         return jsonify({
             'audio_base64': audio_base64,
-            'cached': False
+            'cached': was_cached
         }), 200
 
     except Exception as e:

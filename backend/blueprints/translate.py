@@ -1,6 +1,7 @@
 """
 Content Translation API
 Translates learning content (questions, descriptions, etc.) to target language
+Uses database cache first, falls back to live translation if cache miss or DB error
 """
 
 from flask import Blueprint, request, jsonify
@@ -12,25 +13,58 @@ load_dotenv()
 
 translate_bp = Blueprint('translate', __name__, url_prefix='/api/translate')
 
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+# Simple translation client for fallback
+class SimpleTranslateClient:
+    def __init__(self):
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not set in .env")
+        self.client = OpenAI(api_key=api_key)
+    
+    def translate(self, text, target_language, context=''):
+        lang_map = {'es': 'Spanish', 'ne': 'Nepali', 'hi': 'Hindi'}
+        target_lang_name = lang_map.get(target_language, target_language)
+        
+        response = self.client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": f"Translate to {target_lang_name}. Maintain financial terminology accuracy."},
+                {"role": "user", "content": f"Translate this {context}: {text}"}
+            ],
+            temperature=0.3,
+            max_tokens=500
+        )
+        return response.choices[0].message.content.strip()
 
-# Translation cache (in-memory for MVP, move to Redis/DB for production)
-translation_cache = {}
+# Initialize cached translation service
+_cached_translation_service = None
 
-def get_cache_key(text: str, target_lang: str) -> str:
-    """Generate cache key for translation"""
-    return f"{target_lang}:{hash(text)}"
+def get_cached_translation_service():
+    """Get or create cached translation service"""
+    global _cached_translation_service
+    if _cached_translation_service is None:
+        try:
+            from services.translation_cached import CachedTranslationService
+            translate_client = SimpleTranslateClient()
+            _cached_translation_service = CachedTranslationService(translate_client)
+        except Exception as e:
+            print(f"⚠️  Could not initialize cached translation service: {e}")
+            print("   Falling back to live translation only")
+            return None
+    return _cached_translation_service
 
 @translate_bp.route('/content', methods=['POST'])
 def translate_content():
     """
     Translate content to target language
+    Uses database cache first, falls back to live translation
     
     Request:
     {
         "text": "What is a bank?",
         "target_language": "ne",  // 'en', 'es', 'ne'
         "context": "financial_literacy",  // optional
+        "item_id": "507f...",  // optional, for database cache lookup
         "preserve_terms": ["APR", "FDIC"]  // optional
     }
     
@@ -39,7 +73,7 @@ def translate_content():
         "translated": "बैंक भनेको के हो?",
         "source_language": "en",
         "target_language": "ne",
-        "cached": false
+        "cached": true/false  // true if from database cache
     }
     """
     try:
@@ -47,6 +81,7 @@ def translate_content():
         text = data.get('text', '')
         target_lang = data.get('target_language', 'en')
         context = data.get('context', 'financial_literacy')
+        item_id = data.get('item_id')  # Optional: for database cache lookup
         preserve_terms = data.get('preserve_terms', [])
         
         # If already in English, return as-is
@@ -58,57 +93,40 @@ def translate_content():
                 'cached': False
             })
         
-        # Check cache
-        cache_key = get_cache_key(text, target_lang)
-        if cache_key in translation_cache:
-            return jsonify({
-                'translated': translation_cache[cache_key],
-                'source_language': 'en',
-                'target_language': target_lang,
-                'cached': True
-            })
+        # Try to use database cache if item_id provided
+        if item_id:
+            try:
+                cached_service = get_cached_translation_service()
+                if cached_service:
+                    # Try to get from database cache
+                    cached_translation = cached_service.get_translation_for_text(item_id, text, target_lang)
+                    if cached_translation:
+                        print(f"✅ Translation cache hit: {item_id} ({target_lang})")
+                        return jsonify({
+                            'translated': cached_translation,
+                            'source_language': 'en',
+                            'target_language': target_lang,
+                            'cached': True
+                        })
+                    else:
+                        print(f"🔄 Translation cache miss: {item_id} ({target_lang}) - will translate and cache")
+            except Exception as e:
+                print(f"⚠️  Database cache error (falling back to live): {e}")
         
-        # Map language codes to full names
-        lang_map = {
-            'es': 'Spanish',
-            'ne': 'Nepali',
-            'hi': 'Hindi'
-        }
-        target_language_name = lang_map.get(target_lang, target_lang)
+        # Fallback to live translation
+        print(f"🌐 Translating live: {text[:50]}... ({target_lang})")
+        translate_client = SimpleTranslateClient()
+        translated = translate_client.translate(text, target_lang, context)
         
-        # Build prompt
-        preserve_instruction = ""
-        if preserve_terms:
-            preserve_instruction = f"\n- Keep these terms in English: {', '.join(preserve_terms)}"
-        
-        prompt = f"""Translate the following {context} content from English to {target_language_name}.
-
-Rules:
-- Maintain the tone and meaning
-- Use natural, conversational language
-- Keep financial terms accurate{preserve_instruction}
-- If translating questions, keep the structure clear
-
-Text to translate:
-{text}
-
-Translation:"""
-        
-        # Call OpenAI
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",  # Cheapest model
-            messages=[
-                {"role": "system", "content": f"You are a professional translator specializing in financial literacy content. Translate accurately to {target_language_name}."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.3,
-            max_tokens=500
-        )
-        
-        translated = response.choices[0].message.content.strip()
-        
-        # Cache the translation
-        translation_cache[cache_key] = translated
+        # Try to save to database cache if item_id provided
+        if item_id:
+            try:
+                cached_service = get_cached_translation_service()
+                if cached_service:
+                    cached_service._save_translation_to_cache(item_id, text, target_lang, translated)
+                    print(f"💾 Saved translation to database cache: {item_id} ({target_lang})")
+            except Exception as e:
+                print(f"⚠️  Could not save to cache (non-critical): {e}")
         
         return jsonify({
             'translated': translated,
@@ -118,13 +136,14 @@ Translation:"""
         })
         
     except Exception as e:
+        print(f"❌ Translation error: {e}")
         return jsonify({'error': str(e)}), 500
 
 
 @translate_bp.route('/batch', methods=['POST'])
 def translate_batch():
     """
-    Translate multiple texts at once
+    Translate multiple texts at once (uses live translation, no cache)
     
     Request:
     {
@@ -149,17 +168,12 @@ def translate_batch():
                 'target_language': 'en'
             })
         
+        # Use live translation for batch (could be optimized)
+        translate_client = SimpleTranslateClient()
         translations = []
         for text in texts:
-            # Check cache first
-            cache_key = get_cache_key(text, target_lang)
-            if cache_key in translation_cache:
-                translations.append(translation_cache[cache_key])
-            else:
-                # Translate individually (could be optimized to batch API call)
-                result = translate_single(text, target_lang)
-                translations.append(result)
-                translation_cache[cache_key] = result
+            translated = translate_client.translate(text, target_lang, 'batch translation')
+            translations.append(translated)
         
         return jsonify({
             'translations': translations,
@@ -168,26 +182,4 @@ def translate_batch():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-
-def translate_single(text: str, target_lang: str) -> str:
-    """Helper function to translate a single text"""
-    lang_map = {
-        'es': 'Spanish',
-        'ne': 'Nepali',
-        'hi': 'Hindi'
-    }
-    target_language_name = lang_map.get(target_lang, target_lang)
-    
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": f"Translate to {target_language_name}. Be concise."},
-            {"role": "user", "content": text}
-        ],
-        temperature=0.3,
-        max_tokens=300
-    )
-    
-    return response.choices[0].message.content.strip()
 

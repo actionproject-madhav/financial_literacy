@@ -299,17 +299,43 @@ def get_conversation(conversation_id):
 
 @chat_bp.route('/quick-questions', methods=['GET'])
 def get_quick_questions():
-    """Get suggested quick questions for the coach"""
-    questions = [
-        "How do I open a bank account without an SSN?",
-        "What's the difference between a credit card and debit card?",
-        "How do I build credit as a new immigrant?",
-        "What taxes do I need to pay on an F-1 visa?",
-        "Should I open a Roth IRA or Traditional IRA?",
-        "How do I send money to my family abroad cheaply?",
-        "What is a credit score and why does it matter?",
-        "How do I file taxes for the first time?"
-    ]
+    """Get suggested quick questions for the coach in user's language"""
+    language = request.args.get('language', 'en')
+    
+    questions_by_lang = {
+        'en': [
+            "How do I open a bank account without an SSN?",
+            "What's the difference between a credit card and debit card?",
+            "How do I build credit as a new immigrant?",
+            "What taxes do I need to pay on an F-1 visa?",
+            "Should I open a Roth IRA or Traditional IRA?",
+            "How do I send money to my family abroad cheaply?",
+            "What is a credit score and why does it matter?",
+            "How do I file taxes for the first time?"
+        ],
+        'es': [
+            "¿Cómo abro una cuenta bancaria sin un SSN?",
+            "¿Cuál es la diferencia entre una tarjeta de crédito y una de débito?",
+            "¿Cómo construyo crédito como nuevo inmigrante?",
+            "¿Qué impuestos necesito pagar con una visa F-1?",
+            "¿Debo abrir un Roth IRA o un IRA tradicional?",
+            "¿Cómo envío dinero a mi familia en el extranjero de forma económica?",
+            "¿Qué es una puntuación de crédito y por qué importa?",
+            "¿Cómo presento mis impuestos por primera vez?"
+        ],
+        'ne': [
+            "SSN बिना म कसरी बैंक खाता खोल्न सक्छु?",
+            "क्रेडिट कार्ड र डेबिट कार्ड बीच के फरक छ?",
+            "नयाँ आप्रवासीको रूपमा म कसरी क्रेडिट निर्माण गर्न सक्छु?",
+            "F-1 भिसामा मैले कति कर तिर्नुपर्छ?",
+            "मैले Roth IRA वा Traditional IRA खोल्नुपर्छ?",
+            "म कसरी सस्तोमा विदेशमा मेरो परिवारलाई पैसा पठाउन सक्छु?",
+            "क्रेडिट स्कोर भनेको के हो र यसले किन महत्त्वपूर्ण छ?",
+            "मैले पहिलो पटक कसरी कर दाखिला गर्न सक्छु?"
+        ]
+    }
+    
+    questions = questions_by_lang.get(language, questions_by_lang['en'])
     return jsonify({'questions': questions}), 200
 
 

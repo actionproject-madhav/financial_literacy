@@ -12,7 +12,7 @@ interface FinAICoachPanelProps {
 
 export function FinAICoachPanel({ isOpen, onClose }: FinAICoachPanelProps) {
   const { learnerId } = useUserStore();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -24,11 +24,11 @@ export function FinAICoachPanel({ isOpen, onClose }: FinAICoachPanelProps) {
 
   useEffect(() => {
     if (isOpen && quickQuestions.length === 0) {
-      chatApi.getQuickQuestions().then((data) => {
+      chatApi.getQuickQuestions(language).then((data) => {
         setQuickQuestions(data.questions);
       }).catch(console.error);
     }
-  }, [isOpen]);
+  }, [isOpen, language]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -67,7 +67,7 @@ export function FinAICoachPanel({ isOpen, onClose }: FinAICoachPanelProps) {
       console.error('Chat error:', error);
       const errorMessage: ChatMessage = {
         role: 'assistant',
-        content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
+        content: t('coach.error'),
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -119,8 +119,8 @@ export function FinAICoachPanel({ isOpen, onClose }: FinAICoachPanelProps) {
                 </div>
                 {!isMinimized && (
                   <div>
-                    <h2 className="font-extrabold text-gray-800">FinAI Coach</h2>
-                    <p className="text-xs text-gray-500">Your financial guide</p>
+                    <h2 className="font-extrabold text-gray-800">{t('coach.title')}</h2>
+                    <p className="text-xs text-gray-500">{t('coach.subtitle')}</p>
                   </div>
                 )}
               </div>
@@ -131,7 +131,7 @@ export function FinAICoachPanel({ isOpen, onClose }: FinAICoachPanelProps) {
                       onClick={startNewChat}
                       className="text-xs font-bold text-[#58cc02] hover:text-[#46a302] px-3 py-1.5 rounded-lg transition-colors uppercase tracking-wide"
                     >
-                      New Chat
+                      {t('coach.newChat')}
                     </button>
                   )}
                   <button
@@ -167,14 +167,14 @@ export function FinAICoachPanel({ isOpen, onClose }: FinAICoachPanelProps) {
                       <div className="w-16 h-16 bg-[#e5f7d3] rounded-full flex items-center justify-center mb-4">
                         <MessageCircle className="w-8 h-8 text-[#58cc02]" />
                       </div>
-                      <h3 className="font-extrabold text-gray-800 mb-2">How can I help you today?</h3>
+                      <h3 className="font-extrabold text-gray-800 mb-2">{t('coach.greeting')}</h3>
                       <p className="text-gray-500 text-sm mb-6">
-                        Ask me anything about US banking, credit, taxes, or financial planning.
+                        {t('coach.description')}
                       </p>
 
                       {/* Quick Questions */}
                       <div className="w-full space-y-2">
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Popular Questions</p>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">{t('coach.popularQuestions')}</p>
                         {quickQuestions.slice(0, 4).map((question, index) => (
                           <button
                             key={index}
@@ -245,8 +245,8 @@ export function FinAICoachPanel({ isOpen, onClose }: FinAICoachPanelProps) {
                       type="text"
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
-                      placeholder="Ask about US finances..."
-                      className="flex-1 px-4 py-3 bg-[#f7f7f7] border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#58cc02] transition-all"
+                      placeholder={t('coach.inputPlaceholder')}
+                      className="flex-1 px-4 py-3 bg-[#f7f7f7] border-2 border-gray-200 rounded-xl text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-[#58cc02] transition-all"
                       disabled={isLoading}
                     />
                     <button
@@ -258,7 +258,7 @@ export function FinAICoachPanel({ isOpen, onClose }: FinAICoachPanelProps) {
                     </button>
                   </div>
                   <p className="text-xs text-gray-400 mt-2 text-center">
-                    FinAI Coach provides general guidance. Consult professionals for major decisions.
+                    {t('coach.disclaimer')}
                   </p>
                 </form>
               </>

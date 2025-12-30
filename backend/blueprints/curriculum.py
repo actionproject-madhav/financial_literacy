@@ -5,12 +5,18 @@ Provides endpoints for:
 - Getting all courses (domains)
 - Getting lessons (skills) for a course
 - Getting questions for a lesson
+- Marking lessons as complete
 """
-
 from flask import Blueprint, request, jsonify, current_app
 from bson import ObjectId
+from datetime import datetime, date
 
 curriculum_bp = Blueprint('curriculum', __name__, url_prefix='/api/curriculum')
+
+# Import adaptive engine for future use (currently using sequential questions for MVP)
+def get_learning_engine():
+    """Get learning engine instance from app context (for future adaptive selection)"""
+    return current_app.config.get('LEARNING_ENGINE')
 
 
 def get_db():
@@ -311,6 +317,170 @@ def get_course_lessons(domain):
         return jsonify({'error': str(e)}), 500
 
 
+@curriculum_bp.route('/lessons/<kc_id>/complete', methods=['POST'])
+def complete_lesson(kc_id):
+    """
+    Mark a lesson as complete for a learner.
+    
+    Request body:
+    {
+        "learner_id": "507f...",
+        "xp_earned": 20,
+        "accuracy": 0.85,  // optional, percentage of correct answers
+        "time_spent_minutes": 15  // optional
+    }
+    
+    Response:
+    {
+        "success": true,
+        "lesson": {
+            "id": "507f...",
+            "status": "mastered",
+            "p_mastery": 0.95
+        },
+        "next_lesson_unlocked": true
+    }
+    """
+    try:
+        db = get_db()
+        data = request.get_json()
+        
+        learner_id = data.get('learner_id')
+        if not learner_id:
+            return jsonify({'error': 'learner_id is required'}), 400
+        
+        xp_earned = data.get('xp_earned', 20)
+        accuracy = data.get('accuracy', 1.0)  # Default to 100% if not provided
+        time_spent_minutes = data.get('time_spent_minutes', 10)
+        
+        learner_oid = ObjectId(learner_id)
+        kc_oid = ObjectId(kc_id)
+        
+        # Verify learner exists
+        learner = db.collections.learners.find_one({'_id': learner_oid})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+        
+        # Verify KC exists
+        kc = db.collections.knowledge_components.find_one({'_id': kc_oid})
+        if not kc:
+            return jsonify({'error': 'Lesson not found'}), 404
+        
+        # Get current skill state (mastery should already be updated by adaptive engine from individual question answers)
+        existing_state = db.collections.learner_skill_states.find_one({
+            'learner_id': learner_oid,
+            'kc_id': kc_oid
+        })
+        
+        # Use adaptive engine's mastery value if available, otherwise calculate from accuracy
+        if existing_state:
+            # Mastery is already calculated by BKT from individual question interactions
+            # Use the existing mastery value, but ensure it's at least the accuracy threshold
+            current_mastery = existing_state.get('p_mastery', 0)
+            # If mastery is low but accuracy was high, boost it slightly
+            if accuracy >= 0.8 and current_mastery < accuracy:
+                new_mastery = min(0.95, current_mastery + (accuracy - current_mastery) * 0.3)
+            else:
+                new_mastery = current_mastery
+        else:
+            # No existing state - first time completing, use accuracy
+            new_mastery = accuracy
+        
+        # Update or create skill state with mastered status
+        if existing_state:
+            db.collections.learner_skill_states.update_one(
+                {'_id': existing_state['_id']},
+                {
+                    '$set': {
+                        'status': 'mastered',
+                        'p_mastery': new_mastery,
+                        'updated_at': datetime.utcnow(),
+                        'last_completed_at': datetime.utcnow()
+                    }
+                }
+            )
+        else:
+            # Create new state - mastery should have been created by adaptive engine, but create if missing
+            db.collections.create_learner_skill_state(
+                learner_id=learner_id,
+                kc_id=kc_id,
+                status='mastered',
+                p_mastery=new_mastery
+            )
+            # Set last_completed_at
+            db.collections.learner_skill_states.update_one(
+                {
+                    'learner_id': learner_oid,
+                    'kc_id': kc_oid
+                },
+                {
+                    '$set': {
+                        'last_completed_at': datetime.utcnow()
+                    }
+                }
+            )
+        
+        # Update learner's total XP
+        db.collections.learners.update_one(
+            {'_id': learner_oid},
+            {'$inc': {'total_xp': xp_earned}}
+        )
+        
+        # Update daily progress
+        today = date.today()
+        db.collections.update_daily_progress(
+            learner_id=learner_id,
+            date_obj=today,
+            xp_earned=xp_earned,
+            lessons_completed=1,
+            minutes_practiced=time_spent_minutes
+        )
+        
+        # Check if next lesson should be unlocked
+        # Get all KCs in the same domain, sorted by difficulty_tier
+        domain = kc['domain']
+        all_kcs = list(db.collections.knowledge_components.find({
+            'domain': domain,
+            'is_active': True
+        }).sort('difficulty_tier', 1))
+        
+        current_index = next((i for i, k in enumerate(all_kcs) if str(k['_id']) == kc_id), -1)
+        next_lesson_unlocked = False
+        
+        if current_index >= 0 and current_index < len(all_kcs) - 1:
+            # There is a next lesson
+            next_kc_id = str(all_kcs[current_index + 1]['_id'])
+            next_state = db.collections.learner_skill_states.find_one({
+                'learner_id': learner_oid,
+                'kc_id': ObjectId(next_kc_id)
+            })
+            
+            if not next_state or next_state.get('status') == 'locked':
+                # Unlock the next lesson
+                db.collections.create_learner_skill_state(
+                    learner_id=learner_id,
+                    kc_id=next_kc_id,
+                    status='available',
+                    p_mastery=0
+                )
+                next_lesson_unlocked = True
+        
+        return jsonify({
+            'success': True,
+            'lesson': {
+                'id': kc_id,
+                'status': 'mastered',
+                'p_mastery': round(new_mastery, 2)
+            },
+            'next_lesson_unlocked': next_lesson_unlocked,
+            'xp_earned': xp_earned,
+            'total_xp': learner.get('total_xp', 0) + xp_earned
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @curriculum_bp.route('/lessons/<kc_id>/questions', methods=['GET'])
 def get_lesson_questions(kc_id):
     """
@@ -353,11 +523,11 @@ def get_lesson_questions(kc_id):
         if not kc:
             return jsonify({'error': 'Lesson not found'}), 404
 
-        # Get all item mappings for this KC
+        # Get all item mappings for this KC (preserve insertion order)
         mappings = list(db.collections.item_kc_mappings.find({'kc_id': ObjectId(kc_id)}))
         item_ids = [m['item_id'] for m in mappings]
 
-        # Get all items
+        # Get all items (both content and quiz items)
         query = {
             '_id': {'$in': item_ids},
             'is_active': True
@@ -368,10 +538,21 @@ def get_lesson_questions(kc_id):
 
         items = list(items_cursor)
 
-        # Build questions response
+        # Create a map of item_id -> position from mappings to preserve order
+        # Use the index in mappings array as position (preserves insertion order)
+        item_position_map = {}
+        for idx, mapping in enumerate(mappings):
+            item_id_str = str(mapping['item_id'])
+            # Use explicit position/order if available, otherwise use insertion order
+            item_position_map[item_id_str] = mapping.get('position', mapping.get('order', idx))
+
+        # Sort items by their position in the mapping (preserves order of content + quiz items)
+        items.sort(key=lambda item: item_position_map.get(str(item['_id']), 999))
+
+        # Build questions/content response (includes both types)
         questions = []
         for item in items:
-            questions.append({
+            item_data = {
                 'id': str(item['_id']),
                 'item_type': item['item_type'],
                 'content': item['content'],
@@ -379,8 +560,10 @@ def get_lesson_questions(kc_id):
                 'discrimination': item.get('discrimination', 1.0),
                 'media_type': item.get('media_type'),
                 'media_url': item.get('media_url'),
-                'allows_personalization': item.get('allows_llm_personalization', False)
-            })
+                'allows_personalization': item.get('allows_llm_personalization', False),
+                'position': item_position_map.get(str(item['_id']), 0)
+            }
+            questions.append(item_data)
 
         return jsonify({
             'lesson': {

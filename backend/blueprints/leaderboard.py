@@ -49,16 +49,20 @@ def get_league_for_xp(total_xp):
 
 def get_weekly_xp(db, learner_id):
     """Get XP earned this week for a learner"""
-    week_start = get_start_of_week()
-    pipeline = [
-        {'$match': {
-            'learner_id': ObjectId(learner_id),
-            'date': {'$gte': week_start}
-        }},
-        {'$group': {'_id': None, 'total': {'$sum': '$xp_earned'}}}
-    ]
-    result = list(db.collections.daily_progress.aggregate(pipeline))
-    return result[0]['total'] if result else 0
+    try:
+        week_start = get_start_of_week()
+        pipeline = [
+            {'$match': {
+                'learner_id': ObjectId(learner_id),
+                'date': {'$gte': week_start}
+            }},
+            {'$group': {'_id': None, 'total': {'$sum': '$xp_earned'}}}
+        ]
+        result = list(db.collections.daily_progress.aggregate(pipeline))
+        return result[0]['total'] if result and result[0].get('total') is not None else 0
+    except Exception as e:
+        current_app.logger.error(f"Error getting weekly XP for {learner_id}: {e}")
+        return 0
 
 
 def get_user_initials(display_name):
@@ -146,37 +150,43 @@ def get_leaderboard():
         ]
 
         weekly_results = list(db.collections.daily_progress.aggregate(pipeline))
+        weekly_xp_map = {str(r['_id']): r['weekly_xp'] for r in weekly_results}
 
         # Filter by league if specified
         league_rankings = []
-        for result in weekly_results:
-            learner_id = str(result['_id'])
-            total_xp = learner_xp_map.get(learner_id, 0)
-            league = get_league_for_xp(total_xp)
-
-            if league_filter and league['id'] != league_filter:
+        seen_learner_ids = set()
+        
+        # Include all learners in the league, even if they have 0 weekly XP
+        for learner_obj in all_learners:
+            lid = str(learner_obj['_id'])
+            l_xp = learner_obj.get('total_xp', 0)
+            l_league = get_league_for_xp(l_xp)
+            
+            if league_filter and l_league['id'] != league_filter:
                 continue
-
-            learner_info = learner_info_map.get(learner_id, {})
+            
+            weekly_xp = weekly_xp_map.get(lid, 0)
+            learner_info = learner_info_map.get(lid, {})
             display_name = learner_info.get('display_name', 'Anonymous')
             
             league_rankings.append({
-                'learner_id': learner_id,
-                'weekly_xp': result['weekly_xp'],
-                'total_xp': total_xp,
+                'learner_id': lid,
+                'weekly_xp': weekly_xp,
+                'total_xp': l_xp,
                 'display_name': display_name,
                 'initials': get_user_initials(display_name),
-                'league': league,
+                'league': l_league,
                 'streak': learner_info.get('streak_count', 0)
             })
+            seen_learner_ids.add(lid)
 
         # Sort by weekly XP and assign ranks
         league_rankings.sort(key=lambda x: x['weekly_xp'], reverse=True)
         for i, ranking in enumerate(league_rankings):
             ranking['rank'] = i + 1
 
-        # Limit results
-        limited_rankings = league_rankings[:limit]
+        # Limit results (but ensure we return at least some data even if empty)
+        limited_rankings = league_rankings[:limit] if league_rankings else []
 
         # Get current league info
         current_league = None
@@ -408,6 +418,21 @@ def get_my_league(learner_id):
         learner = db.collections.learners.find_one({'_id': learner_oid})
         if not learner:
             return jsonify({'error': 'Learner not found'}), 404
+        
+        # Ensure learner has required fields (backward compatibility)
+        if 'total_xp' not in learner:
+            db.collections.learners.update_one(
+                {'_id': learner_oid},
+                {'$set': {'total_xp': 0}}
+            )
+            learner['total_xp'] = 0
+        
+        if 'streak_count' not in learner:
+            db.collections.learners.update_one(
+                {'_id': learner_oid},
+                {'$set': {'streak_count': 0}}
+            )
+            learner['streak_count'] = 0
 
         total_xp = learner.get('total_xp', 0)
         current_league = get_league_for_xp(total_xp)
@@ -487,16 +512,20 @@ def get_my_league(learner_id):
 
         promotion_zone = my_rank <= 10 and len(league_rankings) >= 10
 
+        # Ensure we always return at least the current user
+        if not league_rankings:
+            league_rankings = [my_ranking] if my_ranking else []
+
         return jsonify({
             'league': current_league,
             'rankings': league_rankings,
-            'my_rank': my_rank,
+            'my_rank': my_rank or 1,
             'my_ranking': my_ranking,
             'promotion_zone': promotion_zone,
             'time_remaining': get_time_remaining(),
             'week_start': week_start.isoformat() + 'Z',
             'week_end': week_end.isoformat() + 'Z',
-            'total_participants': len(league_rankings)
+            'total_participants': max(1, len(league_rankings))
         }), 200
 
     except Exception as e:

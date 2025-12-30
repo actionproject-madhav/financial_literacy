@@ -16,6 +16,12 @@ async function fetchApi<T>(
   });
 
   if (!response.ok) {
+    // For 401 (Unauthorized), return null instead of throwing
+    // This is expected when user is not logged in
+    if (response.status === 401) {
+      return null as T;
+    }
+    
     const error = await response.json().catch(() => ({}));
     throw new Error(error.message || error.error || 'API request failed');
   }
@@ -142,9 +148,12 @@ export const adaptiveApi = {
 
 // Voice API - Uses backend ElevenLabs integration
 export const voiceApi = {
-  // Get TTS audio for a learning item
-  getTTS: async (itemId: string, language = 'en', slow = false) => {
+  // Get TTS audio for a learning item (uses cached audio)
+  getTTS: async (itemId: string, language = 'en', slow = false, choiceIndex?: number) => {
     const params = new URLSearchParams({ language, slow: slow.toString() });
+    if (choiceIndex !== undefined) {
+      params.append('choice_index', choiceIndex.toString());
+    }
     try {
       return await fetchApi<{ audio_base64: string; cached: boolean }>(`/api/adaptive/voice/tts/${itemId}?${params}`);
     } catch (error) {
@@ -267,22 +276,48 @@ export interface Lesson {
 
 export interface Question {
   id: string;
-  item_type: string;
+  item_type: 'multiple_choice' | 'content' | string;
   content: {
-    stem: string;
-    choices: string[];
-    correct_answer: number;
-    explanation: string;
+    // For multiple_choice items
+    stem?: string;
+    choices?: string[];
+    correct_answer?: number;
+    explanation?: string;
     visa_variants?: Record<string, { additional_context: string }>;
-  };
+    // For content items
+    text?: string;
+    content?: string;
+  } | string; // Can also be a string for simple content items
   difficulty: number;
   discrimination: number;
   media_type: string | null;
   media_url: string | null;
   allows_personalization: boolean;
+  position?: number; // Order in the lesson
 }
 
 export const curriculumApi = {
+  completeLesson: async (kcId: string, data: {
+    learner_id: string;
+    xp_earned?: number;
+    accuracy?: number;
+    time_spent_minutes?: number;
+  }) => {
+    return await fetchApi<{
+      success: boolean;
+      lesson: {
+        id: string;
+        status: string;
+        p_mastery: number;
+      };
+      next_lesson_unlocked: boolean;
+      xp_earned: number;
+      total_xp: number;
+    }>(`/api/curriculum/lessons/${kcId}/complete`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
   getCourses: (learnerId?: string) => {
     const params = learnerId ? `?learner_id=${learnerId}` : '';
     return fetchApi<{ courses: Course[] }>(`/api/curriculum/courses${params}`);
@@ -369,8 +404,8 @@ export const chatApi = {
       created_at: string;
     }>(`/api/chat/conversations/${conversationId}`),
 
-  getQuickQuestions: () =>
-    fetchApi<{ questions: string[] }>('/api/chat/quick-questions'),
+  getQuickQuestions: (language = 'en') =>
+    fetchApi<{ questions: string[] }>(`/api/chat/quick-questions?language=${language}`),
 
   healthCheck: () =>
     fetchApi<{ status: string; llm_available: boolean }>('/api/chat/health').catch(() => null),

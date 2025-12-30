@@ -101,24 +101,39 @@ export const LessonPage = () => {
 
         setLesson(response.lesson)
 
-        // Convert database questions to steps
-        const quizSteps: Step[] = response.questions.map((q: Question) => ({
-          type: 'quiz' as const,
-          question: q.content.stem,
-          options: q.content.choices,
-          correct: q.content.correct_answer,
-          explanation: q.content.explanation,
-          itemId: q.id,
-          kcId: lessonId
-        }))
+        // Convert database items to steps (both content and quiz)
+        const steps: Step[] = response.questions.map((q: any) => {
+          // Handle content items
+          if (q.item_type === 'content') {
+            // Content items can have content as string or object
+            const contentText = typeof q.content === 'string' 
+              ? q.content 
+              : (q.content?.text || q.content?.content || '')
+            return {
+              type: 'content' as const,
+              content: contentText
+            }
+          }
+          
+          // Handle quiz/multiple_choice items
+          return {
+            type: 'quiz' as const,
+            question: q.content.stem,
+            options: q.content.choices || [],
+            correct: q.content.correct_answer,
+            explanation: q.content.explanation || '',
+            itemId: q.id,
+            kcId: lessonId
+          }
+        })
 
-        if (quizSteps.length === 0) {
-          setError('No questions available for this lesson')
+        if (steps.length === 0) {
+          setError('No content available for this lesson')
           return
         }
 
-        setOriginalSteps(quizSteps) // Store original English
-        setSteps(quizSteps)
+        setOriginalSteps(steps) // Store original English
+        setSteps(steps)
         setSessionId(`session-${Date.now()}`)
         setError(null)
       } catch (err) {
@@ -152,6 +167,7 @@ export const LessonPage = () => {
 
             try {
               // Translate question, options, and explanation in parallel
+              // Pass itemId to use database cache
               const [questionRes, ...optionResults] = await Promise.all([
                 fetch(`${API_BASE}/api/translate/content`, {
                   method: 'POST',
@@ -159,7 +175,8 @@ export const LessonPage = () => {
                   body: JSON.stringify({
                     text: step.question,
                     target_language: globalLanguage,
-                    context: 'financial literacy question'
+                    context: 'financial literacy question',
+                    item_id: step.itemId  // Pass itemId for cache lookup
                   })
                 }),
                 ...step.options.map((option, idx) =>
@@ -169,7 +186,8 @@ export const LessonPage = () => {
                     body: JSON.stringify({
                       text: option,
                       target_language: globalLanguage,
-                      context: `answer choice ${idx + 1}`
+                      context: `answer choice ${idx + 1}`,
+                      item_id: step.itemId  // Pass itemId for cache lookup
                     })
                   })
                 )
@@ -181,7 +199,11 @@ export const LessonPage = () => {
               }
 
               const questionData = await questionRes.json()
-              console.log(`✅ Question ${stepIdx + 1} translated:`, questionData.translated?.substring(0, 50))
+              if (questionData.cached) {
+                console.log(`✅ Question ${stepIdx + 1} translated (FROM CACHE):`, questionData.translated?.substring(0, 50))
+              } else {
+                console.log(`🌐 Question ${stepIdx + 1} translated (LIVE):`, questionData.translated?.substring(0, 50))
+              }
 
               const translatedOptions = await Promise.all(
                 optionResults.map(async (res, idx) => {
@@ -201,7 +223,8 @@ export const LessonPage = () => {
                 body: JSON.stringify({
                   text: step.explanation,
                   target_language: globalLanguage,
-                  context: 'question explanation'
+                  context: 'question explanation',
+                  item_id: step.itemId  // Pass itemId for cache lookup
                 })
               })
 
@@ -237,15 +260,25 @@ export const LessonPage = () => {
     translateAllSteps()
   }, [globalLanguage, originalSteps])
 
-  // Text-to-Speech using backend ElevenLabs API
-  const speakQuestion = async (text: string) => {
+  // Text-to-Speech using backend ElevenLabs API (with caching)
+  const speakQuestion = async (text: string, itemId?: string) => {
     if (isSpeaking || isLoadingTTS) return
 
     setIsLoadingTTS(true)
 
     try {
-      // Use backend TTS with ElevenLabs
-      const result = await voiceApi.generateTTS(text, globalLanguage)
+      let result
+      
+      // If we have itemId, use cached endpoint (checks cache first)
+      if (itemId) {
+        result = await voiceApi.getTTS(itemId, globalLanguage)
+        if (result?.cached) {
+          console.log('✅ Using cached TTS audio for question')
+        }
+      } else {
+        // Fallback to generate endpoint
+        result = await voiceApi.generateTTS(text, globalLanguage)
+      }
 
       if (result?.audio_base64) {
         // Play the audio
@@ -268,6 +301,46 @@ export const LessonPage = () => {
     } catch (err) {
       console.error('TTS error:', err)
       fallbackBrowserTTS(text)
+    } finally {
+      setIsLoadingTTS(false)
+    }
+  }
+
+  // Speak an answer choice (uses cached audio)
+  const speakChoice = async (itemId: string, choiceIndex: number, choiceText: string) => {
+    if (isSpeaking || isLoadingTTS) return
+
+    setIsLoadingTTS(true)
+
+    try {
+      // Use cached endpoint with choice_index parameter
+      const result = await voiceApi.getTTS(itemId, globalLanguage, false, choiceIndex)
+      
+      if (result?.cached) {
+        console.log(`✅ Using cached TTS audio for choice ${choiceIndex}`)
+      }
+
+      if (result?.audio_base64) {
+        // Play the audio
+        const audio = new Audio(result.audio_base64)
+        audioRef.current = audio
+
+        audio.onplay = () => setIsSpeaking(true)
+        audio.onended = () => setIsSpeaking(false)
+        audio.onerror = () => {
+          setIsSpeaking(false)
+          // Fallback to browser TTS
+          fallbackBrowserTTS(choiceText)
+        }
+
+        await audio.play()
+      } else {
+        // Fallback to browser TTS
+        fallbackBrowserTTS(choiceText)
+      }
+    } catch (err) {
+      console.error('TTS error for choice:', err)
+      fallbackBrowserTTS(choiceText)
     } finally {
       setIsLoadingTTS(false)
     }
@@ -498,11 +571,43 @@ export const LessonPage = () => {
         setAudioBase64(null)
         setStartTime(Date.now())
       } else {
-        // Complete Lesson
-        addXP(20)
-
-        if (user) {
-          setUser({ ...user, gems: user.gems + 5 })
+        // Complete Lesson - Save progress to backend
+        const accuracy = totalQuizQuestions > 0 ? correctAnswers / totalQuizQuestions : 1.0
+        const timeSpentMinutes = Math.round((Date.now() - startTime) / 1000 / 60) || 1
+        
+        // Save lesson completion to backend
+        if (lessonId && learnerId) {
+          curriculumApi.completeLesson(lessonId, {
+            learner_id: learnerId,
+            xp_earned: 20,
+            accuracy: accuracy,
+            time_spent_minutes: timeSpentMinutes
+          }).then((result) => {
+            if (result) {
+              // Update user XP from backend response
+              if (user) {
+                setUser({ 
+                  ...user, 
+                  gems: user.gems + 5,
+                  totalXp: result.total_xp || user.totalXp + 20
+                })
+              }
+              addXP(20)
+            }
+          }).catch((error) => {
+            console.error('Failed to save lesson completion:', error)
+            // Still show celebration even if save fails
+            addXP(20)
+            if (user) {
+              setUser({ ...user, gems: user.gems + 5 })
+            }
+          })
+        } else {
+          // Fallback if no lessonId or learnerId
+          addXP(20)
+          if (user) {
+            setUser({ ...user, gems: user.gems + 5 })
+          }
         }
 
         confetti({
@@ -599,10 +704,13 @@ export const LessonPage = () => {
     navigate(`/section/${lesson.domain}`)
   }
 
-  const canCheck = status !== 'idle' ||
-    currentStepData.type === 'content' ||
-    selectedOption !== null ||
-    (voiceAnswer && audioBase64)
+  // For content steps, always allow next (no check needed)
+  // For quiz steps, require selection or voice answer when idle, or allow continue after check
+  const canCheck = currentStepData.type === 'content' 
+    ? true  // Content steps can always proceed
+    : status !== 'idle' ||  // After check, can continue
+      selectedOption !== null ||  // Has selected option
+      (voiceAnswer && audioBase64)  // Has voice answer
 
   return (
     <>
@@ -707,7 +815,7 @@ export const LessonPage = () => {
 
                             {/* Speaker Button */}
                             <button
-                              onClick={() => isSpeaking ? stopSpeaking() : speakQuestion(currentStepData.question)}
+                              onClick={() => isSpeaking ? stopSpeaking() : speakQuestion(currentStepData.question, currentStepData.itemId)}
                               disabled={isLoadingTTS}
                               className={`p-2.5 rounded-xl border-2 transition-all ${isSpeaking
                                 ? 'bg-blue-100 border-blue-300 text-blue-600'
@@ -761,7 +869,25 @@ export const LessonPage = () => {
                               `}>
                                 {index + 1}
                               </div>
-                              {option}
+                              <span className="flex-1">{option}</span>
+                              {/* Speaker button for choice */}
+                              {currentStepData.itemId && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    speakChoice(currentStepData.itemId, index, option)
+                                  }}
+                                  disabled={isLoadingTTS || isSpeaking}
+                                  className={`p-1.5 rounded-lg transition-all flex-shrink-0 ${
+                                    isLoadingTTS || isSpeaking
+                                      ? 'bg-gray-100 text-gray-400'
+                                      : 'bg-gray-50 text-gray-500 hover:bg-blue-50 hover:text-blue-500'
+                                  }`}
+                                  title={`Listen to option ${index + 1} in ${currentLang.name}`}
+                                >
+                                  <Volume2 className="w-4 h-4" />
+                                </button>
+                              )}
                             </button>
                           )
                         })}
@@ -913,7 +1039,12 @@ export const LessonPage = () => {
                 }
               `}
             >
-              {status === 'idle' ? 'CHECK' : 'CONTINUE'}
+              {currentStepData.type === 'content' 
+                ? 'NEXT'  // Content steps show "NEXT"
+                : status === 'idle' 
+                  ? 'CHECK'  // Quiz steps show "CHECK" when idle
+                  : 'CONTINUE'  // Quiz steps show "CONTINUE" after check
+              }
             </button>
           </div>
         </div>
