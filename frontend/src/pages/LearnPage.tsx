@@ -1,15 +1,63 @@
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Trophy, Zap, Heart, Star, Lock, Flame, Gem, ArrowLeft, Sparkles, Brain, Target, CheckCircle2, Circle, MessageSquare, TrendingUp } from 'lucide-react'
+import { Heart, Lock, ArrowLeft, TrendingUp, CheckCircle2, Circle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useUserStore } from '../stores/userStore'
-import { COMPREHENSIVE_COURSES } from '../data/courses'
+import { curriculumApi, Course } from '../services/api'
 
 export const LearnPage = () => {
-    const { user } = useUserStore()
+    const { user, learnerId } = useUserStore()
     const navigate = useNavigate()
-    const completedLessons = [1];
+    const [courses, setCourses] = useState<Course[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
-    if (!user) return null;
+    useEffect(() => {
+        const fetchCourses = async () => {
+            try {
+                setLoading(true)
+                const response = await curriculumApi.getCourses(learnerId || undefined)
+                setCourses(response.courses)
+                setError(null)
+            } catch (err) {
+                console.error('Failed to fetch courses:', err)
+                setError('Failed to load courses')
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchCourses()
+    }, [learnerId])
+
+    if (!user) return null
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-white">
+                <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-500 font-medium">Loading courses...</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-white">
+                <div className="text-center">
+                    <p className="text-red-500 font-medium mb-4">{error}</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="px-4 py-2 bg-green-500 text-white rounded-lg font-bold"
+                    >
+                        Retry
+                    </button>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="flex flex-col w-full min-h-screen bg-white">
@@ -42,7 +90,7 @@ export const LearnPage = () => {
                                     </div>
                                     <h3 className="text-gray-800 font-extrabold text-lg mb-1">Credit Score Boost</h3>
                                     <p className="text-gray-500 text-sm font-medium leading-relaxed">
-                                        Paying your rent online can now boost your credit score. Experian Boost™ averages a 13pt increase for new users.
+                                        Paying your rent online can now boost your credit score. Experian Boost averages a 13pt increase for new users.
                                     </p>
                                 </div>
                             </div>
@@ -50,17 +98,15 @@ export const LearnPage = () => {
                     </div>
 
                     <div className="space-y-6">
-                        {COMPREHENSIVE_COURSES.map((course, index) => {
-                            const isUnlocked = index === 0;
-                            const totalModules = course.modules.length;
-                            const completedInCourse = course.modules.filter(m => completedLessons.includes(m.id)).length;
-                            const progress = totalModules > 0 ? (completedInCourse / totalModules) * 100 : 0;
+                        {courses.map((course, index) => {
+                            const isUnlocked = course.unlocked
+                            const progress = course.progress * 100
 
                             return (
                                 <div
                                     key={course.id}
                                     className={`rounded-2xl p-0 relative overflow-hidden border-2 transition-transform hover:translate-y-[-2px] ${isUnlocked
-                                        ? 'bg-[#dcfce7] border-[#dcfce7]' // Green theme
+                                        ? 'bg-[#dcfce7] border-[#dcfce7]'
                                         : 'bg-white border-gray-200'
                                         } ${isUnlocked ? '' : 'opacity-100'}`}
                                 >
@@ -68,11 +114,15 @@ export const LearnPage = () => {
                                         <div className="flex items-center justify-between mb-1">
                                             <div className="flex items-center gap-2">
                                                 <span className={`text-xs font-extrabold tracking-widest uppercase ${isUnlocked ? 'text-green-600' : 'text-cyan-500'}`}>
-                                                    {isUnlocked ? 'SECTION 1, UNIT 1' : `SECTION ${index + 1}, UNIT 1`}
+                                                    {isUnlocked ? `SECTION ${index + 1}` : `SECTION ${index + 1}`} · {course.lessons_count} LESSONS
                                                 </span>
                                             </div>
                                         </div>
-                                        <h3 className="text-2xl font-extrabold text-gray-800 tracking-tight leading-none mb-2">{course.title}</h3>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-2xl">{course.emoji}</span>
+                                            <h3 className="text-2xl font-extrabold text-gray-800 tracking-tight leading-none mb-2">{course.title}</h3>
+                                        </div>
+                                        <p className="text-gray-500 text-sm mb-2">{course.description}</p>
                                     </div>
 
                                     <div className="px-4 pb-6 flex justify-between items-end relative z-10">
@@ -82,8 +132,9 @@ export const LearnPage = () => {
                                                     {/* Progress Bar */}
                                                     <div className="flex items-center gap-3 mb-6">
                                                         <div className="flex-1 h-4 bg-white rounded-full overflow-hidden shadow-inner">
-                                                            <div className="h-full bg-green-500 rounded-full transition-all duration-500" style={{ width: `${Math.max(progress, 15)}%` }} />
+                                                            <div className="h-full bg-green-500 rounded-full transition-all duration-500" style={{ width: `${Math.max(progress, 5)}%` }} />
                                                         </div>
+                                                        <span className="text-sm font-bold text-green-600">{Math.round(progress)}%</span>
                                                         <img src="/trophy.svg" alt="Trophy" className="w-12 h-12 drop-shadow-sm" />
                                                     </div>
 
@@ -91,7 +142,7 @@ export const LearnPage = () => {
                                                         onClick={() => navigate(`/section/${course.id}`)}
                                                         className="w-full py-3.5 bg-green-500 text-white font-bold text-sm rounded-xl border-b-4 border-green-600 hover:bg-green-400 hover:border-green-500 active:border-b-0 active:translate-y-1 transition-all uppercase tracking-widest shadow-sm"
                                                     >
-                                                        Continue
+                                                        {progress > 0 ? 'Continue' : 'Start'}
                                                     </button>
                                                 </>
                                             ) : (
@@ -101,7 +152,7 @@ export const LearnPage = () => {
                                                         <span className="tracking-widest text-xs">LOCKED</span>
                                                     </div>
                                                     <button disabled className="w-full py-3.5 bg-gray-200 text-gray-400 font-bold text-sm rounded-xl border-b-4 border-gray-300 cursor-not-allowed uppercase tracking-widest">
-                                                        Jump to Section {index + 1}
+                                                        Complete Previous
                                                     </button>
                                                 </>
                                             )}
@@ -110,7 +161,7 @@ export const LearnPage = () => {
                                         {/* Mascot Area */}
                                         <div className="flex flex-col items-center justify-end w-32 md:w-40 relative -mb-2">
                                             {/* Speech Bubble */}
-                                            {isUnlocked && (
+                                            {isUnlocked && index === 0 && (
                                                 <motion.div
                                                     initial={{ opacity: 0, scale: 0.8, y: 10 }}
                                                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -118,15 +169,12 @@ export const LearnPage = () => {
                                                 >
                                                     <div className="relative bg-white border-2 border-gray-200 px-4 py-2 rounded-2xl shadow-sm">
                                                         <p className="text-sm font-bold text-gray-700 whitespace-nowrap">Let's go!</p>
-                                                        {/* Tail */}
                                                         <div className="absolute -bottom-[9px] right-6 w-4 h-4 bg-white border-r-2 border-b-2 border-gray-200 transform rotate-45"></div>
-                                                        {/* Cover border for tail intersection */}
                                                         <div className="absolute -bottom-[2px] right-6 w-4 h-2 bg-white transform"></div>
                                                     </div>
                                                 </motion.div>
                                             )}
 
-                                            {/* Subtitle bubble for locked, if desired, otherwise standard mascot */}
                                             {!isUnlocked && (
                                                 <motion.div
                                                     initial={{ opacity: 0, scale: 0.8 }}

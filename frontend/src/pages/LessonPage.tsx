@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Heart, Check, Flag, Volume2, Mic, MicOff } from 'lucide-react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { COMPREHENSIVE_COURSES } from '../data/courses'
 import { useUserStore } from '../stores/userStore'
+import { curriculumApi, adaptiveApi, Question } from '../services/api'
 import confetti from 'canvas-confetti'
 import { CelebrationOverlay } from '../components/CelebrationOverlay'
 
@@ -22,27 +22,41 @@ interface QuizStep extends StepBase {
   options: string[];
   correct: number;
   explanation: string;
+  itemId: string;
+  kcId: string;
 }
 
 type Step = ContentStep | QuizStep;
+
+interface LessonInfo {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  domain: string;
+}
 
 export const LessonPage = () => {
   const { lessonId } = useParams()
   const navigate = useNavigate()
 
   // Store actions
-  const { user, setUser, addXP, loseHeart } = useUserStore()
+  const { user, learnerId, setUser, addXP, loseHeart } = useUserStore()
 
+  const [lesson, setLesson] = useState<LessonInfo | null>(null)
   const [steps, setSteps] = useState<Step[]>([])
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedOption, setSelectedOption] = useState<number | null>(null)
   const [status, setStatus] = useState<'idle' | 'correct' | 'wrong'>('idle')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [sessionId, setSessionId] = useState<string>('')
+  const [startTime, setStartTime] = useState<number>(Date.now())
 
   // Voice accessibility states
   const [isRecording, setIsRecording] = useState(false)
   const [voiceAnswer, setVoiceAnswer] = useState('')
   const [isSpeaking, setIsSpeaking] = useState(false)
-  const [showLanguageMenu, setShowLanguageMenu] = useState(false)
   const [showCelebration, setShowCelebration] = useState(false)
   const [correctAnswers, setCorrectAnswers] = useState(0)
   const [totalQuizQuestions, setTotalQuizQuestions] = useState(0)
@@ -61,19 +75,62 @@ export const LessonPage = () => {
 
   const currentLang = languages[selectedLanguage]
 
+  // Fetch questions on mount
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      if (!lessonId) {
+        navigate('/learn')
+        return
+      }
+
+      try {
+        setLoading(true)
+        const response = await curriculumApi.getLessonQuestions(lessonId, learnerId || undefined)
+
+        setLesson(response.lesson)
+
+        // Convert database questions to steps
+        const quizSteps: Step[] = response.questions.map((q: Question) => ({
+          type: 'quiz' as const,
+          question: q.content.stem,
+          options: q.content.choices,
+          correct: q.content.correct_answer,
+          explanation: q.content.explanation,
+          itemId: q.id,
+          kcId: lessonId
+        }))
+
+        if (quizSteps.length === 0) {
+          setError('No questions available for this lesson')
+          return
+        }
+
+        setSteps(quizSteps)
+        setSessionId(`session-${Date.now()}`)
+        setError(null)
+      } catch (err) {
+        console.error('Failed to fetch questions:', err)
+        setError('Failed to load lesson')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchQuestions()
+  }, [lessonId, learnerId, navigate])
+
   // Cycle through languages
   const cycleLanguage = () => {
     const langOrder: LanguageCode[] = ['en', 'hi', 'ne']
     const currentIndex = langOrder.indexOf(selectedLanguage)
     const nextIndex = (currentIndex + 1) % langOrder.length
     setSelectedLanguage(langOrder[nextIndex])
-    setShowLanguageMenu(false)
   }
 
   // Text-to-Speech: Read the question aloud in selected language
   const speakQuestion = (text: string) => {
     if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel() // Stop any ongoing speech
+      window.speechSynthesis.cancel()
       const utterance = new SpeechSynthesisUtterance(text)
       utterance.lang = currentLang.speechCode
       utterance.rate = 0.9
@@ -100,7 +157,7 @@ export const LessonPage = () => {
     const recognition = new SpeechRecognition()
     recognition.continuous = false
     recognition.interimResults = false
-    recognition.lang = currentLang.speechCode // Use selected language
+    recognition.lang = currentLang.speechCode
 
     recognition.onstart = () => {
       setIsRecording(true)
@@ -124,30 +181,60 @@ export const LessonPage = () => {
     recognition.start()
   }
 
-  // Find course and module based on lessonId
-  const moduleId = Number(lessonId)
-  const course = COMPREHENSIVE_COURSES.find(c => c.modules.some(m => m.id === moduleId))
-  const module = course?.modules.find(m => m.id === moduleId)
+  // Log interaction to backend
+  const logInteraction = async (stepData: QuizStep, isCorrect: boolean) => {
+    if (!learnerId) return
 
-  useEffect(() => {
-    if (!moduleId || !module) {
-      navigate('/learn')
-      return
-    }
-    if (module?.content.quiz) {
-      // Initialize steps 
-      setSteps(module.content.quiz.map(q => ({ type: 'quiz' as const, ...q })))
-    } else {
-      // Fallback or handle modules without quiz
-    }
-  }, [moduleId, navigate, module])
+    const responseTimeMs = Date.now() - startTime
 
-  if (!course || !module || steps.length === 0) return null
+    try {
+      await adaptiveApi.logInteraction({
+        learner_id: learnerId,
+        item_id: stepData.itemId,
+        kc_id: stepData.kcId,
+        session_id: sessionId,
+        is_correct: isCorrect,
+        response_value: { selected_choice: selectedOption },
+        response_time_ms: responseTimeMs,
+        hint_used: false,
+        input_mode: 'click'
+      })
+    } catch (err) {
+      console.error('Failed to log interaction:', err)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-500 font-medium">Loading lesson...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !lesson || steps.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="text-center">
+          <p className="text-red-500 font-medium mb-4">{error || 'No questions available'}</p>
+          <button
+            onClick={() => navigate('/learn')}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg font-bold"
+          >
+            Back to Courses
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   const currentStepData = steps[currentStep]
   const progress = ((currentStep) / steps.length) * 100
 
-  const handleCheck = () => {
+  const handleCheck = async () => {
     if (status !== 'idle') {
       // Moving to next step
       if (currentStep < steps.length - 1) {
@@ -157,36 +244,34 @@ export const LessonPage = () => {
           setCurrentStep(currentStep + 1)
           setStatus('idle')
           setSelectedOption(null)
+          setStartTime(Date.now())
           return
         }
 
         // Check if we should show a streak milestone
         if (status === 'correct' && streak === 3) {
           setShowStreakMilestone(true)
-          // No setCurrentStep(currentStep + 1) yet, we stay on this logical "beat"
           return
         }
 
         setCurrentStep(currentStep + 1)
         setStatus('idle')
         setSelectedOption(null)
+        setStartTime(Date.now())
       } else {
-        // Complete Lesson - Show celebration overlay
+        // Complete Lesson
         addXP(20)
 
-        // Add Gems manually
         if (user) {
           setUser({ ...user, gems: user.gems + 5 })
         }
 
-        // Trigger confetti and show celebration overlay
         confetti({
           particleCount: 150,
           spread: 100,
           origin: { y: 0.5 }
         })
 
-        // Show celebration overlay instead of immediate navigation
         setShowCelebration(true)
       }
       return
@@ -199,7 +284,12 @@ export const LessonPage = () => {
 
     if (currentStepData.type === 'quiz') {
       setTotalQuizQuestions(prev => prev + 1)
-      if (selectedOption === currentStepData.correct) {
+      const isCorrect = selectedOption === currentStepData.correct
+
+      // Log interaction to backend
+      await logInteraction(currentStepData, isCorrect)
+
+      if (isCorrect) {
         setStatus('correct')
         setCorrectAnswers(prev => prev + 1)
         setStreak(prev => prev + 1)
@@ -212,8 +302,7 @@ export const LessonPage = () => {
         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3')
         audio.play().catch(() => { })
 
-        // ADAPTIVE LEARNING LOGIC:
-        // If wrong, insert a remedial content step
+        // Insert a remedial content step
         const explanationStep: ContentStep = {
           type: 'content',
           content: currentStepData.explanation
@@ -236,10 +325,9 @@ export const LessonPage = () => {
     })
   }
 
-  // Handle celebration completion
   const handleCelebrationComplete = () => {
     setShowCelebration(false)
-    navigate(`/section/${course.id}`)
+    navigate(`/section/${lesson.domain}`)
   }
 
   return (
@@ -257,7 +345,7 @@ export const LessonPage = () => {
       <div className="min-h-screen flex flex-col bg-white">
         {/* Top Bar */}
         <div className="px-6 py-8 flex items-center gap-6 max-w-5xl mx-auto w-full">
-          <button onClick={() => navigate(`/section/${course.id}`)} className="text-gray-400 hover:text-gray-600 transition-colors">
+          <button onClick={() => navigate(`/section/${lesson.domain}`)} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X className="w-6 h-6" />
           </button>
           <div className="flex-1 bg-gray-200 h-4 rounded-full overflow-hidden">
@@ -272,6 +360,12 @@ export const LessonPage = () => {
             <Heart className="w-7 h-7 fill-current" />
             {user?.hearts || 5}
           </div>
+        </div>
+
+        {/* Lesson Title */}
+        <div className="text-center mb-4 px-4">
+          <h1 className="text-lg font-bold text-gray-600">{lesson.title}</h1>
+          <p className="text-sm text-gray-400">Question {currentStep + 1} of {steps.length}</p>
         </div>
 
         {/* Main Content */}
@@ -339,7 +433,7 @@ export const LessonPage = () => {
                               </span>
                             </button>
 
-                            {/* Speaker Button - Read Question Aloud */}
+                            {/* Speaker Button */}
                             <button
                               onClick={() => speakQuestion(currentStepData.question)}
                               className={`p-2.5 rounded-xl border-2 transition-all ${isSpeaking
@@ -494,12 +588,12 @@ export const LessonPage = () => {
               <div className="hidden sm:flex items-center gap-2">
                 <button
                   onClick={() => {
-                    // Skip logic: pretend correct but no points? Or just next.
                     if (currentStep < steps.length - 1) {
                       setCurrentStep(currentStep + 1);
                       setSelectedOption(null);
+                      setStartTime(Date.now());
                     } else {
-                      navigate(`/section/${course.id}`);
+                      navigate(`/section/${lesson.domain}`);
                     }
                   }}
                   className="hidden sm:flex items-center gap-2 text-gray-400 font-bold text-sm hover:bg-gray-100 px-4 py-2 rounded-xl transition-colors">

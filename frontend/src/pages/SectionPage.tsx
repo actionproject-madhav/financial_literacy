@@ -1,29 +1,84 @@
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, BookOpen, Trophy, Flame, Heart, Gem } from 'lucide-react'
-import { COMPREHENSIVE_COURSES } from '../data/courses'
+import { ArrowLeft, BookOpen, Flame, Heart, Gem } from 'lucide-react'
 import { useUserStore } from '../stores/userStore'
+import { curriculumApi, Lesson } from '../services/api'
 import { cn } from '../utils/cn'
+
+interface CourseInfo {
+    id: string
+    title: string
+    emoji: string
+    description: string
+    level: string
+}
 
 export const SectionPage = () => {
     const navigate = useNavigate()
     const { sectionId } = useParams()
-    const { user } = useUserStore()
+    const { user, learnerId } = useUserStore()
 
-    const courseId = Number(sectionId) || 1;
-    const course = COMPREHENSIVE_COURSES.find(c => c.id === courseId)
+    const [course, setCourse] = useState<CourseInfo | null>(null)
+    const [lessons, setLessons] = useState<Lesson[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
-    // TODO: Add completedLessons to user store
-    const completedLessons: number[] = [1];
+    useEffect(() => {
+        const fetchLessons = async () => {
+            if (!sectionId) return
 
-    if (!course || !user) return null;
+            try {
+                setLoading(true)
+                const response = await curriculumApi.getCourseLessons(sectionId, learnerId || undefined)
+                setCourse(response.course)
+                setLessons(response.lessons)
+                setError(null)
+            } catch (err) {
+                console.error('Failed to fetch lessons:', err)
+                setError('Failed to load lessons')
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchLessons()
+    }, [sectionId, learnerId])
+
+    if (!user) return null
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-white">
+                <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-500 font-medium">Loading lessons...</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (error || !course) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-white">
+                <div className="text-center">
+                    <p className="text-red-500 font-medium mb-4">{error || 'Course not found'}</p>
+                    <button
+                        onClick={() => navigate('/learn')}
+                        className="px-4 py-2 bg-green-500 text-white rounded-lg font-bold"
+                    >
+                        Back to Courses
+                    </button>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="flex flex-col w-full min-h-screen bg-white">
             <div className="flex-1 flex justify-center xl:pr-96">
                 <div className="w-full max-w-[600px] py-6 px-4">
 
-                    {/* Header Banner - Duolingo Style */}
-                    {/* Header Banner - Duolingo Style */}
+                    {/* Header Banner */}
                     <div className="bg-[#58cc02] rounded-2xl px-5 py-4 mb-8 text-white shadow-sm flex items-center justify-between border-b-[6px] border-[#46a302]">
                         <div className="flex flex-col gap-0.5">
                             <div className="flex items-center gap-3 text-[#b8f28b] font-extrabold text-xs uppercase tracking-widest">
@@ -33,7 +88,7 @@ export const SectionPage = () => {
                                 >
                                     <ArrowLeft className="w-5 h-5 stroke-[3] text-[#b8f28b] hover:text-white" />
                                 </button>
-                                Section {course.id}, Unit 1
+                                {course.emoji} {course.level.toUpperCase()}
                             </div>
                             <h1 className="text-white text-2xl font-extrabold tracking-tight leading-none pl-6">
                                 {course.title}
@@ -46,21 +101,20 @@ export const SectionPage = () => {
                         </button>
                     </div>
 
-                    {/* Vertical Module List - Card Style */}
+                    {/* Vertical Module List */}
                     <div className="flex flex-col gap-0 w-full max-w-[600px] mx-auto pb-32">
-                        {course.modules.map((module, index) => {
-                            const isCompleted = completedLessons.includes(module.id)
-                            const isNext = !isCompleted && (index === 0 || completedLessons.includes(course.modules[index - 1]?.id))
-                            const isLocked = !isCompleted && !isNext
+                        {lessons.map((lesson, index) => {
+                            const isCompleted = lesson.status === 'mastered'
+                            const isNext = lesson.status === 'available' || lesson.status === 'in_progress'
+                            const isLocked = lesson.status === 'locked'
 
-                            // Mock data for UI alignment with reference
                             const points = 500 + (index * 150)
-                            const progress = isCompleted ? 100 : (isNext ? 0 : 0)
+                            const progress = lesson.p_mastery * 100
 
                             return (
-                                <div key={module.id} className="flex gap-4 sm:gap-6 relative">
+                                <div key={lesson.id} className="flex gap-4 sm:gap-6 relative">
                                     {/* Connecting Line */}
-                                    {index !== course.modules.length - 1 && (
+                                    {index !== lessons.length - 1 && (
                                         <div className="absolute left-[20px] sm:left-[24px] top-[60px] bottom-[-24px] w-[3px] bg-[#58cc02]/20 z-0 rounded-full" />
                                     )}
 
@@ -81,7 +135,7 @@ export const SectionPage = () => {
                                         "flex-1 bg-white border-2 rounded-3xl p-5 mb-8 transition-all duration-200 relative overflow-hidden group",
                                         isLocked ? "border-gray-100" : "border-gray-100 shadow-sm hover:shadow-md hover:border-[#58cc02]/30"
                                     )}>
-                                        {/* locked overlay */}
+                                        {/* Locked overlay */}
                                         {isLocked && <div className="absolute inset-0 bg-white/50 z-10" />}
 
                                         <div className="relative z-0">
@@ -92,10 +146,10 @@ export const SectionPage = () => {
                                                         "font-extrabold text-xl mb-1",
                                                         isLocked ? "text-gray-400" : "text-gray-900"
                                                     )}>
-                                                        {module.title}
+                                                        {lesson.title}
                                                     </h3>
                                                     <span className="text-gray-400 text-xs font-bold tracking-wider uppercase">
-                                                        Module {index + 1} of {course.modules.length}
+                                                        {lesson.questions_count} Questions · {lesson.estimated_minutes} min
                                                     </span>
                                                 </div>
 
@@ -105,6 +159,11 @@ export const SectionPage = () => {
                                                 </div>
                                             </div>
 
+                                            {/* Description */}
+                                            {lesson.description && (
+                                                <p className="text-gray-500 text-sm mb-4 line-clamp-2">{lesson.description}</p>
+                                            )}
+
                                             {/* Progress Bar */}
                                             <div className="w-full bg-gray-100 h-2.5 rounded-full mb-2 overflow-hidden">
                                                 <div
@@ -113,20 +172,20 @@ export const SectionPage = () => {
                                                 />
                                             </div>
                                             <div className="flex justify-end mb-6">
-                                                <span className="text-xs font-bold text-gray-400">{progress}%</span>
+                                                <span className="text-xs font-bold text-gray-400">{Math.round(progress)}%</span>
                                             </div>
 
                                             {/* Buttons */}
                                             <div className="flex gap-3">
                                                 <button
-                                                    onClick={() => !isLocked && navigate(`/lesson/${module.id}`)} // Just for viewing mostly
+                                                    onClick={() => !isLocked && navigate(`/lesson/${lesson.id}`)}
                                                     disabled={isLocked}
                                                     className="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 font-extrabold py-3 rounded-2xl transition-colors border-2 border-transparent hover:border-gray-200 text-sm uppercase tracking-wider"
                                                 >
                                                     View
                                                 </button>
                                                 <button
-                                                    onClick={() => !isLocked && navigate(`/lesson/${module.id}`)}
+                                                    onClick={() => !isLocked && navigate(`/lesson/${lesson.id}`)}
                                                     disabled={isLocked}
                                                     className={cn(
                                                         "flex-[2] font-extrabold py-3 rounded-2xl transition-all shadow-sm border-b-[4px] active:border-b-0 active:translate-y-[4px] text-sm uppercase tracking-wider flex items-center justify-center gap-2",
@@ -144,15 +203,10 @@ export const SectionPage = () => {
                             )
                         })}
                     </div>
-
-                    {/* Start Button Fixed at Bottom for Mobile (optional, but nice UX) */}
-                    <div className="md:hidden fixed bottom-6 left-0 right-0 px-4 z-50">
-                        {/* Could add a 'Continue' FAB here if user scrolled away */}
-                    </div>
                 </div>
             </div>
 
-            {/* Right Sidebar - Exactly matching LearnPage */}
+            {/* Right Sidebar */}
             <div className="hidden xl:flex fixed right-0 top-0 w-96 h-screen flex-col border-l-2 border-gray-200 bg-white overflow-y-auto z-40">
                 <div className="p-8 space-y-8">
                     {/* Stats */}
@@ -174,8 +228,7 @@ export const SectionPage = () => {
                         </div>
                     </div>
 
-                    {/* Simple Widgets */}
-                    {/* Widgets container */}
+                    {/* Widgets */}
                     <div className="space-y-6">
                         {/* Daily Quests Widget */}
                         <div className="border-2 border-gray-200 rounded-2xl p-4 bg-white shadow-sm">
@@ -247,15 +300,19 @@ export const SectionPage = () => {
                                             fill="none"
                                             stroke="#58cc02"
                                             strokeWidth="3"
-                                            strokeDasharray="12, 100"
+                                            strokeDasharray={`${lessons.filter(l => l.status === 'mastered').length / lessons.length * 100}, 100`}
                                             strokeLinecap="round"
                                         />
                                     </svg>
-                                    <span className="font-extrabold text-[#58cc02] text-sm">12%</span>
+                                    <span className="font-extrabold text-[#58cc02] text-sm">
+                                        {Math.round(lessons.filter(l => l.status === 'mastered').length / lessons.length * 100)}%
+                                    </span>
                                 </div>
                                 <div>
                                     <div className="font-bold text-gray-900 text-sm mb-0.5">{course.title}</div>
-                                    <div className="text-gray-400 text-xs font-bold uppercase tracking-wider">Total XP: 450</div>
+                                    <div className="text-gray-400 text-xs font-bold uppercase tracking-wider">
+                                        {lessons.filter(l => l.status === 'mastered').length} / {lessons.length} Lessons
+                                    </div>
                                 </div>
                             </div>
                             <button className="w-full py-3 rounded-xl border-2 border-gray-200 font-extrabold text-gray-400 uppercase tracking-widest text-xs hover:bg-gray-50 transition-colors">
