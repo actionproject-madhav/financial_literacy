@@ -846,7 +846,7 @@ export const OnboardingPage: React.FC = () => {
                   className="text-[17px] text-[#737373] mb-8"
                   style={{ lineHeight: '24px' }}
                 >
-                  Your personalized learning path is ready. Let's start building your financial knowledge!
+                  Take a quick assessment so we can personalize your learning path based on what you already know!
                 </motion.p>
 
                 {/* Summary Card */}
@@ -891,11 +891,18 @@ export const OnboardingPage: React.FC = () => {
                     variant="primary"
                     size="xl"
                     fullWidth
-                    onClick={() => navigate('/learn')}
+                    onClick={() => navigate('/diagnostic')}
                     rightIcon={<ChevronRight className="w-5 h-5" />}
                   >
-                    Start Learning
+                    Take Quick Assessment
                   </Button>
+
+                  <button
+                    onClick={() => navigate('/learn')}
+                    className="mt-3 text-[15px] font-bold text-[#AFAFAF] hover:text-[#737373] transition-colors"
+                  >
+                    Skip and start learning
+                  </button>
                 </motion.div>
               </motion.div>
             )}

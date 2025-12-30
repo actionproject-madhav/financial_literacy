@@ -250,6 +250,83 @@ export const voiceApi = {
   },
 };
 
+// Diagnostic Test API
+export interface DiagnosticItem {
+  item_id: string;
+  item_type: string;
+  content: {
+    stem: string;
+    choices: string[];
+    correct_answer: number;
+    explanation?: string;
+  };
+  kc_id: string;
+  kc_name: string;
+  kc_domain: string;
+  difficulty_tier: number;
+  position: number;
+}
+
+export interface DiagnosticResult {
+  item_id: string;
+  kc_id: string;
+  kc_domain: string;
+  is_correct: boolean;
+  response_time_ms: number;
+  selected_choice?: number;
+}
+
+export interface DiagnosticResponse {
+  success: boolean;
+  overall_score: number;
+  correct_count: number;
+  total_items: number;
+  domain_scores: Record<string, number>;
+  domain_priority: string[];
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: Array<{
+    domain: string;
+    score: number;
+    urgency: string;
+    message: string;
+  }>;
+  skills_initialized: number;
+  message: string;
+}
+
+export const diagnosticApi = {
+  startTest: (learnerId: string) =>
+    fetchApi<{
+      test_id: string;
+      items: DiagnosticItem[];
+      total_items: number;
+      domains_tested: string[];
+    }>('/api/adaptive/diagnostic-test/start', {
+      method: 'POST',
+      body: JSON.stringify({ learner_id: learnerId }),
+    }),
+
+  completeTest: (data: {
+    learner_id: string;
+    test_id: string;
+    results: DiagnosticResult[];
+  }) =>
+    fetchApi<DiagnosticResponse>('/api/adaptive/diagnostic-test/complete', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getResults: (learnerId: string) =>
+    fetchApi<{
+      completed: boolean;
+      domain_mastery: Record<string, number>;
+      domain_priority: string[];
+      diagnostic_score: number | null;
+      completed_at: string | null;
+    }>(`/api/adaptive/diagnostic-results/${learnerId}`),
+};
+
 // Health check
 export const healthApi = {
   checkBackend: () =>

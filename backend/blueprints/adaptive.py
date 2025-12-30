@@ -1311,6 +1311,381 @@ def complete_placement_test():
         return jsonify({'error': str(e)}), 500
 
 
+# ========== DIAGNOSTIC TEST ENDPOINTS ==========
+
+@adaptive_bp.route('/diagnostic-test/start', methods=['POST'])
+def start_diagnostic_test():
+    """
+    Start diagnostic test for learner - samples questions per DOMAIN for comprehensive assessment.
+
+    Unlike placement test (which samples by tier), this test samples 2 questions per domain
+    to determine domain-level strengths and weaknesses.
+
+    Request JSON:
+    {
+        "learner_id": "507f..."
+    }
+
+    Response:
+    {
+        "test_id": "uuid",
+        "items": [
+            {
+                "item_id": "...",
+                "item_type": "multiple_choice",
+                "content": {...},
+                "kc_id": "...",
+                "kc_name": "...",
+                "kc_domain": "banking",
+                "position": 0
+            },
+            ...  // 12 items total (2 per domain for 6 domains)
+        ],
+        "total_items": 12,
+        "domains_tested": ["banking", "credit", "taxes", "investing", "budgeting", "retirement"]
+    }
+    """
+    try:
+        data = request.get_json()
+        learner_id = data.get('learner_id')
+
+        if not learner_id:
+            return jsonify({'error': 'learner_id required'}), 400
+
+        db = get_db()
+
+        # Verify learner exists
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        # Get all unique domains from knowledge components
+        domains = db.collections.knowledge_components.distinct('domain')
+
+        # Filter to main domains (exclude empty/null)
+        main_domains = [d for d in domains if d and d.strip()]
+
+        # Sample 2 questions per domain for balanced domain assessment
+        questions_per_domain = 2
+        selected_items = []
+        position = 0
+        domains_tested = []
+
+        for domain in main_domains:
+            # Get items for this domain
+            domain_items = list(db.collections.learning_items.aggregate([
+                {
+                    '$lookup': {
+                        'from': 'item_kc_mappings',
+                        'localField': '_id',
+                        'foreignField': 'item_id',
+                        'as': 'mappings'
+                    }
+                },
+                {'$unwind': '$mappings'},
+                {
+                    '$lookup': {
+                        'from': 'knowledge_components',
+                        'localField': 'mappings.kc_id',
+                        'foreignField': '_id',
+                        'as': 'kc'
+                    }
+                },
+                {'$unwind': '$kc'},
+                {'$match': {
+                    'kc.domain': domain,
+                    'item_type': 'multiple_choice'
+                }},
+                {'$sample': {'size': questions_per_domain}}
+            ]))
+
+            if domain_items:
+                domains_tested.append(domain)
+
+                for item_data in domain_items:
+                    selected_items.append({
+                        'item_id': str(item_data['_id']),
+                        'item_type': item_data.get('item_type', 'multiple_choice'),
+                        'content': item_data.get('content', {}),
+                        'kc_id': str(item_data['kc']['_id']),
+                        'kc_name': item_data['kc'].get('name'),
+                        'kc_domain': domain,
+                        'difficulty_tier': item_data['kc'].get('difficulty_tier', 1),
+                        'position': position
+                    })
+                    position += 1
+
+        # Shuffle the items so domains are mixed (not all banking questions together)
+        import random
+        random.shuffle(selected_items)
+
+        # Re-assign positions after shuffle
+        for i, item in enumerate(selected_items):
+            item['position'] = i
+
+        test_id = str(uuid.uuid4())
+
+        return jsonify({
+            'test_id': test_id,
+            'items': selected_items,
+            'total_items': len(selected_items),
+            'domains_tested': domains_tested
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@adaptive_bp.route('/diagnostic-test/complete', methods=['POST'])
+def complete_diagnostic_test():
+    """
+    Process diagnostic test results and calculate domain-level mastery.
+
+    This stores domain_mastery scores and domain_priority order for personalized
+    lesson recommendations.
+
+    Request JSON:
+    {
+        "learner_id": "507f...",
+        "test_id": "uuid",
+        "results": [
+            {
+                "item_id": "...",
+                "kc_id": "...",
+                "kc_domain": "banking",
+                "is_correct": true,
+                "response_time_ms": 12000
+            },
+            ...
+        ]
+    }
+
+    Response:
+    {
+        "success": true,
+        "overall_score": 0.67,
+        "domain_scores": {
+            "banking": 1.0,
+            "credit": 0.5,
+            "taxes": 0.0,
+            ...
+        },
+        "domain_priority": ["taxes", "credit", "investing", "budgeting", "retirement", "banking"],
+        "strengths": ["banking"],
+        "weaknesses": ["taxes", "credit"],
+        "recommendations": [
+            {"domain": "taxes", "message": "Start with tax basics - this is your biggest opportunity!"},
+            {"domain": "credit", "message": "Build on your credit knowledge with more practice"}
+        ]
+    }
+    """
+    try:
+        data = request.get_json()
+        learner_id = data.get('learner_id')
+        test_id = data.get('test_id')
+        results = data.get('results', [])
+
+        if not learner_id or not results:
+            return jsonify({'error': 'learner_id and results required'}), 400
+
+        db = get_db()
+
+        # Verify learner exists
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        # Calculate overall score
+        total_items = len(results)
+        correct_count = sum(1 for r in results if r.get('is_correct'))
+        overall_score = correct_count / total_items if total_items > 0 else 0.0
+
+        # Calculate per-domain scores
+        domain_results = {}
+        for result in results:
+            domain = result.get('kc_domain')
+            if domain:
+                if domain not in domain_results:
+                    domain_results[domain] = {'correct': 0, 'total': 0}
+                domain_results[domain]['total'] += 1
+                if result.get('is_correct'):
+                    domain_results[domain]['correct'] += 1
+
+        # Calculate domain scores (0.0 to 1.0)
+        domain_scores = {}
+        for domain, stats in domain_results.items():
+            domain_scores[domain] = stats['correct'] / stats['total'] if stats['total'] > 0 else 0.0
+
+        # Sort domains by score (ascending) to get priority order (weakest first)
+        domain_priority = sorted(domain_scores.keys(), key=lambda d: domain_scores[d])
+
+        # Identify strengths (>= 75%) and weaknesses (<= 50%)
+        strengths = [d for d, score in domain_scores.items() if score >= 0.75]
+        weaknesses = [d for d, score in domain_scores.items() if score <= 0.5]
+
+        # Generate recommendations
+        recommendations = []
+        domain_messages = {
+            'banking': 'Master banking fundamentals for everyday money management',
+            'credit': 'Build your credit knowledge to unlock financial opportunities',
+            'taxes': 'Learn tax basics to keep more of your hard-earned money',
+            'investing': 'Start your investing journey to grow your wealth',
+            'budgeting': 'Develop budgeting skills for financial stability',
+            'retirement': 'Plan for retirement to secure your future',
+            'insurance': 'Understand insurance to protect yourself',
+            'cryptocurrency': 'Explore cryptocurrency basics for the modern economy'
+        }
+
+        for domain in domain_priority[:3]:  # Top 3 priorities
+            score = domain_scores.get(domain, 0)
+            if score < 0.5:
+                urgency = "Start here!"
+            elif score < 0.75:
+                urgency = "Build on what you know"
+            else:
+                urgency = "Perfect your mastery"
+
+            recommendations.append({
+                'domain': domain,
+                'score': round(score, 2),
+                'urgency': urgency,
+                'message': domain_messages.get(domain, f'Focus on {domain} to improve')
+            })
+
+        # Initialize skill states for all tier-1 KCs with domain-adjusted mastery
+        tier1_skills = list(db.collections.knowledge_components.find({
+            'difficulty_tier': 1
+        }))
+
+        skills_initialized = 0
+        for skill in tier1_skills:
+            kc_id = str(skill['_id'])
+            kc_domain = skill.get('domain')
+
+            # Calculate initial mastery based on domain performance
+            base_mastery = domain_scores.get(kc_domain, 0.3)
+            # Map domain score (0-1) to mastery (0.1-0.7)
+            # Low score = low mastery (more to learn)
+            # High score = higher mastery (can skip basics)
+            p_mastery = 0.1 + (base_mastery * 0.6)  # Range: 0.1 to 0.7
+
+            # Determine status
+            if p_mastery >= 0.5:
+                status = 'in_progress'
+            else:
+                status = 'available'
+
+            # Check if learner already has this skill state
+            existing_state = db.collections.learner_skill_states.find_one({
+                'learner_id': ObjectId(learner_id),
+                'kc_id': ObjectId(kc_id)
+            })
+
+            if existing_state:
+                db.collections.learner_skill_states.update_one(
+                    {'_id': existing_state['_id']},
+                    {
+                        '$set': {
+                            'p_mastery': p_mastery,
+                            'status': status,
+                            'updated_at': datetime.utcnow()
+                        }
+                    }
+                )
+            else:
+                db.collections.create_learner_skill_state(
+                    learner_id=learner_id,
+                    kc_id=kc_id,
+                    status=status,
+                    p_mastery=p_mastery
+                )
+
+            skills_initialized += 1
+
+        # Log all diagnostic test interactions
+        for result in results:
+            try:
+                db.collections.interactions.insert_one({
+                    'learner_id': ObjectId(learner_id),
+                    'item_id': ObjectId(result['item_id']),
+                    'kc_id': ObjectId(result['kc_id']),
+                    'session_id': test_id,
+                    'is_correct': result.get('is_correct', False),
+                    'response_time_ms': result.get('response_time_ms', 0),
+                    'response_value': result.get('response_value', {}),
+                    'hint_used': False,
+                    'is_diagnostic_test': True,
+                    'created_at': datetime.utcnow()
+                })
+            except Exception:
+                pass
+
+        # Update learner profile with diagnostic results
+        db.collections.learners.update_one(
+            {'_id': ObjectId(learner_id)},
+            {
+                '$set': {
+                    'diagnostic_test_completed': True,
+                    'diagnostic_test_completed_at': datetime.utcnow(),
+                    'diagnostic_test_score': overall_score,
+                    'domain_mastery': domain_scores,
+                    'domain_priority': domain_priority,
+                    'updated_at': datetime.utcnow()
+                }
+            }
+        )
+
+        return jsonify({
+            'success': True,
+            'overall_score': round(overall_score, 2),
+            'correct_count': correct_count,
+            'total_items': total_items,
+            'domain_scores': {k: round(v, 2) for k, v in domain_scores.items()},
+            'domain_priority': domain_priority,
+            'strengths': strengths,
+            'weaknesses': weaknesses,
+            'recommendations': recommendations,
+            'skills_initialized': skills_initialized,
+            'message': f'Diagnostic complete! We\'ve identified your strengths and areas for growth.'
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@adaptive_bp.route('/diagnostic-results/<learner_id>', methods=['GET'])
+def get_diagnostic_results(learner_id):
+    """
+    Get stored diagnostic results for a learner.
+
+    Response:
+    {
+        "completed": true,
+        "domain_mastery": {...},
+        "domain_priority": [...],
+        "diagnostic_score": 0.67,
+        "completed_at": "2025-01-10T15:30:00Z"
+    }
+    """
+    try:
+        db = get_db()
+
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        return jsonify({
+            'completed': learner.get('diagnostic_test_completed', False),
+            'domain_mastery': learner.get('domain_mastery', {}),
+            'domain_priority': learner.get('domain_priority', []),
+            'diagnostic_score': learner.get('diagnostic_test_score'),
+            'completed_at': learner.get('diagnostic_test_completed_at').isoformat() if learner.get('diagnostic_test_completed_at') else None
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # ========== VOICE INTERACTION ENDPOINTS ==========
 
 @adaptive_bp.route('/voice/transcribe', methods=['POST'])

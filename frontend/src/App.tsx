@@ -17,6 +17,7 @@ import { HelpPage } from './pages/HelpPage';
 import LandingPage from './pages/LandingPage';
 import { AuthPage } from './pages/AuthPage';
 import { OnboardingPage } from './pages/OnboardingPage';
+import { DiagnosticPage } from './pages/DiagnosticPage';
 
 // Backend warm-up: Ping health endpoint on app load to wake up Render free tier
 const warmUpBackend = () => {
@@ -59,6 +60,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/diagnostic" element={<DiagnosticPage />} />
 
             {/* Lesson routes (no shell) */}
             <Route path="/lesson/:lessonId" element={<LessonPage />} />

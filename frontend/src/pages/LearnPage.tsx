@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Heart, Lock, ArrowLeft, TrendingUp, CheckCircle2, Circle } from 'lucide-react'
+import { Heart, Lock, ArrowLeft, TrendingUp, CheckCircle2, Circle, Target, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useUserStore } from '../stores/userStore'
-import { curriculumApi, Course } from '../services/api'
+import { curriculumApi, Course, diagnosticApi } from '../services/api'
 import { LanguageSelector } from '../components/LanguageSelector'
 import { useLanguage } from '../contexts/LanguageContext'
 import { TranslatedText } from '../components/TranslatedText'
@@ -24,6 +24,13 @@ const SECTION_AVATARS: Record<string, string> = {
     'financial_planning': 'https://api.dicebear.com/7.x/avataaars/svg?seed=planning&backgroundColor=c5cae9',
 }
 
+// Diagnostic results type
+interface DiagnosticResults {
+    completed: boolean;
+    domain_mastery: Record<string, number>;
+    domain_priority: string[];
+}
+
 export const LearnPage = () => {
     const { user, learnerId } = useUserStore()
     const navigate = useNavigate()
@@ -31,13 +38,40 @@ export const LearnPage = () => {
     const [courses, setCourses] = useState<Course[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [diagnosticResults, setDiagnosticResults] = useState<DiagnosticResults | null>(null)
 
     useEffect(() => {
-        const fetchCourses = async () => {
+        const fetchData = async () => {
             try {
                 setLoading(true)
-                const response = await curriculumApi.getCourses(learnerId || undefined)
-                setCourses(response.courses)
+
+                // Fetch courses and diagnostic results in parallel
+                const [coursesResponse, diagnosticResponse] = await Promise.all([
+                    curriculumApi.getCourses(learnerId || undefined),
+                    learnerId ? diagnosticApi.getResults(learnerId).catch(() => null) : Promise.resolve(null)
+                ])
+
+                let sortedCourses = coursesResponse.courses
+
+                // If diagnostic completed, reorder courses based on priority (weakest first)
+                if (diagnosticResponse?.completed && diagnosticResponse.domain_priority?.length > 0) {
+                    setDiagnosticResults(diagnosticResponse)
+
+                    // Create priority map (lower index = higher priority)
+                    const priorityMap = new Map<string, number>()
+                    diagnosticResponse.domain_priority.forEach((domain, index) => {
+                        priorityMap.set(domain, index)
+                    })
+
+                    // Sort courses: prioritized domains first, then by original order
+                    sortedCourses = [...coursesResponse.courses].sort((a, b) => {
+                        const aPriority = priorityMap.get(a.id) ?? 999
+                        const bPriority = priorityMap.get(b.id) ?? 999
+                        return aPriority - bPriority
+                    })
+                }
+
+                setCourses(sortedCourses)
                 setError(null)
             } catch (err) {
                 console.error('Failed to fetch courses:', err)
@@ -47,7 +81,7 @@ export const LearnPage = () => {
             }
         }
 
-        fetchCourses()
+        fetchData()
     }, [learnerId])
 
     if (!user) return null
@@ -122,19 +156,48 @@ export const LearnPage = () => {
                             const isUnlocked = course.unlocked
                             const progress = course.progress * 100
 
+                            // Check diagnostic results for this course
+                            const domainMastery = diagnosticResults?.domain_mastery?.[course.id]
+                            const priorityIndex = diagnosticResults?.domain_priority?.indexOf(course.id) ?? -1
+                            const isPriority = diagnosticResults?.completed && priorityIndex >= 0 && priorityIndex < 3 && domainMastery !== undefined && domainMastery < 0.5
+                            const isStrong = diagnosticResults?.completed && domainMastery !== undefined && domainMastery >= 0.75
+
                             return (
                                 <div
                                     key={course.id}
-                                    className={`rounded-2xl p-0 relative overflow-hidden border-2 transition-transform hover:translate-y-[-2px] ${isUnlocked
-                                        ? 'bg-[#dcfce7] border-[#dcfce7]'
-                                        : 'bg-white border-gray-200'
-                                        } ${isUnlocked ? '' : 'opacity-100'}`}
+                                    className={`rounded-2xl p-0 relative overflow-hidden border-2 transition-all hover:translate-y-[-2px] ${isPriority
+                                        ? 'bg-[#DDF4FF] border-[#1CB0F6] shadow-[0_0_20px_rgba(28,176,246,0.3)]'
+                                        : isUnlocked
+                                            ? 'bg-[#dcfce7] border-[#dcfce7]'
+                                            : 'bg-white border-gray-200'
+                                        } ${isStrong && !isPriority ? 'opacity-75' : ''}`}
                                 >
-                                    <div className={`p-4 pb-2 border-b-0 ${isUnlocked ? 'bg-[#dcfce7]' : 'bg-white'}`}>
+                                    {/* Priority/Strong badges */}
+                                    {isPriority && (
+                                        <div className="absolute top-3 right-3 z-10">
+                                            <div className="flex items-center gap-1.5 bg-[#1CB0F6] text-white px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide shadow-md">
+                                                <Target className="w-3.5 h-3.5" />
+                                                Recommended
+                                            </div>
+                                        </div>
+                                    )}
+                                    {isStrong && !isPriority && (
+                                        <div className="absolute top-3 right-3 z-10">
+                                            <div className="flex items-center gap-1.5 bg-[#58CC02] text-white px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide">
+                                                <Sparkles className="w-3.5 h-3.5" />
+                                                Strong
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className={`p-4 pb-2 border-b-0 ${isPriority ? 'bg-[#DDF4FF]' : isUnlocked ? 'bg-[#dcfce7]' : 'bg-white'}`}>
                                         <div className="flex items-center justify-between mb-1">
                                             <div className="flex items-center gap-2">
-                                                <span className={`text-xs font-extrabold tracking-widest uppercase ${isUnlocked ? 'text-green-600' : 'text-cyan-500'}`}>
+                                                <span className={`text-xs font-extrabold tracking-widest uppercase ${isPriority ? 'text-[#1899D6]' : isUnlocked ? 'text-green-600' : 'text-cyan-500'}`}>
                                                     {t('learn.section')} {index + 1} · {course.lessons_count} {t('learn.lessons')}
+                                                    {diagnosticResults?.completed && domainMastery !== undefined && (
+                                                        <span className="ml-2 text-gray-400">· {Math.round(domainMastery * 100)}% mastery</span>
+                                                    )}
                                                 </span>
                                             </div>
                                         </div>
@@ -148,24 +211,30 @@ export const LearnPage = () => {
                                         </p>
                                     </div>
 
-                                    <div className="px-4 pb-6 flex justify-between items-end relative z-10">
+                                    <div className={`px-4 pb-6 flex justify-between items-end relative z-10 ${isPriority ? 'bg-[#DDF4FF]' : ''}`}>
                                         <div className="flex-1 max-w-[60%] space-y-4">
                                             {isUnlocked ? (
                                                 <>
                                                     {/* Progress Bar */}
                                                     <div className="flex items-center gap-3 mb-6">
                                                         <div className="flex-1 h-4 bg-white rounded-full overflow-hidden shadow-inner">
-                                                            <div className="h-full bg-green-500 rounded-full transition-all duration-500" style={{ width: `${Math.max(progress, 5)}%` }} />
+                                                            <div
+                                                                className={`h-full rounded-full transition-all duration-500 ${isPriority ? 'bg-[#1CB0F6]' : 'bg-green-500'}`}
+                                                                style={{ width: `${Math.max(progress, 5)}%` }}
+                                                            />
                                                         </div>
-                                                        <span className="text-sm font-bold text-green-600">{Math.round(progress)}%</span>
+                                                        <span className={`text-sm font-bold ${isPriority ? 'text-[#1899D6]' : 'text-green-600'}`}>{Math.round(progress)}%</span>
                                                         <img src="/trophy.svg" alt="Trophy" className="w-12 h-12 drop-shadow-sm" />
                                                     </div>
 
                                                     <button
                                                         onClick={() => navigate(`/section/${course.id}`)}
-                                                        className="w-full py-3.5 bg-green-500 text-white font-bold text-sm rounded-xl border-b-4 border-green-600 hover:bg-green-400 hover:border-green-500 active:border-b-0 active:translate-y-1 transition-all uppercase tracking-widest shadow-sm"
+                                                        className={`w-full py-3.5 text-white font-bold text-sm rounded-xl border-b-4 active:border-b-0 active:translate-y-1 transition-all uppercase tracking-widest shadow-sm ${isPriority
+                                                            ? 'bg-[#1CB0F6] border-[#1899D6] hover:bg-[#14B8FF] hover:border-[#1899D6]'
+                                                            : 'bg-green-500 border-green-600 hover:bg-green-400 hover:border-green-500'
+                                                            }`}
                                                     >
-                                                        {progress > 0 ? t('common.continue') : t('common.start')}
+                                                        {isPriority ? 'Start Now' : progress > 0 ? t('common.continue') : t('common.start')}
                                                     </button>
                                                 </>
                                             ) : (
@@ -184,16 +253,24 @@ export const LearnPage = () => {
                                         {/* Mascot Area */}
                                         <div className="flex flex-col items-center justify-end w-32 md:w-40 relative -mb-2">
                                             {/* Speech Bubble */}
-                                            {isUnlocked && index === 0 && (
+                                            {isUnlocked && (isPriority || index === 0) && (
                                                 <motion.div
                                                     initial={{ opacity: 0, scale: 0.8, y: 10 }}
                                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                                     className="absolute -top-16 -left-4 z-20"
                                                 >
-                                                    <div className="relative bg-white border-2 border-gray-200 px-4 py-2 rounded-2xl shadow-sm">
-                                                        <p className="text-sm font-bold text-gray-700 whitespace-nowrap">{t('learn.lets_go')}</p>
-                                                        <div className="absolute -bottom-[9px] right-6 w-4 h-4 bg-white border-r-2 border-b-2 border-gray-200 transform rotate-45"></div>
-                                                        <div className="absolute -bottom-[2px] right-6 w-4 h-2 bg-white transform"></div>
+                                                    <div className={`relative px-4 py-2 rounded-2xl shadow-sm ${isPriority
+                                                        ? 'bg-[#1CB0F6] border-2 border-[#1899D6]'
+                                                        : 'bg-white border-2 border-gray-200'
+                                                        }`}>
+                                                        <p className={`text-sm font-bold whitespace-nowrap ${isPriority ? 'text-white' : 'text-gray-700'}`}>
+                                                            {isPriority ? 'Focus here!' : t('learn.lets_go')}
+                                                        </p>
+                                                        <div className={`absolute -bottom-[9px] right-6 w-4 h-4 border-r-2 border-b-2 transform rotate-45 ${isPriority
+                                                            ? 'bg-[#1CB0F6] border-[#1899D6]'
+                                                            : 'bg-white border-gray-200'
+                                                            }`}></div>
+                                                        <div className={`absolute -bottom-[2px] right-6 w-4 h-2 ${isPriority ? 'bg-[#1CB0F6]' : 'bg-white'}`}></div>
                                                     </div>
                                                 </motion.div>
                                             )}
