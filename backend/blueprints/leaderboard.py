@@ -133,7 +133,11 @@ def get_leaderboard():
                 pass
 
         # Get all learners with their total XP to determine leagues
-        all_learners = list(db.collections.learners.find({}, {'total_xp': 1, 'display_name': 1, 'streak_count': 1}))
+        # Exclude mock/test users in production
+        all_learners = list(db.collections.learners.find(
+            {'is_mock': {'$ne': True}},  # Exclude mock users
+            {'total_xp': 1, 'display_name': 1, 'streak_count': 1}
+        ))
         learner_xp_map = {str(l['_id']): l.get('total_xp', 0) for l in all_learners}
         learner_info_map = {str(l['_id']): l for l in all_learners}
 
@@ -263,7 +267,7 @@ def get_learner_ranking(learner_id):
         rank = (result[0]['ahead'] if result else 0) + 1
 
         # Get all learners in the same league for promotion zone calculation
-        all_learners = list(db.collections.learners.find({}, {'total_xp': 1}))
+        all_learners = list(db.collections.learners.find({'is_mock': {'$ne': True}}, {'total_xp': 1}))
         league_learners = []
         for l in all_learners:
             l_xp = l.get('total_xp', 0)
@@ -363,9 +367,12 @@ def get_rankings_around_learner(learner_id):
 
         nearby_rankings = all_rankings[start_index:end_index]
 
-        # Get learner details
+        # Get learner details (exclude mock users)
         learner_ids = [r['_id'] for r in nearby_rankings]
-        learners = list(db.collections.learners.find({'_id': {'$in': learner_ids}}))
+        learners = list(db.collections.learners.find({
+            '_id': {'$in': learner_ids},
+            'is_mock': {'$ne': True}
+        }))
         learner_map = {str(l['_id']): l for l in learners}
 
         rankings = []
@@ -441,8 +448,11 @@ def get_my_league(learner_id):
         week_start = get_start_of_week()
         week_end = week_start + timedelta(days=7) - timedelta(seconds=1)
 
-        # Get all learners and filter by league
-        all_learners = list(db.collections.learners.find({}, {'total_xp': 1, 'display_name': 1, 'streak_count': 1}))
+        # Get all learners and filter by league (exclude mock users)
+        all_learners = list(db.collections.learners.find(
+            {'is_mock': {'$ne': True}},
+            {'total_xp': 1, 'display_name': 1, 'streak_count': 1}
+        ))
         learner_xp_map = {str(l['_id']): l.get('total_xp', 0) for l in all_learners}
         learner_info_map = {str(l['_id']): l for l in all_learners}
 

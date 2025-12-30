@@ -380,7 +380,9 @@ export const LearnPage = () => {
                             </div>
                         </div>
 
-                        {/* Immigrant Journey Tracker */}
+                        {/* Immigrant Journey Tracker - Only show for non-citizens */}
+                        {personalization && personalization.visa_type &&
+                         !['CITIZEN', 'GREEN_CARD'].includes(personalization.visa_type) && (
                         <div className="border-2 border-gray-200 rounded-2xl p-4 bg-white hover:bg-gray-50 transition-colors">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="font-bold text-gray-900">My American Journey</h3>
@@ -414,17 +416,18 @@ export const LearnPage = () => {
                                 </button>
                             </div>
                         </div>
+                        )}
 
                         {/* Due Reviews Widget */}
                         {reviewStats && reviewStats.total > 0 && (
-                            <div className="border-2 border-purple-200 rounded-2xl p-0 overflow-hidden bg-purple-50 hover:bg-purple-100 transition-colors cursor-pointer group shadow-sm" onClick={() => navigate('/review')}>
+                            <div className="border-2 border-[#DDF4FF] rounded-2xl p-0 overflow-hidden bg-[#F0F9FF] hover:bg-[#DDF4FF] transition-colors cursor-pointer group shadow-sm" onClick={() => navigate('/review')}>
                                 <div className="p-4">
                                     <div className="flex items-center justify-between mb-3">
                                         <h3 className="font-extrabold text-gray-800 flex items-center gap-2">
-                                            <Brain className="w-5 h-5 text-purple-600" />
+                                            <RotateCcw className="w-5 h-5 text-[#1CB0F6]" />
                                             Review Time
                                         </h3>
-                                        <div className="px-2 py-1 bg-purple-600 rounded-lg text-[10px] font-bold text-white uppercase tracking-wide">
+                                        <div className="px-2 py-1 bg-[#1CB0F6] rounded-lg text-[10px] font-bold text-white uppercase tracking-wide">
                                             {reviewStats.total} DUE
                                         </div>
                                     </div>
@@ -435,7 +438,7 @@ export const LearnPage = () => {
                                         {reviewStats.due === 0 && reviewStats.mistakes === 0 && 'Practice your weak areas'}
                                     </p>
                                     <button
-                                        className="w-full py-2.5 px-3 bg-purple-600 border-b-4 border-purple-700 rounded-xl text-white text-xs font-bold uppercase tracking-wide hover:bg-purple-500 active:border-b-0 active:translate-y-0.5 transition-all text-center flex items-center justify-center gap-2"
+                                        className="w-full py-2.5 px-3 bg-[#1CB0F6] border-b-4 border-[#1899D6] rounded-xl text-white text-xs font-bold uppercase tracking-wide hover:bg-[#47C1FF] active:border-b-0 active:translate-y-0.5 transition-all text-center flex items-center justify-center gap-2"
                                     >
                                         <RotateCcw className="w-4 h-4" />
                                         Start Review

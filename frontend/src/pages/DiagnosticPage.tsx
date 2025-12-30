@@ -7,17 +7,18 @@ import { diagnosticApi, DiagnosticItem, DiagnosticResult, DiagnosticResponse } f
 import confetti from 'canvas-confetti'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
+import { LottieAnimation } from '../components/LottieAnimation'
 
-// Domain display names and colors
-const DOMAIN_CONFIG: Record<string, { name: string; color: string; bgColor: string; emoji: string }> = {
-  banking: { name: 'Banking', color: '#58CC02', bgColor: '#D7FFB8', emoji: '🏦' },
-  credit: { name: 'Credit', color: '#1CB0F6', bgColor: '#DDF4FF', emoji: '💳' },
-  taxes: { name: 'Taxes', color: '#8549BA', bgColor: '#F3E5FF', emoji: '📋' },
-  investing: { name: 'Investing', color: '#FF9600', bgColor: '#FFF0D5', emoji: '📈' },
-  budgeting: { name: 'Budgeting', color: '#FF4B4B', bgColor: '#FFDFE0', emoji: '💰' },
-  retirement: { name: 'Retirement', color: '#FFC800', bgColor: '#FFF4CC', emoji: '🏖️' },
-  insurance: { name: 'Insurance', color: '#1899D6', bgColor: '#DDF4FF', emoji: '🛡️' },
-  cryptocurrency: { name: 'Crypto', color: '#FF9600', bgColor: '#FFF0D5', emoji: '🪙' },
+// Domain display names, colors, and Lottie animations
+const DOMAIN_CONFIG: Record<string, { name: string; color: string; bgColor: string; lottieFile: string }> = {
+  banking: { name: 'Banking', color: '#58CC02', bgColor: '#D7FFB8', lottieFile: 'banking.json' },
+  credit: { name: 'Credit', color: '#1CB0F6', bgColor: '#DDF4FF', lottieFile: 'credit.json' },
+  taxes: { name: 'Taxes', color: '#8549BA', bgColor: '#F3E5FF', lottieFile: 'taxes.json' },
+  investing: { name: 'Investing', color: '#FF9600', bgColor: '#FFF0D5', lottieFile: 'investing.json' },
+  budgeting: { name: 'Budgeting', color: '#FF4B4B', bgColor: '#FFDFE0', lottieFile: 'budgeting.json' },
+  retirement: { name: 'Retirement', color: '#FFC800', bgColor: '#FFF4CC', lottieFile: 'retirement.json' },
+  insurance: { name: 'Insurance', color: '#1899D6', bgColor: '#DDF4FF', lottieFile: 'insurance.json' },
+  cryptocurrency: { name: 'Crypto', color: '#FF9600', bgColor: '#FFF0D5', lottieFile: 'crypto.json' },
 }
 
 type DiagnosticStep = 'intro' | 'quiz' | 'results'
@@ -139,7 +140,7 @@ export const DiagnosticPage = () => {
 
   const currentItem = items[currentIndex]
   const progress = items.length > 0 ? ((currentIndex) / items.length) * 100 : 0
-  const domainConfig = currentItem ? DOMAIN_CONFIG[currentItem.kc_domain] || { name: currentItem.kc_domain, color: '#737373', bgColor: '#F0F0F0', emoji: '📚' } : null
+  const domainConfig = currentItem ? DOMAIN_CONFIG[currentItem.kc_domain] || { name: currentItem.kc_domain, color: '#737373', bgColor: '#F0F0F0', lottieFile: 'default.json' } : null
 
   // Render intro screen
   if (step === 'intro') {
@@ -249,14 +250,25 @@ export const DiagnosticPage = () => {
               {Object.entries(diagnosticResults.domain_scores)
                 .sort(([, a], [, b]) => a - b) // Sort by score ascending (weakest first)
                 .map(([domain, score]) => {
-                  const config = DOMAIN_CONFIG[domain] || { name: domain, color: '#737373', bgColor: '#F0F0F0', emoji: '📚' }
+                  const config = DOMAIN_CONFIG[domain] || { name: domain, color: '#737373', bgColor: '#F0F0F0', lottieFile: 'default.json' }
                   const percentage = Math.round(score * 100)
                   const isWeak = score <= 0.5
                   const isStrong = score >= 0.75
 
                   return (
                     <div key={domain} className="flex items-center gap-3">
-                      <span className="text-xl">{config.emoji}</span>
+                      {/* Lottie animation for domain icon */}
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden" style={{ backgroundColor: config.bgColor }}>
+                        <LottieAnimation
+                          src={config.lottieFile}
+                          className="w-full h-full"
+                          loop={true}
+                          autoplay={true}
+                          fallback={
+                            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: config.color }} />
+                          }
+                        />
+                      </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-bold text-[14px] text-[#4B4B4B]">{config.name}</span>
@@ -296,12 +308,12 @@ export const DiagnosticPage = () => {
               <h3 className="font-bold text-[15px] text-[#1899D6] mb-3">Your Personalized Path</h3>
               <div className="space-y-2">
                 {diagnosticResults.recommendations.map((rec, index) => {
-                  const config = DOMAIN_CONFIG[rec.domain] || { name: rec.domain, emoji: '📚' }
+                  const config = DOMAIN_CONFIG[rec.domain] || { name: rec.domain, color: '#737373', bgColor: '#F0F0F0', lottieFile: 'default.json' }
                   return (
                     <div key={rec.domain} className="flex items-start gap-2">
                       <span className="font-bold text-[#1CB0F6]">{index + 1}.</span>
                       <div>
-                        <span className="font-bold text-[#4B4B4B]">{config.emoji} {config.name}</span>
+                        <span className="font-bold text-[#4B4B4B]">{config.name}</span>
                         <span className="text-[#737373]"> - {rec.message}</span>
                       </div>
                     </div>
@@ -360,7 +372,19 @@ export const DiagnosticPage = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-bold text-[13px]"
             style={{ backgroundColor: domainConfig.bgColor, color: domainConfig.color }}
           >
-            {domainConfig.emoji} {domainConfig.name}
+            {/* Lottie animation for domain icon */}
+            <div className="w-5 h-5 rounded-full flex items-center justify-center overflow-hidden">
+              <LottieAnimation
+                src={domainConfig.lottieFile}
+                className="w-full h-full"
+                loop={true}
+                autoplay={true}
+                fallback={
+                  <span className="w-5 h-5 rounded-full" style={{ backgroundColor: domainConfig.color, opacity: 0.3 }} />
+                }
+              />
+            </div>
+            {domainConfig.name}
           </span>
         </div>
       )}

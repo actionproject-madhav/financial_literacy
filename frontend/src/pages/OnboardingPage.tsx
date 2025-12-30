@@ -7,6 +7,7 @@ import { Card } from '../components/ui/Card';
 import { learnerApi, authApi } from '../services/api';
 import { useUserStore } from '../stores/userStore';
 import { ChevronLeft, ChevronRight, Check, Globe, Briefcase, Target, Clock, Sparkles } from 'lucide-react';
+import { LottieAnimation } from '../components/LottieAnimation';
 
 // Step types
 type OnboardingStep =
@@ -40,10 +41,11 @@ interface OptionCardProps {
   description?: string;
   selected: boolean;
   onClick: () => void;
-  emoji?: string;
+  emoji?: string;  // For country flags (keep these)
+  lottieFile?: string;  // For Lottie animations
 }
 
-const OptionCard: React.FC<OptionCardProps> = ({ icon, title, description, selected, onClick, emoji }) => (
+const OptionCard: React.FC<OptionCardProps> = ({ icon, title, description, selected, onClick, emoji, lottieFile }) => (
   <motion.button
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
@@ -57,7 +59,21 @@ const OptionCard: React.FC<OptionCardProps> = ({ icon, title, description, selec
     `}
   >
     <div className="flex items-center gap-3">
+      {/* Country flags use emoji, experience levels use Lottie */}
       {emoji && <span className="text-2xl">{emoji}</span>}
+      {lottieFile && (
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden ${selected ? 'bg-[#1CB0F6]' : 'bg-[#E5E5E5]'}`}>
+          <LottieAnimation
+            src={lottieFile}
+            className="w-full h-full"
+            loop={true}
+            autoplay={true}
+            fallback={
+              <div className={`w-4 h-4 rounded-full ${selected ? 'bg-white' : 'bg-[#AFAFAF]'}`} />
+            }
+          />
+        </div>
+      )}
       {icon && <span className={`${selected ? 'text-[#1CB0F6]' : 'text-[#737373]'}`}>{icon}</span>}
       <div className="flex-1">
         <p className={`font-bold text-[15px] ${selected ? 'text-[#1899D6]' : 'text-[#4B4B4B]'}`}>
@@ -79,12 +95,12 @@ const OptionCard: React.FC<OptionCardProps> = ({ icon, title, description, selec
 // Multi-select option for goals
 interface GoalOptionProps {
   title: string;
-  emoji: string;
+  lottieFile?: string;
   selected: boolean;
   onClick: () => void;
 }
 
-const GoalOption: React.FC<GoalOptionProps> = ({ title, emoji, selected, onClick }) => (
+const GoalOption: React.FC<GoalOptionProps> = ({ title, lottieFile, selected, onClick }) => (
   <motion.button
     whileTap={{ scale: 0.95 }}
     onClick={onClick}
@@ -97,7 +113,24 @@ const GoalOption: React.FC<GoalOptionProps> = ({ title, emoji, selected, onClick
       active:shadow-none active:translate-y-[3px]
     `}
   >
-    <span className="text-xl">{emoji}</span>
+    {/* Lottie animation for goal icons */}
+    {lottieFile ? (
+      <div className={`w-6 h-6 rounded-md flex items-center justify-center overflow-hidden ${selected ? 'bg-[#58CC02]' : 'bg-[#E5E5E5]'}`}>
+        <LottieAnimation
+          src={lottieFile}
+          className="w-full h-full"
+          loop={true}
+          autoplay={true}
+          fallback={
+            <div className={`w-3 h-3 rounded-full ${selected ? 'bg-white' : 'bg-[#AFAFAF]'}`} />
+          }
+        />
+      </div>
+    ) : (
+      <div className={`w-6 h-6 rounded-md flex items-center justify-center ${selected ? 'bg-[#58CC02]' : 'bg-[#E5E5E5]'}`}>
+        <div className={`w-3 h-3 rounded-full ${selected ? 'bg-white' : 'bg-[#AFAFAF]'}`} />
+      </div>
+    )}
     <span className={`font-bold text-[14px] ${selected ? 'text-[#46A302]' : 'text-[#4B4B4B]'}`}>
       {title}
     </span>
@@ -199,24 +232,24 @@ const VISA_TYPES = [
   { code: 'OTHER', name: 'Other', description: 'Different visa type' },
 ];
 
-// Experience levels
+// Experience levels with Lottie animations
 const EXPERIENCE_LEVELS = [
-  { code: 'novice', name: 'Just Starting', description: 'New to US financial system', emoji: '🌱' },
-  { code: 'beginner', name: 'Beginner', description: 'Know some basics', emoji: '📚' },
-  { code: 'intermediate', name: 'Intermediate', description: 'Have some experience', emoji: '📊' },
-  { code: 'advanced', name: 'Advanced', description: 'Comfortable with finances', emoji: '🎯' },
+  { code: 'novice', name: 'Just Starting', description: 'New to US financial system', lottieFile: 'seedling.json' },
+  { code: 'beginner', name: 'Beginner', description: 'Know some basics', lottieFile: 'book.json' },
+  { code: 'intermediate', name: 'Intermediate', description: 'Have some experience', lottieFile: 'chart.json' },
+  { code: 'advanced', name: 'Advanced', description: 'Comfortable with finances', lottieFile: 'target.json' },
 ];
 
-// Financial goals
+// Financial goals with Lottie animations
 const FINANCIAL_GOALS = [
-  { code: 'emergency_fund', name: 'Emergency Fund', emoji: '🛡️' },
-  { code: 'credit_score', name: 'Build Credit', emoji: '📈' },
-  { code: 'retirement', name: 'Retirement', emoji: '🏖️' },
-  { code: 'home_purchase', name: 'Buy a Home', emoji: '🏠' },
-  { code: 'investing', name: 'Start Investing', emoji: '💹' },
-  { code: 'debt_payoff', name: 'Pay Off Debt', emoji: '💳' },
-  { code: 'tax_planning', name: 'Tax Planning', emoji: '📋' },
-  { code: 'remittances', name: 'Send Money Home', emoji: '💸' },
+  { code: 'emergency_fund', name: 'Emergency Fund', lottieFile: 'shield.json' },
+  { code: 'credit_score', name: 'Build Credit', lottieFile: 'growth.json' },
+  { code: 'retirement', name: 'Retirement', lottieFile: 'beach.json' },
+  { code: 'home_purchase', name: 'Buy a Home', lottieFile: 'house.json' },
+  { code: 'investing', name: 'Start Investing', lottieFile: 'stocks.json' },
+  { code: 'debt_payoff', name: 'Pay Off Debt', lottieFile: 'card.json' },
+  { code: 'tax_planning', name: 'Tax Planning', lottieFile: 'document.json' },
+  { code: 'remittances', name: 'Send Money Home', lottieFile: 'transfer.json' },
 ];
 
 // Daily goal options
@@ -570,8 +603,9 @@ export const OnboardingPage: React.FC = () => {
                 transition={{ duration: 0.3 }}
               >
                 <div className="text-center mb-6">
+                  {/* LOTTIE PLACEHOLDER: Need globe/world animation */}
                   <div className="w-14 h-14 bg-[#D7FFB8] rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">🌍</span>
+                    <Globe className="w-7 h-7 text-[#58CC02]" />
                   </div>
                   <h2 className="text-[23px] font-bold text-[#4B4B4B]" style={{ lineHeight: '32px' }}>
                     Where are you from?
@@ -664,8 +698,19 @@ export const OnboardingPage: React.FC = () => {
                 transition={{ duration: 0.3 }}
               >
                 <div className="text-center mb-6">
-                  <div className="w-14 h-14 bg-[#FFF0D5] rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">📊</span>
+                  {/* Lottie animation for experience level */}
+                  <div className="w-14 h-14 bg-[#FFF0D5] rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                    <LottieAnimation
+                      src="chart.json"
+                      className="w-full h-full"
+                      loop={true}
+                      autoplay={true}
+                      fallback={
+                        <div className="w-7 h-7 bg-[#F59E0B] rounded-lg flex items-center justify-center">
+                          <div className="w-3 h-3 bg-white rounded-full" />
+                        </div>
+                      }
+                    />
                   </div>
                   <h2 className="text-[23px] font-bold text-[#4B4B4B]" style={{ lineHeight: '32px' }}>
                     How familiar are you with US finances?
@@ -679,7 +724,7 @@ export const OnboardingPage: React.FC = () => {
                   {EXPERIENCE_LEVELS.map((level) => (
                     <OptionCard
                       key={level.code}
-                      emoji={level.emoji}
+                      lottieFile={level.lottieFile}
                       title={level.name}
                       description={level.description}
                       selected={data.financial_experience_level === level.code}
@@ -727,7 +772,7 @@ export const OnboardingPage: React.FC = () => {
                   {FINANCIAL_GOALS.map((goal) => (
                     <GoalOption
                       key={goal.code}
-                      emoji={goal.emoji}
+                      lottieFile={goal.lottieFile}
                       title={goal.name}
                       selected={data.financial_goals.includes(goal.code)}
                       onClick={() => toggleGoal(goal.code)}
