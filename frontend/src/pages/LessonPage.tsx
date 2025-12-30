@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Heart, Check, Flag, Volume2, Mic, MicOff } from 'lucide-react'
+import { X, Heart, Check, Flag, Volume2, Mic, MicOff, Loader2 } from 'lucide-react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useUserStore } from '../stores/userStore'
-import { curriculumApi, adaptiveApi, Question } from '../services/api'
+import { curriculumApi, adaptiveApi, voiceApi, Question } from '../services/api'
 import confetti from 'canvas-confetti'
 import { CelebrationOverlay } from '../components/CelebrationOverlay'
 
@@ -53,24 +53,35 @@ export const LessonPage = () => {
   const [sessionId, setSessionId] = useState<string>('')
   const [startTime, setStartTime] = useState<number>(Date.now())
 
-  // Voice accessibility states
+  // Voice states
   const [isRecording, setIsRecording] = useState(false)
+  const [isTranscribing, setIsTranscribing] = useState(false)
   const [voiceAnswer, setVoiceAnswer] = useState('')
+  const [voiceConfidence, setVoiceConfidence] = useState<number | null>(null)
   const [isSpeaking, setIsSpeaking] = useState(false)
+  const [isLoadingTTS, setIsLoadingTTS] = useState(false)
+  const [audioBase64, setAudioBase64] = useState<string | null>(null)
+
+  // Celebration and progress states
   const [showCelebration, setShowCelebration] = useState(false)
   const [correctAnswers, setCorrectAnswers] = useState(0)
   const [totalQuizQuestions, setTotalQuizQuestions] = useState(0)
   const [streak, setStreak] = useState(0)
   const [showStreakMilestone, setShowStreakMilestone] = useState(false)
 
+  // Audio recording refs
+  const mediaRecorder = useRef<MediaRecorder | null>(null)
+  const audioChunks = useRef<Blob[]>([])
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
   // Language configuration
   type LanguageCode = 'en' | 'hi' | 'ne'
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageCode>('en')
 
-  const languages: Record<LanguageCode, { name: string; flag: string; speechCode: string; nativeName: string }> = {
-    en: { name: 'English', nativeName: 'English', flag: 'https://flagcdn.com/w40/us.png', speechCode: 'en-US' },
-    hi: { name: 'Hindi', nativeName: 'हिन्दी', flag: 'https://flagcdn.com/w40/in.png', speechCode: 'hi-IN' },
-    ne: { name: 'Nepali', nativeName: 'नेपाली', flag: 'https://flagcdn.com/w40/np.png', speechCode: 'ne-NP' }
+  const languages: Record<LanguageCode, { name: string; flag: string; nativeName: string }> = {
+    en: { name: 'English', nativeName: 'English', flag: 'https://flagcdn.com/w40/us.png' },
+    hi: { name: 'Hindi', nativeName: 'हिन्दी', flag: 'https://flagcdn.com/w40/in.png' },
+    ne: { name: 'Nepali', nativeName: 'नेपाली', flag: 'https://flagcdn.com/w40/np.png' }
   }
 
   const currentLang = languages[selectedLanguage]
@@ -127,61 +138,150 @@ export const LessonPage = () => {
     setSelectedLanguage(langOrder[nextIndex])
   }
 
-  // Text-to-Speech: Read the question aloud in selected language
-  const speakQuestion = (text: string) => {
+  // Text-to-Speech using backend ElevenLabs API
+  const speakQuestion = async (text: string) => {
+    if (isSpeaking || isLoadingTTS) return
+
+    setIsLoadingTTS(true)
+
+    try {
+      // Use backend TTS with ElevenLabs
+      const result = await voiceApi.generateTTS(text, selectedLanguage)
+
+      if (result?.audio_base64) {
+        // Play the audio
+        const audio = new Audio(result.audio_base64)
+        audioRef.current = audio
+
+        audio.onplay = () => setIsSpeaking(true)
+        audio.onended = () => setIsSpeaking(false)
+        audio.onerror = () => {
+          setIsSpeaking(false)
+          // Fallback to browser TTS
+          fallbackBrowserTTS(text)
+        }
+
+        await audio.play()
+      } else {
+        // Fallback to browser TTS
+        fallbackBrowserTTS(text)
+      }
+    } catch (err) {
+      console.error('TTS error:', err)
+      fallbackBrowserTTS(text)
+    } finally {
+      setIsLoadingTTS(false)
+    }
+  }
+
+  // Fallback browser TTS
+  const fallbackBrowserTTS = (text: string) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel()
       const utterance = new SpeechSynthesisUtterance(text)
-      utterance.lang = currentLang.speechCode
+      utterance.lang = selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'hi' ? 'hi-IN' : 'ne-NP'
       utterance.rate = 0.9
-      utterance.pitch = 1
       utterance.onstart = () => setIsSpeaking(true)
       utterance.onend = () => setIsSpeaking(false)
       window.speechSynthesis.speak(utterance)
     }
   }
 
-  // Speech-to-Text: Record user's voice answer in selected language
-  const toggleVoiceRecording = () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Voice recognition is not supported in this browser. Please use Chrome.')
-      return
+  // Stop speaking
+  const stopSpeaking = () => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
     }
-
-    if (isRecording) {
-      setIsRecording(false)
-      return
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel()
     }
-
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    const recognition = new SpeechRecognition()
-    recognition.continuous = false
-    recognition.interimResults = false
-    recognition.lang = currentLang.speechCode
-
-    recognition.onstart = () => {
-      setIsRecording(true)
-      setVoiceAnswer('')
-    }
-
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript
-      setVoiceAnswer(transcript)
-      setIsRecording(false)
-    }
-
-    recognition.onerror = () => {
-      setIsRecording(false)
-    }
-
-    recognition.onend = () => {
-      setIsRecording(false)
-    }
-
-    recognition.start()
+    setIsSpeaking(false)
   }
 
-  // Log interaction to backend
+  // Start voice recording using MediaRecorder
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100,
+        },
+      })
+
+      mediaRecorder.current = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus',
+      })
+
+      audioChunks.current = []
+
+      mediaRecorder.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunks.current.push(event.data)
+        }
+      }
+
+      mediaRecorder.current.onstop = async () => {
+        // Create blob and convert to base64
+        const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' })
+
+        // Convert to base64
+        const reader = new FileReader()
+        reader.onloadend = async () => {
+          const base64 = reader.result as string
+          setAudioBase64(base64)
+
+          // Transcribe using backend ElevenLabs
+          setIsTranscribing(true)
+          try {
+            const result = await voiceApi.transcribe(base64, selectedLanguage)
+            if (result) {
+              setVoiceAnswer(result.transcription)
+              setVoiceConfidence(result.confidence)
+            }
+          } catch (err) {
+            console.error('Transcription error:', err)
+            setVoiceAnswer('(Transcription failed - please try again)')
+          } finally {
+            setIsTranscribing(false)
+          }
+        }
+        reader.readAsDataURL(audioBlob)
+
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop())
+      }
+
+      mediaRecorder.current.start(100)
+      setIsRecording(true)
+      setVoiceAnswer('')
+      setVoiceConfidence(null)
+      setAudioBase64(null)
+    } catch (err) {
+      console.error('Recording error:', err)
+      alert('Microphone access denied. Please allow microphone access.')
+    }
+  }
+
+  // Stop voice recording
+  const stopRecording = () => {
+    if (mediaRecorder.current && isRecording) {
+      mediaRecorder.current.stop()
+      setIsRecording(false)
+    }
+  }
+
+  // Toggle recording
+  const toggleVoiceRecording = () => {
+    if (isRecording) {
+      stopRecording()
+    } else {
+      startRecording()
+    }
+  }
+
+  // Log interaction to backend (for multiple choice)
   const logInteraction = async (stepData: QuizStep, isCorrect: boolean) => {
     if (!learnerId) return
 
@@ -202,6 +302,33 @@ export const LessonPage = () => {
     } catch (err) {
       console.error('Failed to log interaction:', err)
     }
+  }
+
+  // Submit voice answer to backend
+  const submitVoiceAnswer = async (stepData: QuizStep): Promise<{ isCorrect: boolean; matchedChoice: number | null } | null> => {
+    if (!learnerId || !audioBase64) return null
+
+    try {
+      const result = await voiceApi.submitVoiceAnswer({
+        learner_id: learnerId,
+        item_id: stepData.itemId,
+        kc_id: stepData.kcId,
+        session_id: sessionId,
+        audio_base64: audioBase64,
+        language_hint: selectedLanguage
+      })
+
+      if (result) {
+        return {
+          isCorrect: result.is_correct,
+          matchedChoice: result.matched_choice
+        }
+      }
+    } catch (err) {
+      console.error('Voice submission error:', err)
+    }
+
+    return null
   }
 
   if (loading) {
@@ -238,17 +365,17 @@ export const LessonPage = () => {
     if (status !== 'idle') {
       // Moving to next step
       if (currentStep < steps.length - 1) {
-        // If we just finished showing a streak milestone, just move to next step
         if (showStreakMilestone) {
           setShowStreakMilestone(false)
           setCurrentStep(currentStep + 1)
           setStatus('idle')
           setSelectedOption(null)
+          setVoiceAnswer('')
+          setAudioBase64(null)
           setStartTime(Date.now())
           return
         }
 
-        // Check if we should show a streak milestone
         if (status === 'correct' && streak === 3) {
           setShowStreakMilestone(true)
           return
@@ -257,6 +384,8 @@ export const LessonPage = () => {
         setCurrentStep(currentStep + 1)
         setStatus('idle')
         setSelectedOption(null)
+        setVoiceAnswer('')
+        setAudioBase64(null)
         setStartTime(Date.now())
       } else {
         // Complete Lesson
@@ -284,10 +413,40 @@ export const LessonPage = () => {
 
     if (currentStepData.type === 'quiz') {
       setTotalQuizQuestions(prev => prev + 1)
-      const isCorrect = selectedOption === currentStepData.correct
 
-      // Log interaction to backend
-      await logInteraction(currentStepData, isCorrect)
+      let isCorrect = false
+
+      // Check if we have a voice answer to submit
+      if (audioBase64 && voiceAnswer) {
+        // Submit voice answer to backend for semantic matching
+        const voiceResult = await submitVoiceAnswer(currentStepData)
+
+        if (voiceResult) {
+          isCorrect = voiceResult.isCorrect
+          if (voiceResult.matchedChoice !== null) {
+            setSelectedOption(voiceResult.matchedChoice)
+          }
+        } else {
+          // Voice submission failed, fall back to multiple choice if selected
+          if (selectedOption !== null) {
+            isCorrect = selectedOption === currentStepData.correct
+            await logInteraction(currentStepData, isCorrect)
+          } else {
+            // No valid answer
+            setStatus('wrong')
+            setStreak(0)
+            loseHeart()
+            return
+          }
+        }
+      } else if (selectedOption !== null) {
+        // Regular multiple choice answer
+        isCorrect = selectedOption === currentStepData.correct
+        await logInteraction(currentStepData, isCorrect)
+      } else {
+        // No answer selected
+        return
+      }
 
       if (isCorrect) {
         setStatus('correct')
@@ -302,7 +461,7 @@ export const LessonPage = () => {
         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3')
         audio.play().catch(() => { })
 
-        // Insert a remedial content step
+        // Insert explanation step
         const explanationStep: ContentStep = {
           type: 'content',
           content: currentStepData.explanation
@@ -330,9 +489,13 @@ export const LessonPage = () => {
     navigate(`/section/${lesson.domain}`)
   }
 
+  const canCheck = status !== 'idle' ||
+    currentStepData.type === 'content' ||
+    selectedOption !== null ||
+    (voiceAnswer && audioBase64)
+
   return (
     <>
-      {/* Celebration Overlay */}
       <CelebrationOverlay
         isVisible={showCelebration}
         onComplete={handleCelebrationComplete}
@@ -402,7 +565,7 @@ export const LessonPage = () => {
                       <img src="/man.gif" alt="Mascot" className="w-24 h-24 sm:w-32 sm:h-32 object-contain" />
                     </div>
 
-                    {/* Speech Bubble with Voice Button */}
+                    {/* Speech Bubble */}
                     <div className="relative border-2 border-gray-200 rounded-2xl p-4 sm:p-6 flex-1 bg-white">
                       <div className="absolute top-[-14px] left-1/2 -translate-x-1/2 sm:top-8 sm:left-[-14px] sm:translate-x-0 w-6 h-6 bg-white border-t-2 border-l-2 border-gray-200 transform rotate-45 sm:-rotate-45"></div>
                       {currentStepData.type === 'content' ? (
@@ -415,7 +578,7 @@ export const LessonPage = () => {
                             {currentStepData.question}
                           </div>
 
-                          {/* Voice Controls: Flag + Speaker */}
+                          {/* Voice Controls */}
                           <div className="flex items-center gap-2 flex-shrink-0">
                             {/* Language Flag Button */}
                             <button
@@ -435,14 +598,21 @@ export const LessonPage = () => {
 
                             {/* Speaker Button */}
                             <button
-                              onClick={() => speakQuestion(currentStepData.question)}
+                              onClick={() => isSpeaking ? stopSpeaking() : speakQuestion(currentStepData.question)}
+                              disabled={isLoadingTTS}
                               className={`p-2.5 rounded-xl border-2 transition-all ${isSpeaking
                                 ? 'bg-blue-100 border-blue-300 text-blue-600'
-                                : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-500'
+                                : isLoadingTTS
+                                  ? 'bg-gray-100 border-gray-200 text-gray-400'
+                                  : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-500'
                                 }`}
-                              title={`Listen in ${currentLang.name}`}
+                              title={isSpeaking ? 'Stop speaking' : `Listen in ${currentLang.name}`}
                             >
-                              <Volume2 className={`w-5 h-5 ${isSpeaking ? 'animate-pulse' : ''}`} />
+                              {isLoadingTTS ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                              ) : (
+                                <Volume2 className={`w-5 h-5 ${isSpeaking ? 'animate-pulse' : ''}`} />
+                              )}
                             </button>
                           </div>
                         </div>
@@ -462,24 +632,24 @@ export const LessonPage = () => {
                               onClick={() => status === 'idle' && setSelectedOption(index)}
                               disabled={status !== 'idle'}
                               className={`
-                        w-full p-3 rounded-xl border-2 border-b-4 text-base font-medium text-left transition-all flex items-center gap-3 group
-                        ${isSelected
+                                w-full p-3 rounded-xl border-2 border-b-4 text-base font-medium text-left transition-all flex items-center gap-3 group
+                                ${isSelected
                                   ? 'bg-[#ddf4ff] border-[#84d8ff] text-[#1cb0f6]'
                                   : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
                                 }
-                        ${status !== 'idle' && index === currentStepData.correct ? '!bg-[#d7ffb8] !border-[#58cc02] !text-[#58cc02]' : ''}
-                        ${status === 'wrong' && isSelected ? '!bg-[#ffdfe0] !border-[#ff4b4b] !text-[#ff4b4b]' : ''}
-                      `}
+                                ${status !== 'idle' && index === currentStepData.correct ? '!bg-[#d7ffb8] !border-[#58cc02] !text-[#58cc02]' : ''}
+                                ${status === 'wrong' && isSelected ? '!bg-[#ffdfe0] !border-[#ff4b4b] !text-[#ff4b4b]' : ''}
+                              `}
                             >
                               <div className={`
-                        w-7 h-7 rounded-lg border-2 flex items-center justify-center text-xs font-bold transition-colors flex-shrink-0
-                        ${isSelected
+                                w-7 h-7 rounded-lg border-2 flex items-center justify-center text-xs font-bold transition-colors flex-shrink-0
+                                ${isSelected
                                   ? 'border-[#1cb0f6] text-[#1cb0f6]'
                                   : 'border-gray-200 text-gray-400 group-hover:border-gray-300'
                                 }
-                        ${status !== 'idle' && index === currentStepData.correct ? '!border-[#58cc02] !text-[#58cc02]' : ''}
-                        ${status === 'wrong' && isSelected ? '!border-[#ff4b4b] !text-[#ff4b4b]' : ''}
-                      `}>
+                                ${status !== 'idle' && index === currentStepData.correct ? '!border-[#58cc02] !text-[#58cc02]' : ''}
+                                ${status === 'wrong' && isSelected ? '!border-[#ff4b4b] !text-[#ff4b4b]' : ''}
+                              `}>
                                 {index + 1}
                               </div>
                               {option}
@@ -501,16 +671,23 @@ export const LessonPage = () => {
                           </div>
                           <button
                             onClick={toggleVoiceRecording}
-                            disabled={status !== 'idle'}
+                            disabled={status !== 'idle' || isTranscribing}
                             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all border-b-4 active:border-b-0 active:translate-y-1 ${isRecording
                               ? 'bg-red-500 border-red-600 text-white'
-                              : 'bg-blue-500 border-blue-600 text-white hover:bg-blue-400 disabled:bg-gray-200 disabled:border-gray-300 disabled:text-gray-400'
+                              : isTranscribing
+                                ? 'bg-gray-300 border-gray-400 text-gray-500'
+                                : 'bg-blue-500 border-blue-600 text-white hover:bg-blue-400 disabled:bg-gray-200 disabled:border-gray-300 disabled:text-gray-400'
                               }`}
                           >
                             {isRecording ? (
                               <>
                                 <MicOff className="w-4 h-4" />
                                 STOP
+                              </>
+                            ) : isTranscribing ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                TRANSCRIBING...
                               </>
                             ) : (
                               <>
@@ -525,16 +702,25 @@ export const LessonPage = () => {
                         {isRecording && (
                           <div className="flex items-center gap-3 p-3 bg-red-50 border-2 border-red-200 rounded-xl mb-3">
                             <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                            <span className="text-red-600 font-medium">Listening in {currentLang.name}... Speak now!</span>
+                            <span className="text-red-600 font-medium">Recording in {currentLang.name}... Speak now!</span>
                           </div>
                         )}
 
                         {/* Voice Answer Display */}
                         {voiceAnswer && (
                           <div className="p-4 bg-white border-2 border-blue-200 rounded-xl">
-                            <div className="text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">Your spoken answer:</div>
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="text-xs font-bold text-blue-500 uppercase tracking-widest">Your spoken answer:</div>
+                              {voiceConfidence !== null && (
+                                <div className="text-xs text-gray-400">
+                                  Confidence: {Math.round(voiceConfidence * 100)}%
+                                </div>
+                              )}
+                            </div>
                             <div className="text-lg font-medium text-gray-800">"{voiceAnswer}"</div>
-                            <div className="text-xs text-gray-400 mt-2">AI will analyze this answer when you click CHECK</div>
+                            <div className="text-xs text-green-600 mt-2 font-medium">
+                              Click CHECK to submit your voice answer
+                            </div>
                           </div>
                         )}
                       </div>
@@ -591,6 +777,8 @@ export const LessonPage = () => {
                     if (currentStep < steps.length - 1) {
                       setCurrentStep(currentStep + 1);
                       setSelectedOption(null);
+                      setVoiceAnswer('');
+                      setAudioBase64(null);
                       setStartTime(Date.now());
                     } else {
                       navigate(`/section/${lesson.domain}`);
@@ -605,16 +793,16 @@ export const LessonPage = () => {
 
             <button
               onClick={handleCheck}
-              disabled={status === 'idle' && currentStepData.type === 'quiz' && selectedOption === null}
+              disabled={!canCheck}
               className={`
-              ml-auto px-6 sm:px-10 py-3 rounded-xl font-extrabold text-base tracking-wide border-b-4 transition-all active:border-b-0 active:translate-y-1
-              ${status === 'wrong'
+                ml-auto px-6 sm:px-10 py-3 rounded-xl font-extrabold text-base tracking-wide border-b-4 transition-all active:border-b-0 active:translate-y-1
+                ${status === 'wrong'
                   ? 'bg-[#ff4b4b] text-white border-[#ea2b2b] hover:bg-[#ea2b2b]'
                   : status === 'correct'
                     ? 'bg-[#58cc02] text-white border-[#46a302] hover:bg-[#46a302]'
                     : 'bg-[#58cc02] text-white border-[#46a302] hover:bg-[#46a302] disabled:bg-gray-200 disabled:border-gray-300 disabled:text-gray-400 disabled:active:border-b-4 disabled:active:translate-y-0'
                 }
-            `}
+              `}
             >
               {status === 'idle' ? 'CHECK' : 'CONTINUE'}
             </button>

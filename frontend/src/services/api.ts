@@ -140,25 +140,41 @@ export const adaptiveApi = {
     }),
 };
 
-// Voice API (if implemented)
+// Voice API - Uses backend ElevenLabs integration
 export const voiceApi = {
+  // Get TTS audio for a learning item
   getTTS: async (itemId: string, language = 'en', slow = false) => {
-    const params = new URLSearchParams({ lang: language, slow: slow.toString() });
+    const params = new URLSearchParams({ language, slow: slow.toString() });
     try {
-      return await fetchApi<{ audio_url: string }>(`/api/voice/tts/${itemId}?${params}`);
+      return await fetchApi<{ audio_base64: string; cached: boolean }>(`/api/adaptive/voice/tts/${itemId}?${params}`);
     } catch (error) {
       console.warn('Voice TTS not available:', error);
       return null;
     }
   },
 
+  // Generate TTS for arbitrary text
+  generateTTS: async (text: string, language = 'en', voice?: string) => {
+    try {
+      return await fetchApi<{ audio_base64: string }>('/api/adaptive/voice/tts', {
+        method: 'POST',
+        body: JSON.stringify({ text, language, voice }),
+      });
+    } catch (error) {
+      console.warn('Voice TTS generation not available:', error);
+      return null;
+    }
+  },
+
+  // Transcribe audio to text using ElevenLabs
   transcribe: async (audioBase64: string, languageHint?: string) => {
     try {
       return await fetchApi<{
         transcription: string;
         confidence: number;
         detected_language: string;
-      }>('/api/voice/transcribe', {
+        duration_ms: number;
+      }>('/api/adaptive/voice/transcribe', {
         method: 'POST',
         body: JSON.stringify({ audio_base64: audioBase64, language_hint: languageHint }),
       });
@@ -168,15 +184,34 @@ export const voiceApi = {
     }
   },
 
+  // Submit voice answer with semantic matching
   submitVoiceAnswer: async (data: {
     learner_id: string;
     item_id: string;
+    kc_id: string;
     session_id: string;
     audio_base64: string;
     language_hint?: string;
   }) => {
     try {
-      return await fetchApi<any>('/api/voice/interaction', {
+      return await fetchApi<{
+        success: boolean;
+        is_correct: boolean;
+        transcription: string;
+        matched_choice: number | null;
+        similarity_scores: Record<string, number>;
+        confidence: {
+          transcription: number;
+          semantic_match: number;
+          voice: number;
+        };
+        skill_state: {
+          kc_id: string;
+          p_mastery: number;
+          status: string;
+        };
+        xp_earned: number;
+      }>('/api/adaptive/interactions/voice', {
         method: 'POST',
         body: JSON.stringify(data),
       });
