@@ -8,7 +8,6 @@ import { cn } from '../utils/cn'
 interface CourseInfo {
     id: string
     title: string
-    emoji: string
     description: string
     level: string
 }

@@ -62,6 +62,13 @@ class FinLitCollections:
 
         # Media assets collection
         self.media_assets = db.media_assets
+
+        # Chat conversations collection
+        self.chat_conversations = db.chat_conversations
+
+        # Quests and leaderboard collections
+        self.quest_claims = db.quest_claims
+        self.leaderboard_history = db.leaderboard_history
     
     def _to_object_id(self, id_value):
         """Convert string ID to ObjectId, or return as-is if already ObjectId"""
@@ -185,6 +192,28 @@ class FinLitCollections:
         self.media_assets.create_index([("type", ASCENDING)])
         self.media_assets.create_index([("tags", ASCENDING)])
         self.media_assets.create_index([("used_in", ASCENDING)])
+
+        # Chat Conversations indexes
+        self.chat_conversations.create_index([("learner_id", ASCENDING)])
+        self.chat_conversations.create_index([("updated_at", DESCENDING)])
+
+        # Quest Claims indexes
+        self.quest_claims.create_index([("learner_id", ASCENDING)])
+        self.quest_claims.create_index([("quest_id", ASCENDING)])
+        self.quest_claims.create_index([("claimed_at", DESCENDING)])
+        self.quest_claims.create_index([
+            ("learner_id", ASCENDING),
+            ("quest_id", ASCENDING),
+            ("claimed_at", DESCENDING)
+        ])
+
+        # Leaderboard History indexes
+        self.leaderboard_history.create_index([("week_start", DESCENDING)])
+        self.leaderboard_history.create_index([("learner_id", ASCENDING)])
+        self.leaderboard_history.create_index([
+            ("week_start", DESCENDING),
+            ("xp_earned", DESCENDING)
+        ])
 
         print("All indexes created successfully!")
 

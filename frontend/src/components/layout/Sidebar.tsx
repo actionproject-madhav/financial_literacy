@@ -4,7 +4,11 @@ import { useUserStore } from '../../stores/userStore'
 import { cn } from '../../utils/cn'
 import { useState } from 'react'
 
-export const Sidebar = () => {
+interface SidebarProps {
+  onCoachClick?: () => void;
+}
+
+export const Sidebar = ({ onCoachClick }: SidebarProps) => {
   const location = useLocation()
   const { logout } = useUserStore()
   const [isOpen, setIsOpen] = useState(false)
@@ -14,6 +18,7 @@ export const Sidebar = () => {
   // Using custom SVGs from public folder
   const menuItems = [
     { icon: '/home-pixel.svg', label: 'Home', path: '/learn' },
+    { icon: '/profile.svg', label: 'Coach', path: '/coach', isButton: true },
     { icon: '/leaderboard.svg', label: 'Leaderboard', path: '/leaderboard' },
     { icon: '/quest.svg', label: 'Quests', path: '/quests' },
     { icon: '/shop.svg', label: 'Shop', path: '/shop' },
@@ -34,9 +39,31 @@ export const Sidebar = () => {
 
       <nav className="flex-1 px-4 py-4 space-y-0 overflow-y-auto">
         {menuItems.map((item) => {
-          const isActive = location.pathname === item.path ||
+          const isActive = !item.isButton && (
+            location.pathname === item.path ||
             (item.path !== '/' && location.pathname.startsWith(item.path)) ||
             (item.path === '/learn' && location.pathname.startsWith('/section'))
+          )
+
+          if (item.isButton && item.label === 'Coach') {
+            return (
+              <button
+                key={item.path}
+                onClick={onCoachClick}
+                className={cn(
+                  "w-full flex items-center gap-4 px-4 py-2 rounded-xl transition-all duration-200 group uppercase tracking-widest text-sm font-bold border-2",
+                  "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-900 border-transparent"
+                )}
+              >
+                <img
+                  src={item.icon}
+                  alt={item.label}
+                  className="w-8 h-8 object-contain"
+                />
+                <span>{item.label}</span>
+              </button>
+            )
+          }
 
           return (
             <Link

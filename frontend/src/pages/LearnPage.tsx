@@ -189,8 +189,8 @@ export const LearnPage = () => {
                                             )}
 
                                             <img
-                                                src={index === 0 ? "/man.gif" : `https://api.dicebear.com/7.x/avataaars/svg?seed=${course.title}&backgroundColor=transparent`}
-                                                alt="Mascot"
+                                                src={`https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${course.id}&backgroundColor=transparent`}
+                                                alt={course.title}
                                                 className={`w-28 h-28 md:w-32 md:h-32 object-contain ${!isUnlocked && 'grayscale opacity-60'}`}
                                             />
                                         </div>
@@ -228,25 +228,37 @@ export const LearnPage = () => {
                     <div className="space-y-6">
 
                         {/* AI Financial Coach Widget */}
-                        <div className="border-2 border-indigo-50 rounded-2xl p-0 overflow-hidden bg-indigo-50 hover:bg-indigo-100 transition-colors cursor-pointer group shadow-sm">
+                        <div className="border-2 border-[#e5f7d3] rounded-2xl p-0 overflow-hidden bg-[#e5f7d3] hover:bg-[#d4f0b8] transition-colors cursor-pointer group shadow-sm">
                             <div className="p-4">
                                 <div className="flex items-center justify-between mb-3">
-                                    <h3 className="font-extrabold text-indigo-950 flex items-center gap-2">
+                                    <h3 className="font-extrabold text-gray-800 flex items-center gap-2">
                                         <img src="/profile.svg" alt="Coach" className="w-6 h-6 object-contain" />
                                         FinAI Coach
                                     </h3>
-                                    <div className="px-2 py-1 bg-indigo-100 rounded-lg text-[10px] font-bold text-indigo-600 uppercase tracking-wide">
+                                    <div className="px-2 py-1 bg-[#58cc02] rounded-lg text-[10px] font-bold text-white uppercase tracking-wide">
                                         BETA
                                     </div>
                                 </div>
-                                <p className="text-sm text-indigo-900/70 font-medium leading-relaxed mb-4">
-                                    Confused about taxes or 401(k)? tailored advice for your situation.
+                                <p className="text-sm text-gray-600 font-medium leading-relaxed mb-4">
+                                    Confused about taxes or 401(k)? Get tailored advice for your situation.
                                 </p>
                                 <div className="flex gap-2">
-                                    <button className="flex-1 py-2 px-3 bg-white border-2 border-indigo-100 rounded-xl text-indigo-600 text-xs font-bold uppercase tracking-wide hover:bg-indigo-50 transition-colors text-center">
+                                    <button
+                                        onClick={() => {
+                                            const event = new CustomEvent('openCoach');
+                                            window.dispatchEvent(event);
+                                        }}
+                                        className="flex-1 py-2 px-3 bg-white border-2 border-gray-200 rounded-xl text-[#58cc02] text-xs font-bold uppercase tracking-wide hover:border-[#58cc02] transition-colors text-center"
+                                    >
                                         Ask Question
                                     </button>
-                                    <button className="flex-1 py-2 px-3 bg-indigo-600 border-b-4 border-indigo-700 rounded-xl text-white text-xs font-bold uppercase tracking-wide hover:bg-indigo-500 active:border-b-0 active:translate-y-0.5 transition-all text-center">
+                                    <button
+                                        onClick={() => {
+                                            const event = new CustomEvent('openCoach');
+                                            window.dispatchEvent(event);
+                                        }}
+                                        className="flex-1 py-2 px-3 bg-[#58cc02] border-b-4 border-[#46a302] rounded-xl text-white text-xs font-bold uppercase tracking-wide hover:bg-[#46a302] active:border-b-0 active:translate-y-0.5 transition-all text-center"
+                                    >
                                         Start Chat
                                     </button>
                                 </div>
@@ -336,6 +348,7 @@ export const LearnPage = () => {
                     </div>
                 </div>
             </div>
+
         </div>
     )
 }

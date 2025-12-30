@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '../utils/cn';
 import { useUserStore } from '../stores/userStore';
+import { leaderboardApi, MyLeagueResponse, League } from '../services/api';
 
 // --- Custom SVGs for "Non-Tacky" Look ---
 
@@ -34,7 +35,7 @@ const LeagueShield: React.FC<{
           d="M12 4L4 7v5c0 4.5 5 7.5 8 9 3-1.5 8-4.5 8-9V7l-8-3z"
           fill={isLocked ? "#F3F4F6" : (isCurrent ? color : "#E5E7EB")}
           fillOpacity={isCurrent ? 0.2 : 1}
-          className="mix-blend-multiply" // Simple shading
+          className="mix-blend-multiply"
         />
         {isLocked && (
           <path d="M12 8a2 2 0 0 1 2 2v2h1a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h1v-2a2 2 0 0 1 2-2z" fill="#9CA3AF" />
@@ -53,68 +54,88 @@ const FireIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// --- Data & Types ---
-
-interface LeaderboardEntry {
-  rank: number;
-  name: string;
-  avatar?: string;
-  xp: number;
-  streak: number;
-  change: 'up' | 'down' | 'same';
-  isCurrentUser?: boolean;
-}
-
-const getMockLeaderboard = (currentUserName: string): LeaderboardEntry[] => [
-  { rank: 1, name: 'Alex Chen', xp: 2847, streak: 89, change: 'same', isCurrentUser: false },
-  { rank: 2, name: 'Sarah Johnson', xp: 2756, streak: 76, change: 'up', isCurrentUser: false },
-  { rank: 3, name: 'Priya Sharma', xp: 2698, streak: 65, change: 'up', isCurrentUser: false },
-  { rank: 4, name: 'Mike Rodriguez', xp: 2542, streak: 58, change: 'down', isCurrentUser: false },
-  { rank: 5, name: currentUserName || 'You', xp: 2389, streak: 45, change: 'up', isCurrentUser: true },
-  { rank: 6, name: 'Emma Wilson', xp: 2323, streak: 52, change: 'same', isCurrentUser: false },
-  { rank: 7, name: 'David Kim', xp: 2187, streak: 48, change: 'down', isCurrentUser: false },
-  { rank: 8, name: 'Lisa Brown', xp: 2098, streak: 45, change: 'up', isCurrentUser: false },
-  { rank: 9, name: 'Raj Patel', xp: 2045, streak: 42, change: 'same', isCurrentUser: false },
-  { rank: 10, name: 'Maria Garcia', xp: 1989, streak: 38, change: 'down', isCurrentUser: false },
-  { rank: 11, name: 'Chris Lee', xp: 1834, streak: 35, change: 'up', isCurrentUser: false },
-  { rank: 12, name: 'Ana Martinez', xp: 1798, streak: 32, change: 'same', isCurrentUser: false },
-  { rank: 13, name: 'Tom Wilson', xp: 1745, streak: 28, change: 'down', isCurrentUser: false },
-  { rank: 14, name: 'Nina Patel', xp: 1687, streak: 25, change: 'up', isCurrentUser: false },
-  { rank: 15, name: 'Jake Thompson', xp: 1523, streak: 22, change: 'same', isCurrentUser: false },
-];
-
-const LEAGUES = [
-  { name: 'Bronze', color: '#CD7F32' },
-  { name: 'Silver', color: '#9CA3AF' },
-  { name: 'Gold', color: '#FCD34D' }, // Active
-  { name: 'Emerald', color: '#34D399' },
-  { name: 'Diamond', color: '#60A5FA' },
-];
-
-const CURRENT_LEAGUE_INDEX = 2; // Gold
-
 export const LeaderboardPage: React.FC = () => {
-  const { user } = useUserStore();
-  const currentUserName = user?.name || 'Demo User';
-  const leaderboard = getMockLeaderboard(currentUserName);
+  const { user, learnerId } = useUserStore();
+  const [leagueData, setLeagueData] = useState<MyLeagueResponse | null>(null);
+  const [allLeagues, setAllLeagues] = useState<League[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!learnerId) {
+        setError('Please log in to view leaderboard');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch all leagues and current user's league data
+        const [leaguesResponse, myLeagueResponse] = await Promise.all([
+          leaderboardApi.getLeagues(),
+          leaderboardApi.getMyLeague(learnerId)
+        ]);
+
+        setAllLeagues(leaguesResponse.leagues);
+        setLeagueData(myLeagueResponse);
+      } catch (err) {
+        console.error('Error fetching leaderboard:', err);
+        setError('Failed to load leaderboard. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [learnerId]);
+
+  const formatTimeRemaining = (days: number, hours: number) => {
+    if (days > 0) {
+      return `${days} day${days !== 1 ? 's' : ''} left`;
+    }
+    if (hours > 0) {
+      return `${hours} hour${hours !== 1 ? 's' : ''} left`;
+    }
+    return 'Less than an hour left';
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-gray-500 font-medium">Loading leaderboard...</div>
+      </div>
+    );
+  }
+
+  if (error || !leagueData) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-red-500 font-medium">{error || 'Failed to load leaderboard'}</div>
+      </div>
+    );
+  }
+
+  const currentLeagueIndex = allLeagues.findIndex(l => l.id === leagueData.league.id);
+  const currentLeague = leagueData.league;
 
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-6xl mx-auto px-6 flex gap-8 items-start">
-
         {/* === Left Column: Leaderboard === */}
         <div className="flex-1 max-w-2xl">
-
           {/* League Header */}
           <div className="flex flex-col items-center mb-8 sticky top-0 bg-white z-50 pt-10 pb-6 border-b border-gray-100">
             {/* League Icons */}
             <div className="flex items-center gap-4 mb-4">
-              {LEAGUES.map((league, idx) => {
-                const isActive = idx === CURRENT_LEAGUE_INDEX;
-                const isLocked = idx > CURRENT_LEAGUE_INDEX;
+              {allLeagues.map((league, idx) => {
+                const isActive = league.id === currentLeague.id;
+                const isLocked = idx > currentLeagueIndex;
 
                 return (
-                  <div key={league.name} className="flex flex-col items-center">
+                  <div key={league.id} className="flex flex-col items-center">
                     <LeagueShield
                       state={isLocked ? 'locked' : (isActive ? 'current' : 'unlocked')}
                       color={league.color}
@@ -123,20 +144,13 @@ export const LeaderboardPage: React.FC = () => {
                         isActive ? "w-20 h-20 -mb-2 z-10 drop-shadow-md" : "w-12 h-12"
                       )}
                     />
-                    {isActive && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="hidden" // Hiding name here as per reference, it's shown below
-                      />
-                    )}
                   </div>
                 );
               })}
             </div>
 
             <h1 className="text-2xl font-extrabold text-gray-800 tracking-tight mb-2">
-              {LEAGUES[CURRENT_LEAGUE_INDEX].name} League
+              {currentLeague.name} League
             </h1>
             <p className="text-gray-500 font-medium">
               Top 10 advance to the next league
@@ -145,25 +159,26 @@ export const LeaderboardPage: React.FC = () => {
               <svg viewBox="0 0 24 24" className="w-4 h-4 text-orange-400" fill="currentColor">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
-              <span>2 days left</span>
+              <span>{formatTimeRemaining(leagueData.time_remaining.days, leagueData.time_remaining.hours)}</span>
             </div>
           </div>
 
           {/* List */}
           <div className="flex flex-col gap-0.5 relative z-0">
-            {leaderboard.map((entry, index) => {
+            {leagueData.rankings.map((entry, index) => {
               const isTop3 = index < 3;
               const isPromotionCutoff = index === 9;
+              const isCurrentUser = entry.is_current_user || entry.learner_id === learnerId;
 
               return (
-                <React.Fragment key={entry.rank}>
+                <React.Fragment key={entry.learner_id}>
                   <motion.div
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.03 }}
                     className={cn(
                       "flex items-center gap-4 py-3 px-4 rounded-xl transition-colors",
-                      entry.isCurrentUser
+                      isCurrentUser
                         ? "bg-white border-2 border-sky-400 z-20 sticky bottom-4 shadow-lg my-2 translate-y-[-2px]"
                         : "hover:bg-gray-50 bg-white border border-transparent"
                     )}
@@ -185,19 +200,19 @@ export const LeaderboardPage: React.FC = () => {
                       index === 0 ? "bg-yellow-400" :
                         index === 1 ? "bg-gray-400" :
                           index === 2 ? "bg-orange-400" :
-                            entry.isCurrentUser ? "bg-sky-400" : "bg-indigo-400"
+                            isCurrentUser ? "bg-sky-400" : "bg-indigo-400"
                     )}>
-                      {entry.name.charAt(0)}
+                      {entry.initials || entry.display_name.charAt(0).toUpperCase()}
                     </div>
 
                     {/* Name */}
                     <div className="flex-1 font-bold text-gray-700">
-                      {entry.name} {entry.isCurrentUser && <span className="text-gray-400 text-sm font-medium ml-2">(You)</span>}
+                      {entry.display_name} {isCurrentUser && <span className="text-gray-400 text-sm font-medium ml-2">(You)</span>}
                     </div>
 
                     {/* XP */}
                     <div className="text-gray-600 font-bold text-sm">
-                      {entry.xp} XP
+                      {entry.weekly_xp} XP
                     </div>
                   </motion.div>
 
@@ -219,18 +234,20 @@ export const LeaderboardPage: React.FC = () => {
 
         {/* === Right Column: Sidebar === */}
         <div className="w-[380px] hidden lg:flex flex-col gap-6 sticky top-8 pt-8">
-
           {/* Streak Card */}
           <div className="bg-[#FFFDF0] rounded-2xl p-6 border-2 border-transparent relative overflow-hidden">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-xl font-extrabold text-[#D98229] mb-1">0 day streak</h3>
+                <h3 className="text-xl font-extrabold text-[#D98229] mb-1">
+                  {leagueData.my_ranking?.streak || 0} day streak
+                </h3>
                 <p className="text-gray-500 text-sm font-medium leading-relaxed">
-                  Do a lesson today to start a new streak!
+                  {leagueData.my_ranking?.streak === 0 
+                    ? "Do a lesson today to start a new streak!"
+                    : "Keep it going!"}
                 </p>
               </div>
               <div className="w-16 h-16">
-                {/* Fire Icon large */}
                 <FireIcon className="text-[#FCD34D] opacity-40 w-full h-full" />
               </div>
             </div>
@@ -255,7 +272,6 @@ export const LeaderboardPage: React.FC = () => {
             <button className="w-full py-3 bg-white text-[#FF6D00] font-extrabold rounded-xl text-sm hover:bg-gray-50 transition-colors uppercase tracking-wide">
               View List
             </button>
-            {/* Decorative bg icon */}
             <FireIcon className="absolute top-4 right-4 text-white/20 w-12 h-12 rotate-12" />
           </div>
 
@@ -263,7 +279,6 @@ export const LeaderboardPage: React.FC = () => {
           <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 flex flex-col gap-4">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
-                {/* Lock Icon */}
                 <svg viewBox="0 0 24 24" className="w-6 h-6 text-gray-400" fill="currentColor">
                   <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" />
                 </svg>

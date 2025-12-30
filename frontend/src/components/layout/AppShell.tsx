@@ -1,14 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { BottomNav } from './BottomNav';
 import { Sidebar } from './Sidebar';
 import { useUserStore } from '../../stores/userStore';
 import { mockUser } from '../../data/mockData';
+import { FinAICoachPanel } from '../FinAICoachPanel';
+import { CoachButton } from '../CoachButton';
+import { useCoach } from '../../contexts/CoachContext';
 
 export const AppShell: React.FC = () => {
   const { user, setUser } = useUserStore();
   const location = useLocation();
   const isLessonPage = location.pathname.startsWith('/lesson');
+  const { isOpen: isCoachOpen, openCoach, closeCoach, toggleCoach } = useCoach();
+
+  // Listen for custom events to open coach
+  useEffect(() => {
+    const handleOpenCoach = () => {
+      openCoach();
+    };
+    window.addEventListener('openCoach', handleOpenCoach);
+    return () => {
+      window.removeEventListener('openCoach', handleOpenCoach);
+    };
+  }, [openCoach]);
 
   // Initialize with mock user if no user exists
   useEffect(() => {
@@ -28,13 +43,19 @@ export const AppShell: React.FC = () => {
 
   // If we are in a lesson, render only the content (immersive mode)
   if (isLessonPage) {
-    return <Outlet />;
+    return (
+      <>
+        <Outlet />
+        <CoachButton onClick={toggleCoach} isOpen={isCoachOpen} />
+        <FinAICoachPanel isOpen={isCoachOpen} onClose={closeCoach} />
+      </>
+    );
   }
 
   return (
     <div className="min-h-screen bg-white">
       {/* Sidebar (Desktop) - Fixed Left */}
-      <Sidebar />
+      <Sidebar onCoachClick={openCoach} />
 
       {/* Main Content - Shifted by Sidebar Width */}
       <main className="lg:pl-64 min-h-screen pb-20 lg:pb-0">
@@ -43,6 +64,10 @@ export const AppShell: React.FC = () => {
 
       {/* Bottom Navigation (Mobile) */}
       <BottomNav />
+
+      {/* Coach Panel - Globally Available */}
+      <CoachButton onClick={toggleCoach} isOpen={isCoachOpen} />
+      <FinAICoachPanel isOpen={isCoachOpen} onClose={closeCoach} />
     </div>
   );
 };

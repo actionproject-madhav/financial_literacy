@@ -548,7 +548,7 @@ export const LessonPage = () => {
                     animate={{ scale: 1 }}
                     className="mb-8"
                   >
-                    <img src="/streak-nice.gif" alt="Streak!" className="w-64 h-64 object-contain" />
+                    <img src="/fire.svg" alt="Streak!" className="w-48 h-48 object-contain" />
                   </motion.div>
                   <h1 className="text-4xl font-black text-[#ffc840] mb-2">{streak} in a row!</h1>
                   <p className="text-xl font-bold text-gray-500">You're on fire! Keep going!</p>
@@ -562,7 +562,7 @@ export const LessonPage = () => {
                   <div className="flex flex-col sm:flex-row gap-4 mb-8">
                     {/* Mascot */}
                     <div className="flex-shrink-0 self-center sm:self-end mb-2 sm:mb-0">
-                      <img src="/man.gif" alt="Mascot" className="w-24 h-24 sm:w-32 sm:h-32 object-contain" />
+                      <img src="/profile.svg" alt="Mascot" className="w-20 h-20 sm:w-24 sm:h-24 object-contain" />
                     </div>
 
                     {/* Speech Bubble */}

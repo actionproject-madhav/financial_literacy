@@ -7,6 +7,10 @@ from services import LearningEngine
 from blueprints.adaptive import adaptive_bp
 from blueprints.learners import learners_bp
 from blueprints.curriculum import curriculum_bp
+from blueprints.chat import chat_bp
+from blueprints.quests import quests_bp
+from blueprints.leaderboard import leaderboard_bp
+from blueprints.streaks import streaks_bp
 
 # Create Flask app
 app = Flask(__name__)
@@ -63,6 +67,10 @@ app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(adaptive_bp)
 app.register_blueprint(learners_bp)
 app.register_blueprint(curriculum_bp)
+app.register_blueprint(chat_bp)
+app.register_blueprint(quests_bp)
+app.register_blueprint(leaderboard_bp)
+app.register_blueprint(streaks_bp)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

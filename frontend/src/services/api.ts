@@ -321,3 +321,234 @@ export const curriculumApi = {
     }>(`/api/curriculum/lessons/${kcId}/questions${queryString}`);
   },
 };
+
+// Chat API - FinAI Coach
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp?: string;
+}
+
+export interface ChatResponse {
+  response: string;
+  conversation_id: string;
+  suggestions: string[];
+}
+
+export interface Conversation {
+  id: string;
+  preview: string;
+  updated_at: string;
+}
+
+export const chatApi = {
+  sendMessage: (data: {
+    message: string;
+    learner_id?: string;
+    conversation_id?: string;
+    context?: {
+      current_lesson?: string;
+      visa_type?: string;
+    };
+  }) =>
+    fetchApi<ChatResponse>('/api/chat/message', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getConversations: (learnerId: string, limit = 10) =>
+    fetchApi<{ conversations: Conversation[] }>(
+      `/api/chat/conversations?learner_id=${learnerId}&limit=${limit}`
+    ),
+
+  getConversation: (conversationId: string) =>
+    fetchApi<{
+      id: string;
+      messages: ChatMessage[];
+      created_at: string;
+    }>(`/api/chat/conversations/${conversationId}`),
+
+  getQuickQuestions: () =>
+    fetchApi<{ questions: string[] }>('/api/chat/quick-questions'),
+
+  healthCheck: () =>
+    fetchApi<{ status: string; llm_available: boolean }>('/api/chat/health').catch(() => null),
+};
+
+// Quests API
+export interface Quest {
+  id: string;
+  title: string;
+  description: string;
+  progress: number;
+  target: number;
+  xp_reward: number;
+  icon: string;
+  completed: boolean;
+  can_claim: boolean;
+}
+
+export interface QuestsResponse {
+  daily: Quest[];
+  weekly: Quest[];
+  special: Quest[];
+  daily_reset_hours: number;
+  weekly_reset_hours: number;
+}
+
+export const questsApi = {
+  getQuests: (learnerId: string) =>
+    fetchApi<QuestsResponse>(`/api/quests/${learnerId}`),
+
+  claimQuest: (learnerId: string, questId: string) =>
+    fetchApi<{
+      success: boolean;
+      xp_earned: number;
+      total_xp: number;
+    }>(`/api/quests/${learnerId}/claim/${questId}`, {
+      method: 'POST',
+    }),
+
+  healthCheck: () =>
+    fetchApi<{ status: string }>('/api/quests/health').catch(() => null),
+};
+
+// Leaderboard API
+export interface League {
+  id: string;
+  name: string;
+  min_xp: number;
+  color: string;
+  icon: string;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  learner_id: string;
+  display_name: string;
+  initials?: string;
+  weekly_xp: number;
+  total_xp: number;
+  league: League;
+  streak?: number;
+  is_current_user?: boolean;
+}
+
+export interface LeaderboardResponse {
+  rankings: LeaderboardEntry[];
+  week_start: string;
+  week_end: string;
+  total_participants: number;
+}
+
+export interface LearnerRanking {
+  rank: number;
+  weekly_xp: number;
+  total_xp: number;
+  league: League;
+  next_league: League | null;
+  xp_to_next_league: number;
+  promotion_zone: boolean;
+  demotion_zone: boolean;
+  streak: number;
+  display_name: string;
+}
+
+export interface MyLeagueResponse {
+  league: League;
+  rankings: LeaderboardEntry[];
+  my_rank: number;
+  my_ranking: LeaderboardEntry;
+  promotion_zone: boolean;
+  time_remaining: {
+    days: number;
+    hours: number;
+    total_seconds: number;
+  };
+  week_start: string;
+  week_end: string;
+  total_participants: number;
+}
+
+export const leaderboardApi = {
+  getLeaderboard: (limit = 50, league?: string, learnerId?: string) => {
+    const params = new URLSearchParams({ limit: limit.toString() });
+    if (league) params.append('league', league);
+    if (learnerId) params.append('learner_id', learnerId);
+    return fetchApi<LeaderboardResponse>(`/api/leaderboard?${params}`);
+  },
+
+  getMyLeague: (learnerId: string) =>
+    fetchApi<MyLeagueResponse>(`/api/leaderboard/my-league/${learnerId}`),
+
+  getLearnerRanking: (learnerId: string) =>
+    fetchApi<LearnerRanking>(`/api/leaderboard/${learnerId}`),
+
+  getRankingsAroundLearner: (learnerId: string) =>
+    fetchApi<{
+      rankings: LeaderboardEntry[];
+      learner_rank: number;
+    }>(`/api/leaderboard/around/${learnerId}`),
+
+  getLeagues: () =>
+    fetchApi<{ leagues: League[] }>('/api/leaderboard/leagues'),
+
+  healthCheck: () =>
+    fetchApi<{ status: string }>('/api/leaderboard/health').catch(() => null),
+};
+
+// Streaks API
+export interface StreakCalendarDay {
+  date: string;
+  completed: boolean;
+  xp_earned: number;
+  lessons_completed: number;
+}
+
+export interface StreakInfo {
+  current_streak: number;
+  longest_streak: number;
+  streak_alive: boolean;
+  hours_until_deadline: number;
+  today_completed: boolean;
+  streak_freezes: number;
+  calendar: StreakCalendarDay[];
+}
+
+export const streaksApi = {
+  getStreak: (learnerId: string) =>
+    fetchApi<StreakInfo>(`/api/streaks/${learnerId}`),
+
+  checkAndUpdateStreak: (learnerId: string) =>
+    fetchApi<{
+      streak_updated: boolean;
+      new_streak: number;
+      streak_extended: boolean;
+      milestone_reached: number | null;
+      longest_streak?: number;
+      message?: string;
+    }>(`/api/streaks/${learnerId}/check`, {
+      method: 'POST',
+    }),
+
+  useStreakFreeze: (learnerId: string) =>
+    fetchApi<{
+      success: boolean;
+      remaining_freezes: number;
+    }>(`/api/streaks/${learnerId}/freeze`, {
+      method: 'POST',
+    }),
+
+  repairStreak: (learnerId: string, gemsCost = 50) =>
+    fetchApi<{
+      success: boolean;
+      restored_streak: number;
+      gems_spent: number;
+    }>(`/api/streaks/${learnerId}/repair`, {
+      method: 'POST',
+      body: JSON.stringify({ gems_cost: gemsCost }),
+    }),
+
+  healthCheck: () =>
+    fetchApi<{ status: string }>('/api/streaks/health').catch(() => null),
+};

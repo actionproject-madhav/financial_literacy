@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Settings, Share2, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { IconButton } from '../components/ui/IconButton';
@@ -39,6 +40,7 @@ const mockUser = {
 };
 
 export const ProfilePage: React.FC = () => {
+  const navigate = useNavigate();
   const { user: storeUser } = useUserStore();
   
   // Use store user or fallback to mock
@@ -164,13 +166,14 @@ export const ProfilePage: React.FC = () => {
       {/* Settings Links */}
       <Card variant="bordered" padding="none">
         {[
-          { label: 'Notification Settings', path: '/settings/notifications' },
-          { label: 'Voice & Audio', path: '/settings/voice' },
-          { label: 'Daily Goal', path: '/settings/goal' },
-          { label: 'Language Preferences', path: '/settings/language' },
+          { label: 'Notification Settings', section: 'notifications' },
+          { label: 'Voice & Audio', section: 'voice' },
+          { label: 'Daily Goal', section: 'goal' },
+          { label: 'Language Preferences', section: 'language' },
         ].map((item, index) => (
           <button
-            key={item.path}
+            key={item.section}
+            onClick={() => navigate(`/settings?section=${item.section}`)}
             className={`w-full flex items-center justify-between p-5 hover:bg-[#F7F7F7] transition-colors ${
               index !== 0 ? 'border-t-2 border-[#E5E5E5]' : ''
             }`}

@@ -1,24 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { IconButton } from '../components/ui/IconButton';
-import { 
-  ChevronRight, 
-  Bell, 
-  Volume2, 
-  Globe, 
-  Moon, 
-  Shield, 
+import {
+  ChevronRight,
+  Bell,
+  Volume2,
+  Globe,
+  Moon,
+  Shield,
   HelpCircle,
   LogOut,
   User,
   Trash2,
   Download,
+  Target,
 } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { useUserStore } from '../stores/userStore';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { authApi } from '../services/api';
 
 interface SettingsSection {
@@ -40,10 +41,31 @@ interface SettingsItem {
 
 export const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { logout, user } = useUserStore();
   const [notifications, setNotifications] = useState(true);
   const [soundEffects, setSoundEffects] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+  const [dailyGoal, setDailyGoal] = useState(10);
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Scroll to section if specified in URL
+  useEffect(() => {
+    const section = searchParams.get('section');
+    if (section) {
+      // Map profile page section names to settings section IDs
+      const sectionMap: Record<string, string> = {
+        'notifications': 'notifications',
+        'voice': 'audio',
+        'goal': 'goals',
+        'language': 'account',
+      };
+      const targetSection = sectionMap[section] || section;
+      setTimeout(() => {
+        sectionRefs.current[targetSection]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [searchParams]);
 
   const handleLogout = async () => {
     try {
@@ -107,6 +129,25 @@ export const SettingsPage: React.FC = () => {
           type: 'toggle',
           value: soundEffects,
           onClick: () => setSoundEffects(!soundEffects),
+        },
+      ],
+    },
+    {
+      id: 'goals',
+      title: 'Daily Goal',
+      items: [
+        {
+          id: 'daily-goal',
+          label: 'Daily Practice Goal',
+          description: `${dailyGoal} minutes per day`,
+          icon: <Target className="w-5 h-5" />,
+          type: 'link',
+          onClick: () => {
+            const newGoal = prompt('Set your daily goal (minutes):', String(dailyGoal));
+            if (newGoal && !isNaN(Number(newGoal))) {
+              setDailyGoal(Number(newGoal));
+            }
+          },
         },
       ],
     },
@@ -241,6 +282,7 @@ export const SettingsPage: React.FC = () => {
       {settingsSections.map((section, sectionIndex) => (
         <motion.div
           key={section.id}
+          ref={(el) => { sectionRefs.current[section.id] = el; }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: sectionIndex * 0.1 }}

@@ -87,9 +87,15 @@ export const useLesson = () => {
       const result = await voiceApi.submitVoiceAnswer({
         learner_id: learnerId,
         item_id: currentItem.item_id,
+        kc_id: currentItem.kc_id || currentItem.kcId,
         session_id: sessionId,
         audio_base64: audioBase64,
       });
+
+      if (!result) {
+        console.warn('Voice API not available');
+        return null;
+      }
 
       // Update local state based on result
       answerQuestion(result.is_correct);

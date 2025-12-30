@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { UserProvider } from './context/UserContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { CoachProvider } from './contexts/CoachContext';
 import { AppShell } from './components/layout/AppShell';
 import { LessonPage } from './pages/LessonPage';
 import { LearnPage } from './pages/LearnPage';
@@ -10,6 +11,8 @@ import { ProfilePage } from './pages/ProfilePage';
 import { ShopPage } from './pages/ShopPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { QuestsPage } from './pages/QuestsPage';
+import { HelpPage } from './pages/HelpPage';
 import LandingPage from './pages/LandingPage';
 import { AuthPage } from './pages/AuthPage';
 
@@ -41,7 +44,8 @@ function App() {
   return (
     <ThemeProvider>
       <UserProvider>
-        <HashRouter
+        <CoachProvider>
+          <HashRouter
           future={{
             v7_startTransition: true,
             v7_relativeSplatPath: true,
@@ -61,16 +65,19 @@ function App() {
               <Route path="/section/:sectionId" element={<SectionPage />} />
               <Route path="/practice" element={<div>Practice Page</div>} />
               <Route path="/invest" element={<div>Invest Page</div>} />
+              <Route path="/quests" element={<QuestsPage />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/shop" element={<ShopPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/help" element={<HelpPage />} />
             </Route>
 
             {/* Default redirect */}
             <Route path="*" element={<Navigate to="/learn" replace />} />
           </Routes>
         </HashRouter>
+        </CoachProvider>
       </UserProvider>
     </ThemeProvider>
   );
