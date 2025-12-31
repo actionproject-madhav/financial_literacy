@@ -16,7 +16,7 @@ interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'size'> {
   fullWidth?: boolean;
   children: React.ReactNode;
 }
-
+//juat an test
 const variantStyles: Record<ButtonVariant, string> = {
   primary: `
     bg-[#58CC02] text-white font-bold
