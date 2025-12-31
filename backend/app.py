@@ -43,10 +43,17 @@ CORS(app,
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your-secret-key-change-this')
 # Production: Use secure cookies (HTTPS), Development: Allow HTTP
 is_production = os.getenv('FLASK_ENV') == 'production' or (FRONTEND_URL_ENV and not FRONTEND_URL_ENV.startswith('http://localhost'))
-app.config['SESSION_COOKIE_SECURE'] = is_production  # True in production (HTTPS), False for localhost
-app.config['SESSION_COOKIE_HTTPONLY'] = True  # True for security
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Works for cross-origin
-app.config['SESSION_COOKIE_DOMAIN'] = None  # None for localhost, set domain in production if needed
+
+# Cross-origin cookie settings for production
+if is_production:
+    app.config['SESSION_COOKIE_SECURE'] = True  # Require HTTPS
+    app.config['SESSION_COOKIE_SAMESITE'] = 'None'  # Allow cross-origin (Railway to Vercel)
+else:
+    app.config['SESSION_COOKIE_SECURE'] = False  # Allow HTTP for localhost
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Localhost doesn't need None
+
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent XSS
+app.config['SESSION_COOKIE_DOMAIN'] = None  # None for proper cross-origin handling
 app.config['SESSION_COOKIE_PATH'] = '/'
 app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 
@@ -67,6 +74,7 @@ app.config['LEARNING_ENGINE'] = learning_engine
 
 # Health check endpoint
 @app.route('/')
+@app.route('/api/health')
 def health_check():
     return {
         'status': 'ok',
