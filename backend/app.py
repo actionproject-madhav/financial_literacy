@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
+from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 from auth import auth_bp
 from database import Database
@@ -15,6 +16,10 @@ from blueprints.translate import translate_bp
 
 # Create Flask app
 app = Flask(__name__)
+
+# Fix for running behind Railway's reverse proxy
+# This ensures Flask knows the original request was HTTPS
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Configure CORS
 FRONTEND_URL_ENV = os.getenv('FRONTEND_URL', 'http://localhost:5173')
