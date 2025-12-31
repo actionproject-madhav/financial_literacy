@@ -7,9 +7,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Allow insecure transport for localhost development (HTTP instead of HTTPS)
-# This is safe for localhost only - DO NOT use in production
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+# Allow insecure transport for localhost development only (HTTP instead of HTTPS)
+# Only enable this for local development, not production
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+if 'localhost' in FRONTEND_URL or '127.0.0.1' in FRONTEND_URL:
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+    print("⚠️  OAUTHLIB_INSECURE_TRANSPORT enabled for localhost development")
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -21,7 +24,6 @@ def get_db():
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
 GOOGLE_REDIRECT_URI = os.getenv('GOOGLE_REDIRECT_URI')
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 
 def create_flow():
     """Create OAuth flow"""
