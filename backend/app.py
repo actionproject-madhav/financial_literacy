@@ -20,18 +20,25 @@ app = Flask(__name__)
 FRONTEND_URL_ENV = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 FRONTEND_BASE = FRONTEND_URL_ENV.rstrip('/').split('/auth')[0].split('/onboarding')[0]
 
+# Always include the configured frontend URL
 CORS_ORIGINS = [FRONTEND_BASE]
 
+# In development (localhost), also allow common dev ports
 if 'localhost' in FRONTEND_URL_ENV or '127.0.0.1' in FRONTEND_URL_ENV:
     CORS_ORIGINS.extend([
         "http://localhost:5173",
-        "http://localhost:5174", 
-        "http://localhost:3000",
-        "https://finlit-sigma.vercel.app"
+        "http://localhost:5174",
+        "http://localhost:3000"
     ])
 
+# Always allow production Vercel domain (in case of dual environments)
+CORS_ORIGINS.append("https://finlit-sigma.vercel.app")
+
+# Remove duplicates and trailing slashes
 CORS_ORIGINS = [origin.rstrip('/') for origin in CORS_ORIGINS]
 CORS_ORIGINS = list(dict.fromkeys(CORS_ORIGINS))
+
+print(f"🔒 CORS enabled for: {CORS_ORIGINS}")
 
 CORS(app, 
      origins=CORS_ORIGINS,
