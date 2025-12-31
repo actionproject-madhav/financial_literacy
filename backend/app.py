@@ -27,6 +27,7 @@ if 'localhost' in FRONTEND_URL_ENV or '127.0.0.1' in FRONTEND_URL_ENV:
         "http://localhost:5173",
         "http://localhost:5174", 
         "http://localhost:3000",
+        "https://finlit-sigma.vercel.app"
     ])
 
 CORS_ORIGINS = [origin.rstrip('/') for origin in CORS_ORIGINS]
@@ -63,6 +64,15 @@ else:
 # Store in app config for blueprint access
 app.config['DATABASE'] = db
 app.config['LEARNING_ENGINE'] = learning_engine
+
+# Health check endpoint
+@app.route('/')
+def health_check():
+    return {
+        'status': 'ok',
+        'message': 'Financial Literacy API is running',
+        'database': 'connected' if db.is_connected else 'disconnected'
+    }
 
 # Register blueprints
 app.register_blueprint(auth_bp, url_prefix='/auth')
