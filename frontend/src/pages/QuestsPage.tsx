@@ -1,285 +1,284 @@
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { ArrowLeft, Clock, Zap, BookOpen, Target, Loader2, Lock } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { useUserStore } from '../stores/userStore'
-import { questsApi, Quest } from '../services/api'
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { useUserStore } from '../stores/userStore';
+import { useLanguage } from '../contexts/LanguageContext';
+import { Heart } from 'lucide-react';
 
-export const QuestsPage = () => {
-    const { user, learnerId } = useUserStore()
-    const navigate = useNavigate()
-    const [dailyQuests, setDailyQuests] = useState<Quest[]>([])
-    const [weeklyQuests, setWeeklyQuests] = useState<Quest[]>([])
-    const [specialQuests, setSpecialQuests] = useState<Quest[]>([])
-    const [dailyResetHours, setDailyResetHours] = useState(12)
-    const [weeklyResetHours, setWeeklyResetHours] = useState(48)
-    const [loading, setLoading] = useState(true)
-    const [claiming, setClaiming] = useState<string | null>(null)
-    const [error, setError] = useState<string | null>(null)
+// Mock Data for Quests
+const MOCK_DAILY_QUESTS = [
+    { id: 1, title: 'Extend your streak', target: 1, current: 0, reward: 10, icon: '/fire.svg' },
+    { id: 2, title: 'Spend 5 minutes learning', target: 5, current: 0, reward: 20, icon: '/trophy.svg' },
+    { id: 3, title: 'Score 80% or higher in 3 lessons', target: 3, current: 0, reward: 50, icon: '/leaderboard.svg' },
+];
 
-    useEffect(() => {
-        if (learnerId) {
-            loadQuests()
+const MOCK_WEEKLY_QUESTS = [
+    { id: 4, title: 'Earn 500 XP this week', target: 500, current: 340, reward: 100, icon: '/coin.svg' },
+    { id: 5, title: 'Complete 10 lessons', target: 10, current: 6, reward: 150, icon: '/home-pixel.svg' },
+];
+
+export function QuestsPage() {
+    const { user } = useUserStore();
+    const { t } = useLanguage();
+    const [dailyQuests] = useState(MOCK_DAILY_QUESTS);
+    const [weeklyQuests] = useState(MOCK_WEEKLY_QUESTS);
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
         }
-    }, [learnerId])
+    };
 
-    const loadQuests = async () => {
-        if (!learnerId) return
-        setLoading(true)
-        setError(null)
-        try {
-            const data = await questsApi.getQuests(learnerId)
-            setDailyQuests(data.daily)
-            setWeeklyQuests(data.weekly)
-            setSpecialQuests(data.special)
-            setDailyResetHours(data.daily_reset_hours)
-            setWeeklyResetHours(data.weekly_reset_hours)
-        } catch (err) {
-            console.error('Failed to load quests:', err)
-            setError('Failed to load quests. Please try again.')
-        } finally {
-            setLoading(false)
-        }
-    }
+    const itemVariants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: { y: 0, opacity: 1 }
+    };
 
-    const handleClaimQuest = async (questId: string) => {
-        if (!learnerId || claiming) return
-        setClaiming(questId)
-        try {
-            const result = await questsApi.claimQuest(learnerId, questId)
-            if (result.success) {
-                await loadQuests()
-            }
-        } catch (err) {
-            console.error('Failed to claim quest:', err)
-        } finally {
-            setClaiming(null)
-        }
-    }
-
-    if (!learnerId) {
-        return (
-            <div className="min-h-screen bg-white flex items-center justify-center">
-                <div className="text-center">
-                    <p className="text-gray-500 font-medium mb-4">Please log in to view quests</p>
-                </div>
-            </div>
-        )
-    }
-
-    const formatResetTime = (hours: number) => {
-        if (hours < 1) return 'Less than 1h'
-        if (hours < 24) return `${hours}h`
-        const days = Math.floor(hours / 24)
-        const remainingHours = hours % 24
-        return `${days}d ${remainingHours}h`
-    }
-
-    const getIcon = (iconType: string) => {
-        switch (iconType) {
-            case 'xp':
-                return <Zap className="w-10 h-10 text-yellow-400" />
-            case 'lesson':
-                return <BookOpen className="w-10 h-10 text-blue-400" />
-            case 'streak':
-                return <Target className="w-10 h-10 text-orange-400" />
-            case 'perfect':
-                return <Target className="w-10 h-10 text-green-400" />
-            default:
-                return <Target className="w-10 h-10 text-gray-400" />
-        }
-    }
-
-    const QuestCard = ({ quest, index }: { quest: Quest; index: number }) => {
-        const progressPercent = Math.min((quest.progress / quest.target) * 100, 100)
-        const canClaim = quest.can_claim && !quest.completed
-        const isCompleted = quest.completed
-
-        return (
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={`bg-white border-2 ${isCompleted ? 'border-green-500 bg-green-50' : 'border-gray-200'} rounded-2xl p-4 transition-all hover:shadow-md`}
-            >
-                <div className="flex items-center gap-3">
-                    {/* Icon */}
-                    {getIcon(quest.icon)}
-
-                    {/* Content */}
-                    <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                            <h3 className={`font-extrabold text-sm ${isCompleted ? 'text-green-600' : 'text-gray-800'}`}>
-                                {quest.title}
-                            </h3>
-                            {!isCompleted && (
-                                <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg border border-yellow-200">
-                                    <span className="font-bold text-yellow-600 text-xs">+{quest.xp_reward}</span>
-                                    <Zap className="w-3 h-3 text-yellow-600 fill-yellow-600" />
-                                </div>
-                            )}
-                            {isCompleted && (
-                                <div className="flex items-center gap-1 bg-green-100 px-2 py-1 rounded-lg">
-                                    <span className="font-bold text-green-600 text-xs">COMPLETED</span>
-                                </div>
-                            )}
-                        </div>
-
-                        <p className="text-gray-500 text-xs mb-3 font-medium">{quest.description}</p>
-
-                        {/* Progress Bar */}
-                        <div className="relative w-full bg-gray-100 h-6 rounded-full overflow-hidden border border-gray-200 mb-3">
-                            <div className="absolute inset-0 flex items-center justify-center z-10">
-                                <span className="text-[10px] font-extrabold text-gray-500 uppercase tracking-tighter">
-                                    {quest.progress} / {quest.target}
-                                </span>
-                            </div>
-                            <div
-                                className={`h-full rounded-full transition-all ${
-                                    isCompleted ? 'bg-green-500' : 'bg-yellow-400'
-                                } border-r-2 ${isCompleted ? 'border-green-600/20' : 'border-yellow-500/20'}`}
-                                style={{ width: `${Math.max(progressPercent, 2)}%` }}
-                            />
-                        </div>
-
-                        {/* Claim Button */}
-                        {canClaim && (
-                            <button
-                                onClick={() => handleClaimQuest(quest.id)}
-                                disabled={claiming === quest.id}
-                                className="w-full py-3 bg-green-500 text-white font-bold text-xs rounded-xl border-b-4 border-green-600 hover:bg-green-400 hover:border-green-500 active:border-b-0 active:translate-y-1 transition-all uppercase tracking-widest shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                            >
-                                {claiming === quest.id ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        CLAIMING...
-                                    </>
-                                ) : (
-                                    'CLAIM REWARD'
-                                )}
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Reward Icon */}
-                    <img src="/quest.svg" className="w-12 h-12 object-contain cursor-pointer transition-transform hover:scale-110 -ml-1 pt-4" alt="Reward" />
-                </div>
-            </motion.div>
-        )
-    }
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-white flex items-center justify-center">
-                <div className="text-center">
-                    <Loader2 className="w-8 h-8 text-green-500 animate-spin mx-auto mb-4" />
-                    <p className="text-gray-500 font-medium">Loading quests...</p>
-                </div>
-            </div>
-        )
-    }
+    // Week days for streak calendar
+    const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    const today = new Date().getDay();
 
     return (
-        <div className="flex flex-col w-full min-h-screen bg-white">
-            {/* Back Header - Sticky */}
-            <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-6 py-4">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="flex items-center gap-3 text-gray-400 hover:text-gray-600 transition-colors group"
-                >
-                    <ArrowLeft className="w-5 h-5 group-hover:bg-gray-100 rounded-full transition-colors" strokeWidth={3} />
-                    <span className="font-bold uppercase tracking-widest text-sm">Back</span>
-                </button>
-            </div>
+        <div className="max-w-6xl mx-auto p-6 pb-20 pt-8">
+            <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={containerVariants}
+            >
+                {/* Two Column Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-            {/* Main Content */}
-            <div className="flex-1 flex justify-center">
-                <div className="w-full max-w-[720px] py-8 px-5">
-                    {/* Header */}
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight mb-2">Quests</h1>
-                        <p className="text-gray-500 text-sm font-medium">Complete quests to earn bonus XP</p>
-                    </div>
+                    {/* LEFT COLUMN - Main Quests */}
+                    <div className="lg:col-span-2 space-y-6">
 
-                    {/* Reset Timer */}
-                    <div className="mb-6 flex items-center gap-2 bg-white border-2 border-gray-200 px-4 py-3 rounded-xl w-fit">
-                        <Clock className="w-5 h-5 text-gray-400" />
-                        <span className="text-sm font-bold text-gray-600">Resets in {formatResetTime(dailyResetHours)}</span>
-                    </div>
-
-                    {error && (
-                        <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl text-red-600 text-sm font-medium">
-                            {error}
-                        </div>
-                    )}
-
-                    {/* Daily Quests */}
-                    <div className="mb-8">
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="w-8 h-8 bg-yellow-400 rounded-lg flex items-center justify-center">
-                                <Target className="w-5 h-5 text-white" />
+                        {/* Monthly Challenge Banner - Orange Theme */}
+                        <motion.div
+                            variants={itemVariants}
+                            className="rounded-3xl p-6 relative overflow-hidden"
+                            style={{ backgroundColor: '#FF6B35' }}
+                        >
+                            {/* Month Badge */}
+                            <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-1 rounded-full mb-4">
+                                <span className="text-white font-bold text-sm uppercase tracking-wide">December</span>
                             </div>
-                            <h2 className="font-extrabold text-gray-800 text-lg uppercase tracking-wider">Daily Quests</h2>
-                        </div>
-                        <div className="space-y-3">
-                            {dailyQuests.length > 0 ? (
-                                dailyQuests.map((quest, index) => (
-                                    <QuestCard key={quest.id} quest={quest} index={index} />
-                                ))
-                            ) : (
-                                <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 text-center">
-                                    <p className="text-gray-400 font-medium">No daily quests available</p>
+
+                            <h2 className="text-2xl font-extrabold text-white mb-2">
+                                Your Financial Quest
+                            </h2>
+                            <div className="flex items-center gap-2 text-white/80 text-sm font-medium mb-6">
+                                <span>⏱</span>
+                                <span>5 HOURS</span>
+                            </div>
+
+                            {/* Progress Card */}
+                            <div className="bg-white rounded-2xl p-4">
+                                <p className="font-bold text-gray-800 mb-3">Complete 30 quests</p>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full rounded-full"
+                                            style={{ width: '3%', backgroundColor: '#FF6B35' }}
+                                        />
+                                    </div>
+                                    <span className="text-gray-400 text-sm font-medium">1 / 30</span>
+                                    <img
+                                        src="/3d-models/monster-3.png"
+                                        alt="Reward"
+                                        className="w-10 h-10 object-contain"
+                                    />
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Daily Quests Section */}
+                        <motion.section variants={itemVariants}>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-xl font-bold text-gray-800">Daily Quests</h2>
+                                <span className="text-sm font-bold text-orange-500 flex items-center gap-1">
+                                    <span>⏱</span> 5 HOURS
+                                </span>
+                            </div>
+
+                            <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
+                                {dailyQuests.map((quest, index) => (
+                                    <div
+                                        key={quest.id}
+                                        className={`p-4 flex items-center gap-4 ${index !== dailyQuests.length - 1 ? 'border-b border-gray-100' : ''
+                                            }`}
+                                    >
+                                        <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 bg-gray-50">
+                                            <img src={quest.icon} alt="" className="w-7 h-7 object-contain" />
+                                        </div>
+
+                                        <div className="flex-1">
+                                            <h3 className="font-bold text-gray-800 mb-2">{quest.title}</h3>
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full rounded-full bg-gray-200"
+                                                        style={{ width: `${Math.min((quest.current / quest.target) * 100, 100)}%` }}
+                                                    />
+                                                </div>
+                                                <span className="text-gray-400 text-sm font-medium whitespace-nowrap">
+                                                    {quest.current} / {quest.target}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="shrink-0">
+                                            <img src="/quest.svg" alt="Reward" className="w-10 h-10 object-contain opacity-60" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.section>
+
+                        {/* Weekly Quests Section */}
+                        <motion.section variants={itemVariants}>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-xl font-bold text-gray-800">Weekly Quests</h2>
+                                <span className="text-sm font-bold text-purple-500 flex items-center gap-1">
+                                    <span>⏱</span> 4 DAYS
+                                </span>
+                            </div>
+
+                            <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
+                                {weeklyQuests.map((quest, index) => (
+                                    <div
+                                        key={quest.id}
+                                        className={`p-4 flex items-center gap-4 ${index !== weeklyQuests.length - 1 ? 'border-b border-gray-100' : ''
+                                            }`}
+                                    >
+                                        <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 bg-gray-50">
+                                            <img src={quest.icon} alt="" className="w-7 h-7 object-contain" />
+                                        </div>
+
+                                        <div className="flex-1">
+                                            <h3 className="font-bold text-gray-800 mb-2">{quest.title}</h3>
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full rounded-full bg-purple-400"
+                                                        style={{ width: `${Math.min((quest.current / quest.target) * 100, 100)}%` }}
+                                                    />
+                                                </div>
+                                                <span className="text-gray-400 text-sm font-medium whitespace-nowrap">
+                                                    {quest.current} / {quest.target}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="shrink-0">
+                                            <img src="/quest.svg" alt="Reward" className="w-10 h-10 object-contain opacity-60" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.section>
                     </div>
 
-                    {/* Weekly Quests */}
-                    <div className="mb-8">
-                        <div className="flex items-center justify-between mb-4">
+                    {/* RIGHT COLUMN - Stats & Widgets */}
+                    <div className="space-y-6">
+
+                        {/* Stats Header Row */}
+                        <motion.div variants={itemVariants} className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm">
                             <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 bg-blue-400 rounded-lg flex items-center justify-center">
-                                    <Target className="w-5 h-5 text-white" />
-                                </div>
-                                <h2 className="font-extrabold text-gray-800 text-lg uppercase tracking-wider">Weekly Quests</h2>
+                                <img src="/fire.svg" alt="Streak" className="w-6 h-6" />
+                                <span className="font-bold text-gray-700">{user?.streak || 0}</span>
                             </div>
-                            <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">Resets in {formatResetTime(weeklyResetHours)}</span>
-                        </div>
-                        <div className="space-y-3">
-                            {weeklyQuests.length > 0 ? (
-                                weeklyQuests.map((quest, index) => (
-                                    <QuestCard key={quest.id} quest={quest} index={index + dailyQuests.length} />
-                                ))
-                            ) : (
-                                <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 text-center">
-                                    <p className="text-gray-400 font-medium">No weekly quests available</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                            <div className="flex items-center gap-2">
+                                <img src="/coin.svg" alt="Gems" className="w-6 h-6" />
+                                <span className="font-bold text-gray-700">{user?.gems || 0}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Heart className="w-5 h-5 text-red-500 fill-current" />
+                                <span className="font-bold text-red-500">{user?.hearts || 5}</span>
+                            </div>
+                        </motion.div>
 
-                    {/* Special Quests */}
-                    <div>
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="w-8 h-8 bg-purple-400 rounded-lg flex items-center justify-center">
-                                <Target className="w-5 h-5 text-white" />
-                            </div>
-                            <h2 className="font-extrabold text-gray-800 text-lg uppercase tracking-wider">Special Quests</h2>
-                        </div>
-                        <div className="space-y-3">
-                            {specialQuests.length > 0 ? (
-                                specialQuests.map((quest, index) => (
-                                    <QuestCard key={quest.id} quest={quest} index={index + dailyQuests.length + weeklyQuests.length} />
-                                ))
-                            ) : (
-                                <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 text-center">
-                                    <p className="text-gray-400 font-medium">No special quests available</p>
+                        {/* Streak Widget - Light Blue Theme */}
+                        <motion.div
+                            variants={itemVariants}
+                            className="rounded-2xl p-5"
+                            style={{ backgroundColor: '#E0F7FA' }}
+                        >
+                            <div className="flex items-start justify-between mb-3">
+                                <div>
+                                    <h3 className="text-xl font-extrabold text-gray-800">{user?.streak || 1} day streak</h3>
+                                    <p className="text-gray-600 text-sm mt-1">
+                                        Streak frozen yesterday. Extend your streak now!
+                                    </p>
                                 </div>
-                            )}
-                        </div>
+                                <img src="/fire.svg" alt="Streak" className="w-12 h-12" />
+                            </div>
+
+                            {/* Week Calendar */}
+                            <div className="flex justify-between mt-4">
+                                {weekDays.map((day, index) => (
+                                    <div key={index} className="text-center">
+                                        <span className="text-xs font-bold text-gray-500 block mb-2">{day}</span>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${index < today
+                                            ? 'bg-orange-500'
+                                            : index === today
+                                                ? 'bg-orange-500 ring-2 ring-orange-300'
+                                                : 'bg-gray-200'
+                                            }`}>
+                                            {index <= today && (
+                                                <span className="text-white text-xs">✓</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+
+                        {/* Friend Streaks - Orange Theme */}
+                        <motion.div
+                            variants={itemVariants}
+                            className="rounded-2xl p-5 flex items-center gap-4"
+                            style={{ backgroundColor: '#FF6B35' }}
+                        >
+                            <img
+                                src="/3d-models/monster-6.png"
+                                alt="Friends"
+                                className="w-16 h-16 object-contain"
+                            />
+                            <div className="flex-1">
+                                <h3 className="font-bold text-white">Friend Streaks</h3>
+                                <p className="text-white/80 text-sm">0 active Friend Streaks</p>
+                                <button className="mt-2 bg-white text-orange-600 font-bold text-sm px-4 py-1.5 rounded-full">
+                                    VIEW LIST
+                                </button>
+                            </div>
+                        </motion.div>
+
+                        {/* Streak Society */}
+                        <motion.div variants={itemVariants} className="bg-white rounded-2xl p-5 shadow-sm">
+                            <div className="flex items-start gap-4">
+                                <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+                                    <img src="/trophy.svg" alt="Society" className="w-8 h-8 opacity-40" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-gray-800">Streak Society</h3>
+                                    <p className="text-gray-500 text-sm mt-1">
+                                        Reach a 7 day streak to join the Streak Society and earn exclusive rewards.
+                                    </p>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* View More Button */}
+                        <motion.button
+                            variants={itemVariants}
+                            className="w-full py-4 rounded-2xl font-bold text-white text-sm uppercase tracking-wide"
+                            style={{ backgroundColor: '#FF8C42' }}
+                        >
+                            View More
+                        </motion.button>
                     </div>
                 </div>
-            </div>
+            </motion.div>
         </div>
-    )
+    );
 }

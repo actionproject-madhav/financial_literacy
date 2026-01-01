@@ -57,7 +57,9 @@
     @apply border-border;
   }
 
-  html, body, #root {
+  html,
+  body,
+  #root {
     @apply h-full;
   }
 
@@ -95,7 +97,10 @@
 
   /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
+
+    *,
+    *::before,
+    *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
@@ -104,6 +109,7 @@
 }
 
 @layer components {
+
   /* Custom scrollbar (Duolingo style) */
   .scrollbar-custom::-webkit-scrollbar {
     width: 8px;
@@ -123,6 +129,23 @@
   .scrollbar-custom::-webkit-scrollbar-thumb:hover {
     background: #D5D5D5;
   }
+
+  /* Course Card Mascot/Monster Image */
+  .course-mascot {
+    width: 13.5rem;
+    /* 216px - easy to change */
+    height: 13.5rem;
+    /* 216px */
+    object-fit: contain;
+  }
+
+  @media (min-width: 768px) {
+    .course-mascot {
+      width: 13.5rem;
+      /* Same on larger screens */
+      height: 13.5rem;
+    }
+  }
 }
 
 /* Utility classes */
@@ -130,11 +153,11 @@
   .text-balance {
     text-wrap: balance;
   }
-  
+
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
-  
+
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;

@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Card, Button, IconButton } from '../components/ui';
+import { Button } from '../components/ui';
 import {
-  ChevronRight,
   Bell,
   Volume2,
   Globe,
@@ -14,6 +13,9 @@ import {
   Trash2,
   Download,
   Target,
+  Image,
+  MessageSquare,
+  Headphones,
 } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { useUserStore } from '../stores/userStore';
@@ -31,123 +33,93 @@ interface SettingsItem {
   id: string;
   label: string;
   description?: string;
-  icon: React.ReactNode;
-  type: 'link' | 'toggle' | 'button';
+  type: 'link' | 'toggle' | 'button' | 'dropdown';
   value?: boolean;
   onClick?: () => void;
   danger?: boolean;
+  options?: { label: string; value: string }[];
 }
 
 export const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { logout, user } = useUserStore();
-  const [notifications, setNotifications] = useState(true);
+  const { logout } = useUserStore();
+
+  // Settings State
   const [soundEffects, setSoundEffects] = useState(true);
+  const [animations, setAnimations] = useState(true);
+  const [motivationalMessages, setMotivationalMessages] = useState(true);
+  const [listeningExercises, setListeningExercises] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
-  const [dailyGoal, setDailyGoal] = useState(10);
+  const [pushNotifications, setPushNotifications] = useState(true);
+  const [practiceReminders, setPracticeReminders] = useState(true);
+
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Scroll to section if specified in URL
-  useEffect(() => {
-    const section = searchParams.get('section');
-    if (section) {
-      // Map profile page section names to settings section IDs
-      const sectionMap: Record<string, string> = {
-        'notifications': 'notifications',
-        'voice': 'audio',
-        'goal': 'goals',
-        'language': 'account',
-      };
-      const targetSection = sectionMap[section] || section;
-      setTimeout(() => {
-        sectionRefs.current[targetSection]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
-    }
-  }, [searchParams]);
+  const scrollToSection = (id: string) => {
+    sectionRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const handleLogout = async () => {
     try {
       await authApi.logout();
     } catch (error: any) {
       console.error('Logout API error:', error);
-      // Continue with logout even if API call fails
-      // The error might be "URL not found" if backend is down, but we still want to clear local state
     }
-    // Clear local state (always do this, even if API call failed)
     logout();
-    // Navigate to auth page using hash router
     navigate('/auth');
   };
 
-  const settingsSections: SettingsSection[] = [
+  const sections: SettingsSection[] = [
     {
       id: 'account',
       title: 'Account',
       items: [
         {
           id: 'profile',
-          label: 'Profile',
-          description: 'Edit your profile information',
-          icon: <User className="w-5 h-5" />,
-          type: 'link',
+          label: 'Edit Profile',
+          type: 'button',
           onClick: () => navigate('/profile'),
         },
         {
-          id: 'language',
-          label: 'Language',
-          description: 'Change app language',
-          icon: <Globe className="w-5 h-5" />,
-          type: 'link',
+          id: 'password',
+          label: 'Change Password',
+          type: 'button',
+          onClick: () => console.log('Change password'),
         },
       ],
     },
     {
-      id: 'notifications',
-      title: 'Notifications',
+      id: 'preferences',
+      title: 'Lesson experience',
       items: [
         {
-          id: 'push-notifications',
-          label: 'Push Notifications',
-          description: 'Get reminders to practice',
-          icon: <Bell className="w-5 h-5" />,
-          type: 'toggle',
-          value: notifications,
-          onClick: () => setNotifications(!notifications),
-        },
-      ],
-    },
-    {
-      id: 'audio',
-      title: 'Audio',
-      items: [
-        {
-          id: 'sound-effects',
-          label: 'Sound Effects',
-          description: 'Play sounds for correct answers',
-          icon: <Volume2 className="w-5 h-5" />,
+          id: 'sound',
+          label: 'Sound effects',
           type: 'toggle',
           value: soundEffects,
           onClick: () => setSoundEffects(!soundEffects),
         },
-      ],
-    },
-    {
-      id: 'goals',
-      title: 'Daily Goal',
-      items: [
         {
-          id: 'daily-goal',
-          label: 'Daily Practice Goal',
-          description: `${dailyGoal} minutes per day`,
-          icon: <Target className="w-5 h-5" />,
-          type: 'link',
-          onClick: () => {
-            const newGoal = prompt('Set your daily goal (minutes):', String(dailyGoal));
-            if (newGoal && !isNaN(Number(newGoal))) {
-              setDailyGoal(Number(newGoal));
-            }
-          },
+          id: 'animations',
+          label: 'Animations',
+          type: 'toggle',
+          value: animations,
+          onClick: () => setAnimations(!animations),
+        },
+        {
+          id: 'motivation',
+          label: 'Motivational messages',
+          type: 'toggle',
+          value: motivationalMessages,
+          onClick: () => setMotivationalMessages(!motivationalMessages),
+        },
+        {
+          id: 'listening',
+          label: 'Listening exercises',
+          type: 'toggle',
+          value: listeningExercises,
+          onClick: () => setListeningExercises(!listeningExercises),
         },
       ],
     },
@@ -156,185 +128,200 @@ export const SettingsPage: React.FC = () => {
       title: 'Appearance',
       items: [
         {
-          id: 'dark-mode',
-          label: 'Dark Mode',
-          description: 'Switch to dark theme',
-          icon: <Moon className="w-5 h-5" />,
-          type: 'toggle',
+          id: 'dark_mode',
+          label: 'Dark mode',
+          type: 'dropdown', // Visualized as dropdown in React but simple text here
           value: darkMode,
           onClick: () => setDarkMode(!darkMode),
+          description: darkMode ? 'ON' : 'OFF',
         },
       ],
     },
     {
-      id: 'data',
-      title: 'Data',
+      id: 'notifications',
+      title: 'Notifications',
+      items: [
+        {
+          id: 'push',
+          label: 'Push notifications',
+          type: 'toggle',
+          value: pushNotifications,
+          onClick: () => setPushNotifications(!pushNotifications),
+        },
+        {
+          id: 'reminders',
+          label: 'Practice reminders',
+          type: 'toggle',
+          value: practiceReminders,
+          onClick: () => setPracticeReminders(!practiceReminders),
+        },
+      ],
+    },
+    {
+      id: 'courses',
+      title: 'Courses',
+      items: [
+        {
+          id: 'language',
+          label: 'Learning Language',
+          type: 'button', // Using button to wrap LanguageSelector logic
+          onClick: () => { }, // Handled by inline component
+        },
+      ],
+    },
+    {
+      id: 'privacy',
+      title: 'Privacy settings',
       items: [
         {
           id: 'export',
           label: 'Export Data',
-          description: 'Download your learning data',
-          icon: <Download className="w-5 h-5" />,
           type: 'button',
-          onClick: () => console.log('Export data'),
+          onClick: () => console.log('Export'),
         },
         {
           id: 'delete',
           label: 'Delete Account',
-          description: 'Permanently delete your account',
-          icon: <Trash2 className="w-5 h-5" />,
           type: 'button',
           danger: true,
           onClick: () => {
-            if (confirm('Are you sure you want to delete your account? This cannot be undone.')) {
-              console.log('Delete account');
+            if (confirm('Delete account? This cannot be undone.')) {
+              console.log('Delete');
             }
           },
         },
       ],
     },
-    {
-      id: 'support',
-      title: 'Support',
-      items: [
-        {
-          id: 'help',
-          label: 'Help Center',
-          description: 'Get help and support',
-          icon: <HelpCircle className="w-5 h-5" />,
-          type: 'link',
-        },
-        {
-          id: 'privacy',
-          label: 'Privacy Policy',
-          description: 'How we protect your data',
-          icon: <Shield className="w-5 h-5" />,
-          type: 'link',
-        },
-      ],
-    },
   ];
 
-  const SettingItemComponent: React.FC<{ item: SettingsItem }> = ({ item }) => {
-    return (
-      <button
-        onClick={item.onClick}
-        className={cn(
-          'w-full flex items-center gap-4 p-5 transition-colors',
-          'hover:bg-[#F7F7F7]',
-          item.danger && 'hover:bg-[#FFDFE0]'
-        )}
-      >
-        <div className={cn(
-          'flex items-center justify-center w-10 h-10 rounded-[12px]',
-          item.danger ? 'bg-[#FFDFE0] text-[#FF4B4B]' : 'bg-[#F7F7F7] text-[#4B4B4B]'
-        )}>
-          {item.icon}
-        </div>
-
-        <div className="flex-1 text-left">
-          <p className={cn(
-            'text-[15px] font-bold',
-            item.danger ? 'text-[#FF4B4B]' : 'text-[#4B4B4B]'
-          )} style={{ lineHeight: '24px' }}>
-            {item.label}
-          </p>
-          {item.description && (
-            <p className="text-[13px] text-[#737373] mt-1" style={{ lineHeight: '20px' }}>
-              {item.description}
-            </p>
-          )}
-        </div>
-
-        {item.type === 'toggle' && (
-          <div className={cn(
-            'w-12 h-7 rounded-full transition-colors relative',
-            item.value ? 'bg-[#58CC02]' : 'bg-[#E5E5E5]'
-          )}>
-            <motion.div
-              className="absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-sm"
-              animate={{ x: item.value ? 20 : 0 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-            />
-          </div>
-        )}
-
-        {item.type === 'link' && item.id === 'language' && (
-          <LanguageSelector />
-        )}
-        
-        {(item.type === 'link' || item.type === 'button') && !item.danger && item.id !== 'language' && (
-          <ChevronRight className="w-5 h-5 text-[#737373]" />
-        )}
-      </button>
-    );
-  };
-
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div>
-        <h1 className="text-[23px] font-bold text-[#4B4B4B]" style={{ lineHeight: '32px' }}>
-          Settings
-        </h1>
-        <p className="text-[15px] text-[#737373] mt-1" style={{ lineHeight: '24px' }}>
-          Manage your account and preferences
-        </p>
-      </div>
+    <div className="min-h-screen bg-white flex justify-center">
+      <div className="flex w-full max-w-[1100px] p-6 pt-10 gap-12">
+        {/* === Left: Main Content === */}
+        <div className="flex-1 max-w-[700px]">
+          <h1 className="text-3xl font-extrabold text-[#3c3c3c] mb-8">Preferences</h1>
 
-      {/* Settings Sections */}
-      {settingsSections.map((section, sectionIndex) => (
-        <motion.div
-          key={section.id}
-          ref={(el) => { sectionRefs.current[section.id] = el; }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: sectionIndex * 0.1 }}
-        >
-          <Card variant="bordered" padding="none">
-            <div className="px-5 py-4 border-b-2 border-[#E5E5E5]">
-              <h2 className="text-[17px] font-bold text-[#4B4B4B]" style={{ lineHeight: '24px' }}>
-                {section.title}
-              </h2>
-            </div>
+          <div className="space-y-10">
+            {sections.map((section) => (
+              <div key={section.id} ref={(el) => { sectionRefs.current[section.id] = el; }}>
+                <h2 className="text-xl font-bold text-[#3c3c3c] border-b-2 border-gray-200 pb-4 mb-4">
+                  {section.title}
+                </h2>
 
-            <div>
-              {section.items.map((item, itemIndex) => (
-                <div
-                  key={item.id}
-                  className={cn(
-                    itemIndex !== section.items.length - 1 && 'border-b-2 border-[#E5E5E5]'
-                  )}
-                >
-                  <SettingItemComponent item={item} />
+                <div className="space-y-1">
+                  {section.items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between py-3"
+                    >
+                      <div className="flex-1">
+                        <span className={cn(
+                          "font-bold text-[17px]",
+                          item.danger ? "text-red-500" : "text-[#4b4b4b]"
+                        )}>
+                          {item.label}
+                        </span>
+                        {item.id === 'language' && (
+                          <div className="mt-2">
+                            <LanguageSelector />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Controls */}
+                      {item.type === 'toggle' && (
+                        <button
+                          onClick={item.onClick}
+                          className={cn(
+                            "w-12 h-7 rounded-full relative transition-colors duration-200",
+                            item.value ? "bg-[#1cb0f6]" : "bg-[#e5e5e5]"
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200",
+                              item.value ? "translate-x-5" : "translate-x-0"
+                            )}
+                          />
+                        </button>
+                      )}
+
+                      {(item.type === 'button' || item.type === 'link') && item.id !== 'language' && !item.danger && (
+                        <Button variant="ghost" size="sm" onClick={item.onClick} className="text-[#1cb0f6] font-bold uppercase">
+                          Edit
+                        </Button>
+                      )}
+
+                      {item.type === 'button' && item.danger && (
+                        <Button variant="danger" size="sm" onClick={item.onClick}>
+                          Delete
+                        </Button>
+                      )}
+
+                      {item.type === 'dropdown' && (
+                        <div className="relative">
+                          <button
+                            onClick={item.onClick}
+                            className="px-4 py-2 bg-white border-2 border-gray-200 rounded-xl font-bold text-gray-600 min-w-[120px] text-left flex justify-between items-center"
+                          >
+                            <span>{item.description}</span>
+                            <span className="text-gray-400">▼</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* === Right: Sidebar Navigation === */}
+        <div className="hidden lg:block w-[320px] flex-shrink-0">
+          <div className="sticky top-10 space-y-6">
+            <div className="border-[2px] border-gray-200 rounded-2xl p-4 bg-white">
+              <div className="flex flex-col gap-1">
+                {sections.map((section) => (
+                  <button
+                    key={section.id}
+                    onClick={() => scrollToSection(section.id)}
+                    className="text-left px-4 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-colors"
+                  >
+                    {section.title === 'Lesson experience' ? 'Preferences' : section.title}
+                  </button>
+                ))}
+                <button className="text-left px-4 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-colors">
+                  Duolingo for Schools
+                </button>
+                <button className="text-left px-4 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-colors">
+                  Social accounts
+                </button>
+              </div>
             </div>
-          </Card>
-        </motion.div>
-      ))}
 
-      {/* Logout Button */}
-      <Card variant="bordered" padding="none">
-        <Button
-          variant="danger"
-          size="lg"
-          fullWidth
-          onClick={handleLogout}
-          leftIcon={<LogOut className="w-5 h-5" />}
-        >
-          Log Out
-        </Button>
-      </Card>
+            <div className="border-[2px] border-gray-200 rounded-2xl p-4 bg-white">
+              <h3 className="px-4 font-bold text-gray-800 text-lg mb-2">Subscription</h3>
+              <button className="w-full text-left px-4 py-2 font-bold text-[#1cb0f6] hover:bg-gray-50 rounded-xl transition-colors">
+                Choose a plan
+              </button>
+            </div>
 
-      {/* App Version */}
-      <div className="text-center py-4">
-        <p className="text-[13px] text-[#737373]">
-          FinLit v1.0.0
-        </p>
-        <p className="text-[13px] text-[#737373] mt-1">
-          © 2024 FinLit. All rights reserved.
-        </p>
+            <div className="border-[2px] border-gray-200 rounded-2xl p-4 bg-white">
+              <h3 className="px-4 font-bold text-gray-800 text-lg mb-2">Support</h3>
+              <button className="w-full text-left px-4 py-2 font-bold text-[#1cb0f6] hover:bg-gray-50 rounded-xl transition-colors">
+                Help Center
+              </button>
+              <div className="my-2 border-t border-gray-100 mx-4" />
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-2 font-extrabold text-[#ff4b4b] hover:bg-red-50 rounded-xl transition-colors uppercase text-sm tracking-widest"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

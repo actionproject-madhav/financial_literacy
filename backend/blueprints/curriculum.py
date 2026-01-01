@@ -34,7 +34,7 @@ def get_db():
 DOMAIN_METADATA = {
     'banking': {
         'title': 'Banking Basics',
-        'description': 'Master US banking fundamentals - accounts, fees, and everyday transactions.',
+        'description': 'Master US banking fundamentals.',
         'level': 'beginner',
         'order': 1
     },
@@ -46,7 +46,7 @@ DOMAIN_METADATA = {
     },
     'taxes': {
         'title': 'US Tax System',
-        'description': 'Navigate the US tax system with confidence - filing, deductions, and compliance.',
+        'description': 'Navigate the US tax system with confidence.',
         'level': 'intermediate',
         'order': 3
     },

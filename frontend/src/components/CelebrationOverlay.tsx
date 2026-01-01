@@ -1,7 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useState, useRef } from 'react'
-import Lottie from 'lottie-react'
-import happyAnimation from '../assets/animations/happy.json'
 import { Zap } from 'lucide-react'
 
 interface CelebrationOverlayProps {
@@ -59,7 +57,7 @@ export const CelebrationOverlay = ({
                 >
                     {/* Main Content Container */}
                     <div className="flex flex-col items-center justify-center flex-1 px-6 pt-16">
-                        {/* Celebration Animation */}
+                        {/* Celebration Animation - Happy Women GIF */}
                         <motion.div
                             initial={{ y: -30, opacity: 0, scale: 0.8 }}
                             animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -67,10 +65,10 @@ export const CelebrationOverlay = ({
                             className="relative z-10 mb-6"
                         >
                             <div className="w-48 h-48 md:w-56 md:h-56">
-                                <Lottie 
-                                    animationData={happyAnimation} 
-                                    loop={true}
-                                    className="w-full h-full"
+                                <img
+                                    src="/happy-women.gif"
+                                    alt="Celebration"
+                                    className="w-full h-full object-contain"
                                 />
                             </div>
                         </motion.div>

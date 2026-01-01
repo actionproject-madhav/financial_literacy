@@ -26,15 +26,39 @@ export const SectionPage = () => {
         const fetchLessons = async () => {
             if (!sectionId) return
 
+            // Check if learnerId is a valid MongoDB ObjectId (24-char hex string)
+            const isValidObjectId = learnerId && /^[0-9a-fA-F]{24}$/.test(learnerId)
+
+            // For UI testing: use mock data when not logged in or invalid learnerId
+            if (!isValidObjectId) {
+                // Mock data for testing UI without login
+                setCourse({
+                    id: sectionId,
+                    title: 'Financial Basics',
+                    description: 'Learn the fundamentals of personal finance',
+                    level: 'Beginner'
+                })
+                setLessons([
+                    { id: '1', title: 'Understanding Money', order: 1, status: 'completed', xpReward: 10 },
+                    { id: '2', title: 'Budgeting 101', order: 2, status: 'completed', xpReward: 15 },
+                    { id: '3', title: 'Saving Strategies', order: 3, status: 'available', xpReward: 20 },
+                    { id: '4', title: 'Introduction to Investing', order: 4, status: 'locked', xpReward: 25 },
+                    { id: '5', title: 'Credit and Debt Management', order: 5, status: 'locked', xpReward: 30 },
+                ] as any)
+                setLoading(false)
+                return
+            }
+
             try {
                 setLoading(true)
                 const response = await curriculumApi.getCourseLessons(sectionId, learnerId || undefined)
                 setCourse(response.course)
                 setLessons(response.lessons)
                 setError(null)
-            } catch (err) {
+            } catch (err: any) {
                 console.error('Failed to fetch lessons:', err)
-                setError('Failed to load lessons')
+                // For production: show error to logged-in users instead of mock data
+                setError('Failed to load lessons. Please check your connection.')
             } finally {
                 setLoading(false)
             }
@@ -46,7 +70,9 @@ export const SectionPage = () => {
     // Refresh lessons when page becomes visible (user returns from lesson)
     useEffect(() => {
         const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible' && sectionId && learnerId) {
+            // Only refresh if we have a valid MongoDB ObjectId
+            const isValidObjectId = learnerId && /^[0-9a-fA-F]{24}$/.test(learnerId)
+            if (document.visibilityState === 'visible' && sectionId && isValidObjectId) {
                 // Refetch lessons to get updated progress
                 curriculumApi.getCourseLessons(sectionId, learnerId)
                     .then(response => {
@@ -64,8 +90,6 @@ export const SectionPage = () => {
         }
     }, [sectionId, learnerId])
 
-    if (!user) return null
-
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-white">
@@ -77,10 +101,48 @@ export const SectionPage = () => {
         )
     }
 
+    // Show login prompt if explicitly required (only when API returns auth error)
+    if (error === 'login_required') {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-white">
+                <div className="text-center max-w-md px-6">
+                    <img
+                        src="/3d-models/monster-4.png"
+                        alt="Login required"
+                        className="w-32 h-32 mx-auto mb-6 object-contain"
+                    />
+                    <h2 className="text-2xl font-extrabold text-gray-800 mb-2">Please Log In</h2>
+                    <p className="text-gray-500 font-medium mb-6">
+                        You need to be logged in to access course lessons and track your progress.
+                    </p>
+                    <div className="flex flex-col gap-3">
+                        <button
+                            onClick={() => navigate('/login')}
+                            className="px-6 py-3 bg-[#58cc02] text-white rounded-xl font-bold border-b-4 border-[#46a302] hover:brightness-105 transition-all"
+                        >
+                            Log In
+                        </button>
+                        <button
+                            onClick={() => navigate('/learn')}
+                            className="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-all"
+                        >
+                            Back to Courses
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     if (error || !course) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-white">
-                <div className="text-center">
+                <div className="text-center max-w-md px-6">
+                    <img
+                        src="/3d-models/monster-2.png"
+                        alt="Error"
+                        className="w-24 h-24 mx-auto mb-4 object-contain opacity-60"
+                    />
                     <p className="text-red-500 font-medium mb-4">{error || 'Course not found'}</p>
                     <button
                         onClick={() => navigate('/learn')}
@@ -175,7 +237,7 @@ export const SectionPage = () => {
 
                                                 <div className="flex items-center gap-1.5 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">
                                                     <span className="font-extrabold text-amber-500 text-sm">{points}+</span>
-                                                    <div className="w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center border-2 border-amber-300 text-[10px]">🪙</div>
+                                                    <img src="/coin.svg" className="w-5 h-5 object-contain" alt="Coins" />
                                                 </div>
                                             </div>
 
@@ -236,15 +298,15 @@ export const SectionPage = () => {
                         </div>
                         <div className="flex items-center gap-2 hover:bg-gray-100 p-2 px-3 rounded-xl transition-colors cursor-pointer">
                             <Flame className="w-5 h-5 text-orange-500 fill-current" />
-                            <span className="font-bold text-gray-400 hover:text-orange-500">{user.streak}</span>
+                            <span className="font-bold text-gray-400 hover:text-orange-500">{user?.streak ?? 0}</span>
                         </div>
                         <div className="flex items-center gap-2 hover:bg-gray-100 p-2 px-3 rounded-xl transition-colors cursor-pointer">
-                            <Gem className="w-5 h-5 text-blue-400 fill-current" />
-                            <span className="font-bold text-gray-400 hover:text-blue-400">{user.gems}</span>
+                            <img src="/coin.svg" className="w-5 h-5 object-contain" alt="Gems" />
+                            <span className="font-bold text-gray-400 hover:text-amber-500">{user?.gems ?? 0}</span>
                         </div>
                         <div className="flex items-center gap-2 hover:bg-gray-100 p-2 px-3 rounded-xl transition-colors cursor-pointer">
                             <Heart className="w-5 h-5 text-red-500 fill-current" />
-                            <span className="font-bold text-gray-400 hover:text-red-500">{user.hearts}</span>
+                            <span className="font-bold text-gray-400 hover:text-red-500">{user?.hearts ?? 5}</span>
                         </div>
                     </div>
 

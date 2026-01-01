@@ -10,7 +10,11 @@ import { ChevronDown } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { SUPPORTED_LANGUAGES, LanguageCode } from '../i18n/config'
 
-export const LanguageSelector = () => {
+interface LanguageSelectorProps {
+  compact?: boolean
+}
+
+export const LanguageSelector = ({ compact = false }: LanguageSelectorProps) => {
   const { language, setLanguage, languageConfig } = useLanguage()
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -36,7 +40,7 @@ export const LanguageSelector = () => {
     <div className="relative z-50" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-xl border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-95"
+        className={`flex items-center gap-2 ${compact ? 'p-2' : 'px-3 py-2'} rounded-xl border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-95`}
         aria-label="Select language"
       >
         <img
@@ -44,10 +48,14 @@ export const LanguageSelector = () => {
           alt={languageConfig.name}
           className="w-6 h-4 rounded object-cover shadow-sm"
         />
-        <span className="text-sm font-bold text-gray-700 hidden sm:inline">
-          {languageConfig.nativeName}
-        </span>
-        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        {!compact && (
+          <>
+            <span className="text-sm font-bold text-gray-700 hidden sm:inline">
+              {languageConfig.nativeName}
+            </span>
+            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          </>
+        )}
       </button>
 
       <AnimatePresence>
@@ -63,9 +71,8 @@ export const LanguageSelector = () => {
               <button
                 key={lang.code}
                 onClick={() => handleLanguageChange(lang.code)}
-                className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-all border-b border-gray-100 last:border-b-0 ${
-                  language === lang.code ? 'bg-green-50 hover:bg-green-100' : ''
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-all border-b border-gray-100 last:border-b-0 ${language === lang.code ? 'bg-green-50 hover:bg-green-100' : ''
+                  }`}
                 aria-label={`Switch to ${lang.name}`}
               >
                 <img

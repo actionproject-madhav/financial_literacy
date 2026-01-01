@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Share2, ChevronRight } from 'lucide-react';
+import { Settings, Share2, ChevronRight, X, Edit2, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Button, IconButton } from '../components/ui';
 import { Avatar } from '../components/ui/Avatar';
@@ -11,9 +11,60 @@ import { AchievementBadge } from '../components/gamification/AchievementBadge';
 import { useUserStore } from '../stores/userStore';
 import { learnerApi } from '../services/api';
 
+const AVATAR_OPTIONS = [
+  '/characters/12.png',
+  '/characters/13.png',
+  '/characters/14.png',
+  '/characters/15.png',
+  '/characters/16.png',
+  '/characters/17.png',
+  '/characters/18.png',
+  '/characters/19.png',
+  '/characters/20.png',
+];
+
+const BACKGROUND_COLORS = [
+  '#89e219', // Green
+  '#1cb0f6', // Blue
+  '#ff4b4b', // Red
+  '#ffc800', // Yellow
+  '#ce82ff', // Purple
+  '#ff96bc', // Pink
+  '#ff9600', // Orange
+];
+
+const COUNTRY_OPTIONS = [
+  { code: 'us', name: 'United States' },
+  { code: 'in', name: 'India' },
+  { code: 'cn', name: 'China' },
+  { code: 'mx', name: 'Mexico' },
+  { code: 'ph', name: 'Philippines' },
+  { code: 'vn', name: 'Vietnam' },
+  { code: 'kr', name: 'South Korea' },
+  { code: 'ng', name: 'Nigeria' },
+  { code: 'ca', name: 'Canada' },
+  { code: 'gb', name: 'United Kingdom' },
+  { code: 'br', name: 'Brazil' },
+  { code: 'fr', name: 'France' },
+];
+
+const VISA_STATUS_OPTIONS = [
+  'F-1 Student',
+  'H-1B Specialty',
+  'J-1 Exchange',
+  'L-1 Intracompany',
+  'O-1 Extraordinary',
+  'TN NAFTA',
+  'Green Card',
+  'Citizen',
+  'Other',
+];
+
 interface ProfileStats {
   learner_id: string;
   display_name: string;
+  username?: string;
+  joined_date?: string;
   email: string;
   country_of_origin: string;
   visa_type: string;
@@ -27,6 +78,10 @@ interface ProfileStats {
   xp_for_next_level: number;
   xp_in_current_level: number;
   xp_needed_for_level: number;
+  current_league?: string;
+  top_3_finishes?: number;
+  following?: number;
+  followers?: number;
 }
 
 export const ProfilePage: React.FC = () => {
@@ -36,10 +91,73 @@ export const ProfilePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Customization State - Load from localStorage for persistence
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('profileAvatar') || '/3d-models/monster-1.png';
+    }
+    return '/3d-models/monster-1.png';
+  });
+  const [selectedBgColor, setSelectedBgColor] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('profileBgColor') || '#89e219';
+    }
+    return '#89e219';
+  });
+  const [selectedCountry, setSelectedCountry] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('profileCountry') || 'fr';
+    }
+    return 'fr';
+  });
+  const [selectedVisaStatus, setSelectedVisaStatus] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('profileVisaStatus') || 'F-1 Student';
+    }
+    return 'F-1 Student';
+  });
+
+  // Save to localStorage when user saves changes
+  const handleSaveProfile = () => {
+    localStorage.setItem('profileAvatar', selectedAvatar);
+    localStorage.setItem('profileBgColor', selectedBgColor);
+    localStorage.setItem('profileCountry', selectedCountry);
+    localStorage.setItem('profileVisaStatus', selectedVisaStatus);
+    setIsEditingProfile(false);
+  };
+
   // Fetch real profile stats from backend
   const fetchStats = React.useCallback(async () => {
-    if (!learnerId) {
-      setError('Not logged in');
+    // Check if learnerId is valid MongoDB ObjectId
+    const isValidLearnerId = learnerId && /^[0-9a-fA-F]{24}$/.test(learnerId)
+
+    if (!isValidLearnerId) {
+      // Use mock data for UI testing
+      console.log('[ProfilePage] Using mock data for UI testing');
+      setStats({
+        learner_id: 'mock-user',
+        display_name: 'Koshish Shrestha',
+        username: 'KoshishShr',
+        joined_date: 'November 2023',
+        email: 'alex.johnson@email.com',
+        country_of_origin: 'France',
+        visa_type: 'F-1 Student',
+        total_xp: 1647,
+        streak_count: 5,
+        lessons_completed: 24,
+        skills_mastered: 8,
+        level: 5,
+        level_progress: 65,
+        current_league: 'Gold',
+        top_3_finishes: 1,
+        following: 0,
+        followers: 0,
+        xp_for_current_level: 2000,
+        xp_for_next_level: 3000,
+        xp_in_current_level: 450,
+        xp_needed_for_level: 1000
+      });
       setIsLoading(false);
       return;
     }
@@ -49,18 +167,25 @@ export const ProfilePage: React.FC = () => {
       setError(null);
       console.log('[ProfilePage] Fetching stats from database for learner:', learnerId);
       const profileStats = await learnerApi.getStats(learnerId);
-      console.log('[ProfilePage] Stats loaded from database:', {
-        total_xp: profileStats.total_xp,
-        streak_count: profileStats.streak_count,
-        lessons_completed: profileStats.lessons_completed,
-        skills_mastered: profileStats.skills_mastered,
-        level: profileStats.level,
-        level_progress: profileStats.level_progress
-      });
-      setStats(profileStats);
+
+      // Merge with mock fields for design matching if missing
+      // Cast defaults to ensure we don't break if backend doesn't have these fields yet
+      const ps = profileStats as any;
+      setStats({
+        ...profileStats,
+        username: ps.username || 'User123',
+        joined_date: ps.joined_date || 'January 2024',
+        current_league: ps.current_league || 'Bronze',
+        top_3_finishes: ps.top_3_finishes || 0,
+        following: ps.following || 0,
+        followers: ps.followers || 0
+      } as any);
+
     } catch (err) {
       console.error('[ProfilePage] Failed to fetch profile stats:', err);
-      setError('Failed to load profile data');
+      // For production, we should show an error if real data fetch fails
+      // setStats(null); // Keep null to trigger error state
+      setError('Failed to load profile data. Please check your connection.');
     } finally {
       setIsLoading(false);
     }
@@ -73,7 +198,9 @@ export const ProfilePage: React.FC = () => {
   // Refresh stats when page becomes visible (e.g., after completing a lesson)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && learnerId) {
+      // Only refresh if we have a valid MongoDB ObjectId
+      const isValidLearnerId = learnerId && /^[0-9a-fA-F]{24}$/.test(learnerId)
+      if (document.visibilityState === 'visible' && isValidLearnerId) {
         fetchStats();
       }
     };
@@ -96,8 +223,8 @@ export const ProfilePage: React.FC = () => {
     );
   }
 
-  // Show error state
-  if (error || !stats) {
+  // Show error state (only if no stats available)
+  if (!stats) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -110,153 +237,404 @@ export const ProfilePage: React.FC = () => {
 
   // Use real data from backend
   const userData = {
-    name: stats.display_name || storeUser?.name || 'User',
-    email: stats.email || storeUser?.email || '',
-    country: stats.country_of_origin || storeUser?.country || 'US',
-    visaType: stats.visa_type || storeUser?.visaType || 'Other',
-    avatar: null, // Avatar not in stats, can be added later
+    name: stats.display_name,
+    username: stats.username || '@username',
+    joined: stats.joined_date || 'January 2024',
+    following: stats.following || 0,
+    followers: stats.followers || 0,
     stats: {
       streak: stats.streak_count,
       totalXP: stats.total_xp,
-      lessonsCompleted: stats.lessons_completed,
-      skillsMastered: stats.skills_mastered,
-      currentLevel: stats.level,
-      levelProgress: stats.level_progress,
-    },
-    // TODO: Fetch real achievements from backend
-    achievements: [
-      { id: 'streak-7', icon: '🔥', title: 'Week Warrior', description: '7-day streak', unlocked: stats.streak_count >= 7 },
-      { id: 'streak-30', icon: '🔥', title: 'Monthly Master', description: '30-day streak', unlocked: stats.streak_count >= 30 },
-      { id: 'perfect', icon: '⭐', title: 'Perfect!', description: '100% accuracy lesson', unlocked: false },
-      { id: 'xp-1000', icon: '⚡', title: 'XP Hunter', description: 'Earn 1000 XP', unlocked: stats.total_xp >= 1000 },
-      { id: 'streak-100', icon: '💎', title: 'Century', description: '100-day streak', unlocked: stats.streak_count >= 100, progress: stats.streak_count < 100 ? { current: stats.streak_count, total: 100 } : undefined },
-    ],
+      league: stats.current_league || 'Bronze',
+      topFinishes: stats.top_3_finishes || 0
+    }
   };
 
   return (
-    <div className="space-y-5"> {/* Duolingo uses 20px (5 * 4px) spacing */}
-      {/* Profile Header */}
-      <Card variant="elevated" padding="lg">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <Avatar
-              src={userData.avatar || undefined}
-              alt={userData.name}
-              fallback={userData.name.charAt(0)}
-              size="xl"
-            />
-            <div>
-              <h1 className="text-[23px] font-bold text-[#4B4B4B]" style={{ lineHeight: '32px' }}>
-                {userData.name}
-              </h1>
-              <p className="text-[15px] text-[#737373]" style={{ lineHeight: '24px', marginTop: '8px' }}>{userData.email}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant="info" size="sm">{userData.country}</Badge>
-                <Badge variant="xp" size="sm">{userData.visaType} Visa</Badge>
+    <div className="max-w-[1056px] mx-auto px-4 py-6 flex flex-col md:flex-row gap-8">
+
+      {/* LEFT COLUMN - Main Profile Info */}
+      <div className="flex-1 min-w-0 space-y-8">
+
+        {/* Profile Header */}
+        <div className="space-y-4">
+          <div className="relative">
+            {/* Banner */}
+            <div className="h-48 bg-[#dceeff] rounded-2xl relative">
+              <button className="absolute top-4 right-4 text-[#1cb0f6] hover:bg-[#cce5ff] p-2 rounded-xl transition-colors">
+                <Settings className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Avatar with Edit Button */}
+            <div className="absolute -bottom-4 left-6 group">
+              <div className="w-32 h-32 md:w-40 md:h-40 bg-transparent rounded-full border-4 border-white overflow-hidden relative">
+                <img
+                  src={selectedAvatar}
+                  alt="Profile"
+                  className="w-full h-full object-cover transition-colors duration-300"
+                  style={{ backgroundColor: selectedBgColor }}
+                />
+
+                {/* Edit Overlay */}
+                <button
+                  onClick={() => setIsEditingProfile(true)}
+                  className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                >
+                  <Edit2 className="w-8 h-8 text-white" />
+                </button>
+              </div>
+
+              <div className="absolute bottom-0 right-0 md:bottom-2 md:right-2">
+                <button
+                  onClick={() => setIsEditingProfile(true)}
+                  className="w-8 h-8 bg-[#1cb0f6] rounded-full border-2 border-white flex items-center justify-center text-white hover:bg-[#1899d6] transition-colors shadow-sm"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
               </div>
             </div>
           </div>
-          
-          <div className="flex gap-2">
-            <IconButton aria-label="Share" variant="ghost">
-              <Share2 className="w-5 h-5" />
-            </IconButton>
-            <IconButton aria-label="Settings" variant="ghost">
-              <Settings className="w-5 h-5" />
-            </IconButton>
+
+          {/* User Details */}
+          <div className="pt-2 px-4 flex justify-between items-start">
+            <div>
+              <h1 className="text-2xl font-bold text-[#3c3c3c]">{userData.name}</h1>
+              <p className="text-[#a5a5a5] font-medium mb-2">{userData.username}</p>
+              <p className="text-[#a5a5a5] text-sm font-medium mb-3">Joined {userData.joined}</p>
+              <div className="flex gap-4 text-[#1cb0f6] font-bold text-sm">
+                <span className="cursor-pointer hover:opacity-80">{userData.following} Following</span>
+                <span className="cursor-pointer hover:opacity-80">{userData.followers} Followers</span>
+              </div>
+            </div>
+
+            {/* Flag Icon */}
+            <div className="mt-2 flex flex-col items-end gap-2">
+              <img src={`https://flagcdn.com/w80/${selectedCountry}.png`} alt="Country" className="w-8 rounded-md shadow-sm opacity-80" />
+              <Badge variant="xp" size="sm" className="whitespace-nowrap">{selectedVisaStatus}</Badge>
+            </div>
           </div>
         </div>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 pt-5 border-t-2 border-[#E5E5E5]"> {/* Duolingo uses 20px gaps */}
-          <div className="text-center">
-            <StreakCounter days={userData.stats.streak} size="md" />
-            <p className="text-xs text-duo-text-muted mt-1">Day Streak</p>
+        {/* Statistics Section */}
+        <div>
+          <h2 className="text-2xl font-bold text-[#3c3c3c] mb-6">Statistics</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            {/* Streak Card */}
+            <div className="border-2 border-[#e5e5e5] rounded-2xl p-4 flex items-center gap-4">
+              <div className="w-6 h-6">
+                <img src="/fire.svg" alt="Streak" className="w-full h-full object-contain" />
+              </div>
+              <div>
+                <div className="text-xl font-bold text-[#4b4b4b]">{userData.stats.streak}</div>
+                <div className="text-[#777] text-sm font-bold uppercase tracking-wide">Day streak</div>
+              </div>
+            </div>
+
+            {/* XP Card */}
+            <div className="border-2 border-[#e5e5e5] rounded-2xl p-4 flex items-center gap-4">
+              <div className="w-6 h-6">
+                <img src="/coin.svg" alt="XP" className="w-full h-full object-contain" />
+              </div>
+              <div>
+                <div className="text-xl font-bold text-[#4b4b4b]">{userData.stats.totalXP}</div>
+                <div className="text-[#777] text-sm font-bold uppercase tracking-wide">Total XP</div>
+              </div>
+            </div>
+
+            {/* League Card */}
+            <div className="border-2 border-[#e5e5e5] rounded-2xl p-4 flex items-center gap-4">
+              <div className="w-7 h-7">
+                <span className="text-2xl">🛡️</span>
+              </div>
+              <div>
+                <div className="text-xl font-bold text-[#4b4b4b]">{userData.stats.league}</div>
+                <div className="text-[#777] text-sm font-bold uppercase tracking-wide">Current league</div>
+              </div>
+            </div>
+
+            {/* Top Finishes Card */}
+            <div className="border-2 border-[#e5e5e5] rounded-2xl p-4 flex items-center gap-4">
+              <div className="w-6 h-6">
+                <img src="/trophy.svg" alt="Trophy" className="w-full h-full object-contain" />
+              </div>
+              <div>
+                <div className="text-xl font-bold text-[#4b4b4b]">{userData.stats.topFinishes}</div>
+                <div className="text-[#777] text-sm font-bold uppercase tracking-wide">Top 3 finishes</div>
+              </div>
+            </div>
           </div>
-          <div className="text-center">
-            <XPDisplay amount={userData.stats.totalXP} size="md" />
-            <p className="text-xs text-duo-text-muted mt-1">Total XP</p>
+        </div>
+
+        {/* Friend Suggestions */}
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-[#3c3c3c]">Friend suggestions</h2>
+            <button className="text-[#1cb0f6] font-bold text-sm uppercase tracking-wider hover:opacity-80">VIEW ALL</button>
           </div>
-          <div className="text-center">
-            <p className="text-[23px] font-bold text-[#58CC02]" style={{ lineHeight: '32px' }}>
-              {userData.stats.lessonsCompleted}
+
+          <div className="border-2 border-[#e5e5e5] rounded-2xl p-6 relative flex flex-col items-center">
+            <button className="absolute top-4 right-4 text-[#e5e5e5] hover:text-[#afafaf] transition-colors">
+              <X className="w-5 h-5" strokeWidth={3} />
+            </button>
+
+            <div className="w-20 h-20 rounded-full bg-[#ff4b4b] flex items-center justify-center text-white text-3xl font-extrabold mb-3 shadow-sm">
+              B
+            </div>
+
+            <div className="text-xl font-bold text-[#3c3c3c] mb-1">beth</div>
+            <div className="text-[#afafaf] font-bold text-sm mb-6">From your league</div>
+
+            <button className="w-full bg-[#1cb0f6] hover:bg-[#1899d6] text-white font-extrabold py-3.5 rounded-xl uppercase tracking-widest text-sm shadow-[0_4px_0_#1899d6] active:shadow-none active:translate-y-[4px] transition-all">
+              Follow
+            </button>
+          </div>
+        </div>
+
+        {/* Achievements Section */}
+        <div>
+          <div className="flex justify-between items-center mb-6 mt-10">
+            <h2 className="text-2xl font-bold text-[#3c3c3c]">Achievements</h2>
+            <button className="text-[#1cb0f6] font-bold text-sm uppercase tracking-wider hover:opacity-80">VIEW ALL</button>
+          </div>
+
+          <div className="border-2 border-[#e5e5e5] rounded-2xl overflow-hidden">
+            {/* Achievement: Wildfire */}
+            <div className="p-6 flex gap-6 items-center border-b-2 border-[#e5e5e5]">
+              <div className="w-20 h-24 bg-[#ff4b4b] rounded-xl flex flex-col items-center justify-center relative shrink-0 transform rotate-[-3deg] shadow-sm border-b-4 border-[#ce3a3a]">
+                <img src="/fire.svg" alt="Wildfire" className="w-10 h-10 mb-2 filter brightness-0 invert" />
+                <div className="absolute bottom-2 text-[10px] font-black text-white uppercase tracking-wide">Level 6</div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between mb-2">
+                  <h3 className="font-bold text-[#3c3c3c] text-lg">Wildfire</h3>
+                  <span className="text-[#afafaf] font-bold">66/75</span>
+                </div>
+                <div className="h-4 bg-[#e5e5e5] rounded-full overflow-hidden mb-3">
+                  <div className="h-full bg-[#ffc800] w-[88%] rounded-full"></div>
+                </div>
+                <p className="text-[#777] text-md font-medium">Reach a 75 day streak</p>
+              </div>
+            </div>
+
+            {/* Achievement: Sage */}
+            <div className="p-6 flex gap-6 items-center border-b-2 border-[#e5e5e5]">
+              <div className="w-20 h-24 bg-[#58cc02] rounded-xl flex flex-col items-center justify-center relative shrink-0 transform rotate-[2deg] shadow-sm border-b-4 border-[#46a302]">
+                <img src="/man.gif" alt="Sage" className="w-12 h-12 mb-2 object-contain" />
+                <div className="absolute bottom-2 text-[10px] font-black text-white uppercase tracking-wide">Level 5</div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between mb-2">
+                  <h3 className="font-bold text-[#3c3c3c] text-lg">Sage</h3>
+                  <span className="text-[#afafaf] font-bold">1647/2000</span>
+                </div>
+                <div className="h-4 bg-[#e5e5e5] rounded-full overflow-hidden mb-3">
+                  <div className="h-full bg-[#ffc800] w-[82%] rounded-full"></div>
+                </div>
+                <p className="text-[#777] text-md font-medium">Earn 2000 XP</p>
+              </div>
+            </div>
+
+            {/* Achievement: Champion */}
+            <div className="p-6 flex gap-6 items-center">
+              <div className="w-20 h-24 bg-[#ce82ff] rounded-xl flex flex-col items-center justify-center relative shrink-0 transform rotate-[-2deg] shadow-sm border-b-4 border-[#a568cc]">
+                <img src="/trophy.svg" alt="Champion" className="w-10 h-10 mb-2 filter brightness-0 invert" />
+                <div className="absolute bottom-2 text-[10px] font-black text-white uppercase tracking-wide">Level 6</div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between mb-2">
+                  <h3 className="font-bold text-[#3c3c3c] text-lg">Champion</h3>
+                  <span className="text-[#afafaf] font-bold">5/6</span>
+                </div>
+                <div className="h-4 bg-[#e5e5e5] rounded-full overflow-hidden mb-3">
+                  <div className="h-full bg-[#ffc800] w-[83%] rounded-full"></div>
+                </div>
+                <p className="text-[#777] text-md font-medium">Advance to the Emerald League</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* RIGHT COLUMN - Sidebar Widgets */}
+      <div className="w-full md:w-[350px] space-y-6">
+
+        {/* Following/Followers Widget */}
+        <div className="border-2 border-[#e5e5e5] rounded-2xl overflow-hidden bg-white">
+          <div className="flex border-b-2 border-[#e5e5e5]">
+            <button className="flex-1 py-3 text-sm font-bold text-[#3c3c3c] border-b-2 border-[#1cb0f6] -mb-[2px]">
+              FOLLOWING
+            </button>
+            <button className="flex-1 py-3 text-sm font-bold text-[#777] hover:bg-gray-50">
+              FOLLOWERS
+            </button>
+          </div>
+          <div className="p-8 text-center min-h-[200px] flex flex-col items-center justify-center">
+            <img src="/happy-women.gif" alt="Community" className="w-32 h-32 object-contain mb-4" />
+            <p className="text-[#777] text-[15px] leading-relaxed">
+              Learning is more fun and effective when you connect with others.
             </p>
-            <p className="text-[13px] text-[#737373] mt-1 font-bold">Lessons</p>
-          </div>
-          <div className="text-center">
-            <p className="text-[23px] font-bold text-[#FFC800]" style={{ lineHeight: '32px' }}>
-              {userData.stats.skillsMastered}
-            </p>
-            <p className="text-[13px] text-[#737373] mt-1 font-bold">Skills Mastered</p>
           </div>
         </div>
-      </Card>
 
-      {/* Level Progress */}
-      <Card variant="elevated" padding="lg">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h2 className="font-bold text-[#4B4B4B] text-[17px]" style={{ lineHeight: '24px' }}>Level {userData.stats.currentLevel}</h2>
-            <p className="text-[15px] text-[#737373] mt-1">Financial Explorer</p>
-          </div>
-          <div className="text-right">
-            <p className="font-bold text-[#1CB0F6] text-[17px]" style={{ lineHeight: '24px' }}>{userData.stats.levelProgress}%</p>
-            <p className="text-[15px] text-[#737373] mt-1">to next level</p>
-          </div>
-        </div>
-        <ProgressBar
-          value={userData.stats.levelProgress}
-          max={100}
-          variant="xp"
-          size="lg"
-        />
-      </Card>
+        {/* Add Friends Widget */}
+        <div className="border-2 border-[#e5e5e5] rounded-2xl bg-white p-2">
+          <h3 className="font-bold text-[#3c3c3c] text-lg px-4 py-2">Add friends</h3>
 
-      {/* Achievements */}
-      <Card variant="elevated" padding="lg">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-[#4B4B4B] text-[19px]" style={{ lineHeight: '25px' }}>Achievements</h2>
-          <Button variant="ghost" size="sm" rightIcon={<ChevronRight className="w-4 h-4" />}>
-            See All
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-          {userData.achievements.map((achievement) => (
-            <AchievementBadge
-              key={achievement.id}
-              icon={achievement.icon}
-              title={achievement.title}
-              description={achievement.description}
-              isUnlocked={achievement.unlocked}
-              progress={achievement.progress}
-              size="sm"
-            />
-          ))}
-        </div>
-      </Card>
-
-      {/* Settings Links */}
-      <Card variant="bordered" padding="none">
-        {[
-          { label: 'Notification Settings', section: 'notifications' },
-          { label: 'Voice & Audio', section: 'voice' },
-          { label: 'Daily Goal', section: 'goal' },
-          { label: 'Language Preferences', section: 'language' },
-        ].map((item, index) => (
-          <button
-            key={item.section}
-            onClick={() => navigate(`/settings?section=${item.section}`)}
-            className={`w-full flex items-center justify-between p-5 hover:bg-[#F7F7F7] transition-colors ${
-              index !== 0 ? 'border-t-2 border-[#E5E5E5]' : ''
-            }`}
-          >
-            <span className="font-bold text-[#4B4B4B] text-[15px]">{item.label}</span>
-            <ChevronRight className="w-5 h-5 text-[#737373]" />
+          <button className="w-full flex items-center justify-between p-4 hover:bg-gray-50 rounded-xl transition-colors group">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <Share2 className="w-5 h-5 text-[#1cb0f6]" />
+              </div>
+              <span className="font-bold text-[#3c3c3c] group-hover:text-[#1cb0f6] transition-colors">Find friends</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-[#ccc]" />
           </button>
-        ))}
-      </Card>
+
+          <button className="w-full flex items-center justify-between p-4 hover:bg-gray-50 rounded-xl transition-colors group">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">✉️</div>
+              </div>
+              <span className="font-bold text-[#3c3c3c] group-hover:text-green-500 transition-colors">Invite friends</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-[#ccc]" />
+          </button>
+        </div>
+
+        {/* Small footer links */}
+        <div className="flex flex-wrap gap-x-4 gap-y-2 text-[#afafaf] text-xs font-bold justify-center px-4">
+          <a href="#" className="hover:text-[#1cb0f6]">ABOUT</a>
+          <a href="#" className="hover:text-[#1cb0f6]">BLOG</a>
+          <a href="#" className="hover:text-[#1cb0f6]">STORE</a>
+          <a href="#" className="hover:text-[#1cb0f6]">EFFICACY</a>
+          <a href="#" className="hover:text-[#1cb0f6]">CAREERS</a>
+          <a href="#" className="hover:text-[#1cb0f6]">INVESTORS</a>
+          <a href="#" className="hover:text-[#1cb0f6]">TERMS</a>
+          <a href="#" className="hover:text-[#1cb0f6]">PRIVACY</a>
+        </div>
+      </div>
+
+      {/* Edit Profile Modal */}
+      {isEditingProfile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+            {/* Modal Header */}
+            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+              <h2 className="text-xl font-bold text-[#3c3c3c]">Customize Profile</h2>
+              <button
+                onClick={() => setIsEditingProfile(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors bg-transparent hover:bg-gray-100 p-2 rounded-full"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 max-h-[80vh] overflow-y-auto">
+              <div className="flex flex-col items-center mb-8">
+                {/* Preview */}
+                <div className="w-40 h-40 rounded-full border-4 border-white shadow-lg overflow-hidden relative mb-4">
+                  <img
+                    src={selectedAvatar}
+                    alt="Preview"
+                    className="w-full h-full object-cover transition-colors duration-300"
+                    style={{ backgroundColor: selectedBgColor }}
+                  />
+                </div>
+                <h3 className="text-[#777] font-bold text-sm uppercase tracking-wide">Preview</h3>
+              </div>
+
+              {/* Avatar Selection */}
+              <div className="mb-8">
+                <h3 className="text-[#3c3c3c] font-bold text-lg mb-4">Choose Avatar</h3>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
+                  <button
+                    onClick={() => setSelectedAvatar('/3d-models/monster-1.png')}
+                    className={`rounded-xl border-2 overflow-hidden transition-all aspect-square ${selectedAvatar === '/3d-models/monster-1.png' ? 'border-[#1cb0f6] ring-2 ring-[#1cb0f6]/30 scale-105' : 'border-transparent hover:border-gray-200'}`}
+                  >
+                    <div className="w-full h-full bg-[#89e219]">
+                      <img src="/3d-models/monster-1.png" alt="Default" className="w-full h-full object-cover" />
+                    </div>
+                  </button>
+                  {AVATAR_OPTIONS.map((avatar, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedAvatar(avatar)}
+                      className={`rounded-xl border-2 overflow-hidden transition-all aspect-square ${selectedAvatar === avatar ? 'border-[#1cb0f6] ring-2 ring-[#1cb0f6]/30 scale-105' : 'border-transparent hover:border-gray-200'}`}
+                    >
+                      <div className="w-full h-full bg-gray-100">
+                        <img src={avatar} alt={`Option ${index}`} className="w-full h-full object-cover" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Background Selection */}
+              <div className="mb-8">
+                <h3 className="text-[#3c3c3c] font-bold text-lg mb-4">Background Color</h3>
+                <div className="flex flex-wrap gap-4">
+                  {BACKGROUND_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setSelectedBgColor(color)}
+                      className={`w-12 h-12 rounded-full border-4 transition-all flex items-center justify-center ${selectedBgColor === color ? 'border-[#3c3c3c] scale-110' : 'border-white shadow-sm hover:scale-105'}`}
+                      style={{ backgroundColor: color }}
+                    >
+                      {selectedBgColor === color && <Check className="w-6 h-6 text-white drop-shadow-md" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Country Selection */}
+              <div className="mb-8">
+                <h3 className="text-[#3c3c3c] font-bold text-lg mb-4">Country of Origin</h3>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
+                  {COUNTRY_OPTIONS.map((country) => (
+                    <button
+                      key={country.code}
+                      onClick={() => setSelectedCountry(country.code)}
+                      className={`p-2 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${selectedCountry === country.code ? 'border-[#1cb0f6] bg-blue-50 ring-2 ring-[#1cb0f6]/30' : 'border-gray-100 hover:border-gray-200 bg-gray-50'}`}
+                    >
+                      <img
+                        src={`https://flagcdn.com/w80/${country.code}.png`}
+                        alt={country.name}
+                        className="w-10 rounded-md shadow-sm"
+                      />
+                      <span className="text-xs font-bold text-[#777] text-center line-clamp-1">{country.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Visa Status Selection */}
+              <div className="mb-8">
+                <h3 className="text-[#3c3c3c] font-bold text-lg mb-4">Visa Status</h3>
+                <div className="flex flex-wrap gap-2">
+                  {VISA_STATUS_OPTIONS.map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => setSelectedVisaStatus(status)}
+                      className={`px-4 py-2 rounded-xl border-2 font-bold text-sm transition-all ${selectedVisaStatus === status ? 'border-[#1cb0f6] bg-[#1cb0f6] text-white shadow-md' : 'border-gray-200 bg-white text-[#777] hover:bg-gray-50'}`}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 sticky bottom-0">
+              <Button variant="ghost" onClick={() => setIsEditingProfile(false)}>Cancel</Button>
+              <Button variant="secondary" onClick={handleSaveProfile}>Save Changes</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-

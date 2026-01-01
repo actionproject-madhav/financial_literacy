@@ -22,7 +22,6 @@ export const Sidebar = ({ onCoachClick }: SidebarProps) => {
   // Using custom SVGs from public folder
   const menuItems = [
     { icon: '/home-pixel.svg', label: t('nav.learn'), path: '/learn' },
-    { icon: '/profile.svg', label: t('nav.coach'), path: '/coach', isButton: true },
     { icon: '/leaderboard.svg', label: t('nav.leaderboard'), path: '/leaderboard' },
     { icon: '/quest.svg', label: t('nav.quests'), path: '/quests' },
     { icon: '/shop.svg', label: t('nav.shop'), path: '/shop' },

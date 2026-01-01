@@ -72,6 +72,7 @@ export const LessonPage = () => {
   const [totalQuizQuestions, setTotalQuizQuestions] = useState(0)
   const [streak, setStreak] = useState(0)
   const [showStreakMilestone, setShowStreakMilestone] = useState(false)
+  const [hasShownStreak, setHasShownStreak] = useState(false) // Track if streak was already shown
 
   // Audio recording refs
   const mediaRecorder = useRef<MediaRecorder | null>(null)
@@ -95,6 +96,142 @@ export const LessonPage = () => {
         return
       }
 
+      // Check if IDs are valid MongoDB ObjectIds (24-char hex string)
+      const isValidLessonId = /^[0-9a-fA-F]{24}$/.test(lessonId)
+      const isValidLearnerId = learnerId && /^[0-9a-fA-F]{24}$/.test(learnerId)
+
+      // For UI testing: use mock data when not logged in or invalid IDs
+      if (!isValidLessonId || !isValidLearnerId) {
+        // Mock lesson data for testing UI
+        setLesson({
+          id: lessonId,
+          title: 'Understanding Financial Basics',
+          order: 1,
+          status: 'available',
+          xpReward: 20
+        } as any)
+
+        // Mock quiz steps for testing (8 quiz questions to trigger streak)
+        const mockSteps: Step[] = [
+          {
+            type: 'content',
+            content: 'Welcome to this lesson on financial basics! In this module, you will learn about budgeting, saving, and making smart financial decisions.'
+          },
+          {
+            type: 'quiz',
+            question: 'What is a budget?',
+            options: [
+              'A plan for how you will spend your money',
+              'A type of bank account',
+              'A credit card',
+              'A loan from the bank'
+            ],
+            correct: 0,
+            explanation: 'A budget is a financial plan that helps you track your income and expenses.',
+            itemId: 'mock-1',
+            kcId: lessonId
+          },
+          {
+            type: 'quiz',
+            question: 'What percentage of income do experts recommend saving?',
+            options: ['5%', '10%', '20%', '50%'],
+            correct: 2,
+            explanation: 'The 50/30/20 rule suggests allocating 20% of income to savings.',
+            itemId: 'mock-2',
+            kcId: lessonId
+          },
+          {
+            type: 'quiz',
+            question: 'Which of these is NOT a good reason to have an emergency fund?',
+            options: [
+              'Unexpected medical bills',
+              'Job loss',
+              'Buying a luxury item on sale',
+              'Car repairs'
+            ],
+            correct: 2,
+            explanation: 'Emergency funds should be reserved for unexpected necessary expenses, not discretionary purchases.',
+            itemId: 'mock-3',
+            kcId: lessonId
+          },
+          {
+            type: 'content',
+            content: 'Great job so far! Now let\'s learn about credit scores and how they affect your financial life.'
+          },
+          {
+            type: 'quiz',
+            question: 'What is a good credit score range?',
+            options: ['300-500', '500-600', '670-739', '200-300'],
+            correct: 2,
+            explanation: 'A credit score of 670-739 is considered "good" by most lenders.',
+            itemId: 'mock-4',
+            kcId: lessonId
+          },
+          {
+            type: 'quiz',
+            question: 'What is compound interest?',
+            options: [
+              'Interest only on the principal',
+              'Interest on both principal and accumulated interest',
+              'A type of bank fee',
+              'Interest paid monthly'
+            ],
+            correct: 1,
+            explanation: 'Compound interest is calculated on the initial principal and also on the accumulated interest from previous periods.',
+            itemId: 'mock-5',
+            kcId: lessonId
+          },
+          {
+            type: 'quiz',
+            question: 'What does APR stand for?',
+            options: [
+              'Annual Percentage Rate',
+              'Applied Payment Ratio',
+              'Average Prime Rate',
+              'Automatic Payment Reminder'
+            ],
+            correct: 0,
+            explanation: 'APR stands for Annual Percentage Rate, which represents the yearly cost of borrowing money.',
+            itemId: 'mock-6',
+            kcId: lessonId
+          },
+          {
+            type: 'quiz',
+            question: 'Which is the best strategy for paying off debt?',
+            options: [
+              'Pay minimum on all debts',
+              'Ignore bills completely',
+              'Pay off high-interest debt first',
+              'Take out more loans'
+            ],
+            correct: 2,
+            explanation: 'The avalanche method focuses on paying off high-interest debt first to minimize total interest paid.',
+            itemId: 'mock-7',
+            kcId: lessonId
+          },
+          {
+            type: 'quiz',
+            question: 'What is diversification in investing?',
+            options: [
+              'Putting all money in one stock',
+              'Spreading investments across different assets',
+              'Only investing in bonds',
+              'Keeping all money in cash'
+            ],
+            correct: 1,
+            explanation: 'Diversification means spreading your investments across different asset classes to reduce risk.',
+            itemId: 'mock-8',
+            kcId: lessonId
+          }
+        ]
+
+        setOriginalSteps(mockSteps)
+        setSteps(mockSteps)
+        setSessionId(`session-${Date.now()}`)
+        setLoading(false)
+        return
+      }
+
       try {
         setLoading(true)
         const response = await curriculumApi.getLessonQuestions(lessonId, learnerId || undefined)
@@ -106,15 +243,15 @@ export const LessonPage = () => {
           // Handle content items
           if (q.item_type === 'content') {
             // Content items can have content as string or object
-            const contentText = typeof q.content === 'string' 
-              ? q.content 
+            const contentText = typeof q.content === 'string'
+              ? q.content
               : (q.content?.text || q.content?.content || '')
             return {
               type: 'content' as const,
               content: contentText
             }
           }
-          
+
           // Handle quiz/multiple_choice items
           return {
             type: 'quiz' as const,
@@ -138,7 +275,39 @@ export const LessonPage = () => {
         setError(null)
       } catch (err) {
         console.error('Failed to fetch questions:', err)
-        setError('Failed to load lesson')
+        // Fallback to mock data on error for UI testing
+        setLesson({
+          id: lessonId,
+          title: 'Understanding Financial Basics',
+          order: 1,
+          status: 'available',
+          xpReward: 20
+        } as any)
+
+        const mockSteps: Step[] = [
+          {
+            type: 'content',
+            content: 'Welcome to this lesson! This is demo content for UI testing.'
+          },
+          {
+            type: 'quiz',
+            question: 'What is a budget?',
+            options: [
+              'A plan for how you will spend your money',
+              'A type of bank account',
+              'A credit card',
+              'A loan from the bank'
+            ],
+            correct: 0, // Index 0 = first option
+            explanation: 'A budget is a financial plan that helps you track your income and expenses.',
+            itemId: 'mock-1',
+            kcId: lessonId
+          }
+        ]
+        setOriginalSteps(mockSteps)
+        setSteps(mockSteps)
+        setSessionId(`session-${Date.now()}`)
+        setError(null)
       } finally {
         setLoading(false)
       }
@@ -156,10 +325,10 @@ export const LessonPage = () => {
       }
 
       console.log(`🌍 Translating ${originalSteps.length} questions to ${globalLanguage}...`)
-      
+
       const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000').replace(/\/+$/, '')
       console.log(`📡 Using API base: ${API_BASE}`)
-      
+
       try {
         const translatedSteps = await Promise.all(
           originalSteps.map(async (step, stepIdx) => {
@@ -268,7 +437,7 @@ export const LessonPage = () => {
 
     try {
       let result
-      
+
       // If we have itemId, use cached endpoint (checks cache first)
       if (itemId) {
         result = await voiceApi.getTTS(itemId, globalLanguage)
@@ -315,7 +484,7 @@ export const LessonPage = () => {
     try {
       // Use cached endpoint with choice_index parameter
       const result = await voiceApi.getTTS(itemId, globalLanguage, false, choiceIndex)
-      
+
       if (result?.cached) {
         console.log(`✅ Using cached TTS audio for choice ${choiceIndex}`)
       }
@@ -550,6 +719,7 @@ export const LessonPage = () => {
       if (currentStep < steps.length - 1) {
         if (showStreakMilestone) {
           setShowStreakMilestone(false)
+          setHasShownStreak(true) // Mark that we've shown the streak
           setCurrentStep(currentStep + 1)
           setStatus('idle')
           setSelectedOption(null)
@@ -559,7 +729,8 @@ export const LessonPage = () => {
           return
         }
 
-        if (status === 'correct' && streak === 3) {
+        // Only show streak milestone once (when streak hits 3 for the first time)
+        if (status === 'correct' && streak === 3 && !hasShownStreak) {
           setShowStreakMilestone(true)
           return
         }
@@ -574,7 +745,7 @@ export const LessonPage = () => {
         // Complete Lesson - Save progress to backend
         const accuracy = totalQuizQuestions > 0 ? correctAnswers / totalQuizQuestions : 1.0
         const timeSpentMinutes = Math.round((Date.now() - startTime) / 1000 / 60) || 1
-        
+
         // Save lesson completion to backend
         if (lessonId && learnerId) {
           curriculumApi.completeLesson(lessonId, {
@@ -586,8 +757,8 @@ export const LessonPage = () => {
             if (result) {
               // Update user XP from backend response
               if (user) {
-                setUser({ 
-                  ...user, 
+                setUser({
+                  ...user,
                   gems: user.gems + 5,
                   totalXp: result.total_xp || user.totalXp + 20
                 })
@@ -707,11 +878,11 @@ export const LessonPage = () => {
 
   // For content steps, always allow next (no check needed)
   // For quiz steps, require selection or voice answer when idle, or allow continue after check
-  const canCheck = currentStepData.type === 'content' 
+  const canCheck = currentStepData.type === 'content'
     ? true  // Content steps can always proceed
     : status !== 'idle' ||  // After check, can continue
-      selectedOption !== null ||  // Has selected option
-      (voiceAnswer && audioBase64)  // Has voice answer
+    selectedOption !== null ||  // Has selected option
+    (voiceAnswer && audioBase64)  // Has voice answer
 
   return (
     <>
@@ -744,11 +915,7 @@ export const LessonPage = () => {
           </div>
         </div>
 
-        {/* Lesson Title */}
-        <div className="text-center mb-4 px-4">
-          <h1 className="text-lg font-bold text-gray-600">{lesson.title}</h1>
-          <p className="text-sm text-gray-400">Question {currentStep + 1} of {steps.length}</p>
-        </div>
+        {/* Removed lesson title to fit content without scrolling */}
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full px-4 pb-48">
@@ -767,7 +934,7 @@ export const LessonPage = () => {
                     animate={{ scale: 1 }}
                     className="mb-8"
                   >
-                    <img src="/fire.svg" alt="Streak!" className="w-64 h-64 object-contain" />
+                    <img src="/streak-nice.gif" alt="Streak!" className="w-64 h-64 object-contain" />
                   </motion.div>
                   <h1 className="text-4xl font-black text-[#ffc840] mb-2">{streak} in a row!</h1>
                   <p className="text-xl font-bold text-gray-500">You're on fire! Keep going!</p>
@@ -781,7 +948,7 @@ export const LessonPage = () => {
                   <div className="flex flex-col sm:flex-row gap-4 mb-8">
                     {/* Mascot */}
                     <div className="flex-shrink-0 self-center sm:self-end mb-2 sm:mb-0">
-                      <img src="/profile.svg" alt="Mascot" className="w-20 h-20 sm:w-24 sm:h-24 object-contain" />
+                      <img src="/man.gif" alt="Mascot" className="w-20 h-20 sm:w-24 sm:h-24 object-contain" />
                     </div>
 
                     {/* Speech Bubble */}
@@ -879,11 +1046,10 @@ export const LessonPage = () => {
                                     speakChoice(currentStepData.itemId, index, option)
                                   }}
                                   disabled={isLoadingTTS || isSpeaking}
-                                  className={`p-1.5 rounded-lg transition-all flex-shrink-0 ${
-                                    isLoadingTTS || isSpeaking
-                                      ? 'bg-gray-100 text-gray-400'
-                                      : 'bg-gray-50 text-gray-500 hover:bg-blue-50 hover:text-blue-500'
-                                  }`}
+                                  className={`p-1.5 rounded-lg transition-all flex-shrink-0 ${isLoadingTTS || isSpeaking
+                                    ? 'bg-gray-100 text-gray-400'
+                                    : 'bg-gray-50 text-gray-500 hover:bg-blue-50 hover:text-blue-500'
+                                    }`}
                                   title={`Listen to option ${index + 1} in ${currentLang.name}`}
                                 >
                                   <Volume2 className="w-4 h-4" />
@@ -1040,9 +1206,9 @@ export const LessonPage = () => {
                 }
               `}
             >
-              {currentStepData.type === 'content' 
+              {currentStepData.type === 'content'
                 ? 'NEXT'  // Content steps show "NEXT"
-                : status === 'idle' 
+                : status === 'idle'
                   ? 'CHECK'  // Quiz steps show "CHECK" when idle
                   : 'CONTINUE'  // Quiz steps show "CONTINUE" after check
               }

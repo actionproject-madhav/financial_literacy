@@ -15,9 +15,9 @@ export const GemDisplay: React.FC<GemDisplayProps> = ({
   className,
 }) => {
   const sizeConfig = {
-    sm: { icon: 16, text: 'text-sm', padding: 'px-2 py-0.5' },
-    md: { icon: 18, text: 'text-base', padding: 'px-2.5 py-1' },
-    lg: { icon: 22, text: 'text-lg', padding: 'px-3 py-1.5' },
+    sm: { icon: 'w-4 h-4', text: 'text-sm', padding: 'px-2 py-0.5' },
+    md: { icon: 'w-5 h-5', text: 'text-base', padding: 'px-2.5 py-1' },
+    lg: { icon: 'w-6 h-6', text: 'text-lg', padding: 'px-3 py-1.5' },
   };
 
   const config = sizeConfig[size];
@@ -25,17 +25,18 @@ export const GemDisplay: React.FC<GemDisplayProps> = ({
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-2 rounded-full', // Duolingo uses 8px gap
-        'bg-[#DDF4FF]', // Duolingo exact blue tint
+        'inline-flex items-center gap-2 rounded-full',
+        'bg-amber-100/50 border border-amber-200/50', // Gold/Amber tint
         config.padding,
         className
       )}
     >
-      <Gem
-        size={config.icon}
-        className="text-[#1CB0F6]" // Duolingo exact blue
+      <img
+        src="/coin.svg"
+        alt="Gems"
+        className={cn("object-contain drop-shadow-sm", config.icon)}
       />
-      <span className={cn('font-bold text-[#1CB0F6]', config.text)}>
+      <span className={cn('font-bold text-amber-500', config.text)}>
         {amount.toLocaleString()}
       </span>
     </div>
