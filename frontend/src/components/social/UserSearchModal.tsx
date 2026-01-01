@@ -1,0 +1,206 @@
+import React, { useState, useEffect } from 'react';
+import { Search, UserPlus, Loader2 } from 'lucide-react';
+import { Modal } from './Modal';
+import { socialApi, UserProfile } from '../../services/api';
+import { useUserStore } from '../../stores/userStore';
+
+interface UserSearchModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const UserSearchModal: React.FC<UserSearchModalProps> = ({ isOpen, onClose }) => {
+  const { learnerId } = useUserStore();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [sendingRequest, setSendingRequest] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      if (searchQuery.trim().length < 2) return;
+
+      setLoading(true);
+      try {
+        const response = await socialApi.searchUsers(searchQuery, 20);
+        // Filter out current user from results
+        const filtered = response.users.filter(u => u.user_id !== learnerId);
+        setSearchResults(filtered);
+      } catch (error) {
+        console.error('Search failed:', error);
+        setSearchResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, learnerId]);
+
+  const handleSendFriendRequest = async (userId: string) => {
+    if (!learnerId) return;
+
+    setSendingRequest(userId);
+    try {
+      await socialApi.sendFriendRequest(learnerId, userId);
+      // Update the user in the results to show pending status
+      setSearchResults(prev =>
+        prev.map(user =>
+          user.user_id === userId
+            ? { ...user, has_pending_request: true }
+            : user
+        )
+      );
+    } catch (error) {
+      console.error('Failed to send friend request:', error);
+    } finally {
+      setSendingRequest(null);
+    }
+  };
+
+  const handleFollow = async (userId: string) => {
+    if (!learnerId) return;
+
+    try {
+      await socialApi.followUser(learnerId, userId);
+      setSearchResults(prev =>
+        prev.map(user =>
+          user.user_id === userId
+            ? { ...user, is_following: true }
+            : user
+        )
+      );
+    } catch (error) {
+      console.error('Failed to follow user:', error);
+    }
+  };
+
+  const handleUnfollow = async (userId: string) => {
+    if (!learnerId) return;
+
+    try {
+      await socialApi.unfollowUser(learnerId, userId);
+      setSearchResults(prev =>
+        prev.map(user =>
+          user.user_id === userId
+            ? { ...user, is_following: false }
+            : user
+        )
+      );
+    } catch (error) {
+      console.error('Failed to unfollow user:', error);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Find Friends" maxWidth="md">
+      <div className="p-4">
+        {/* Search Input */}
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#afafaf]" />
+          <input
+            type="text"
+            placeholder="Search by name or email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border-2 border-[#e5e5e5] rounded-xl font-bold text-[#3c3c3c] placeholder-[#afafaf] focus:border-[#1cb0f6] focus:outline-none transition-colors"
+            autoFocus
+          />
+        </div>
+
+        {/* Results */}
+        <div className="space-y-2">
+          {loading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 text-[#1cb0f6] animate-spin" />
+            </div>
+          )}
+
+          {!loading && searchQuery.trim() && searchResults.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-[#afafaf] font-bold">No users found</p>
+              <p className="text-[#afafaf] text-sm mt-1">Try searching by name or email</p>
+            </div>
+          )}
+
+          {!loading && searchResults.map((user) => (
+            <div
+              key={user.user_id}
+              className="border-2 border-[#e5e5e5] rounded-xl p-4 hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  {/* Avatar */}
+                  <div className="w-12 h-12 rounded-full bg-[#1cb0f6] flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                    {user.display_name.charAt(0).toUpperCase()}
+                  </div>
+
+                  {/* User Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-[#3c3c3c] truncate">{user.display_name}</div>
+                    <div className="text-sm text-[#afafaf] font-bold">
+                      Level {user.level} • {user.total_xp.toLocaleString()} XP
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2 flex-shrink-0">
+                  {user.is_friend ? (
+                    <span className="px-4 py-2 text-[#58cc02] font-bold text-sm">Friends</span>
+                  ) : user.has_pending_request ? (
+                    <span className="px-4 py-2 text-[#afafaf] font-bold text-sm">Pending</span>
+                  ) : (
+                    <button
+                      onClick={() => handleSendFriendRequest(user.user_id)}
+                      disabled={sendingRequest === user.user_id}
+                      className="bg-[#1cb0f6] hover:bg-[#1899d6] text-white font-bold py-2 px-4 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {sendingRequest === user.user_id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <UserPlus className="w-4 h-4" />
+                          <span className="text-sm">Add</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+
+                  {!user.is_following ? (
+                    <button
+                      onClick={() => handleFollow(user.user_id)}
+                      className="border-2 border-[#1cb0f6] text-[#1cb0f6] hover:bg-[#1cb0f6] hover:text-white font-bold py-2 px-4 rounded-xl transition-colors text-sm"
+                    >
+                      Follow
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleUnfollow(user.user_id)}
+                      className="border-2 border-[#e5e5e5] text-[#afafaf] hover:border-[#ff4b4b] hover:text-[#ff4b4b] font-bold py-2 px-4 rounded-xl transition-colors text-sm"
+                    >
+                      Following
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {!searchQuery.trim() && !loading && (
+          <div className="text-center py-12">
+            <Search className="w-12 h-12 text-[#e5e5e5] mx-auto mb-3" />
+            <p className="text-[#afafaf] font-bold">Search for friends</p>
+            <p className="text-[#afafaf] text-sm mt-1">Enter a name or email to get started</p>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+};

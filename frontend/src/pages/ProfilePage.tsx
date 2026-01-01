@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Share2, ChevronRight, X, Edit2, Check } from 'lucide-react';
+import { Settings, Share2, ChevronRight, X, Edit2, Check, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Button, IconButton } from '../components/ui';
 import { Avatar } from '../components/ui/Avatar';
@@ -9,7 +9,12 @@ import { StreakCounter } from '../components/gamification/StreakCounter';
 import { XPDisplay } from '../components/gamification/XPDisplay';
 import { AchievementBadge } from '../components/gamification/AchievementBadge';
 import { useUserStore } from '../stores/userStore';
-import { learnerApi } from '../services/api';
+import { learnerApi, socialApi } from '../services/api';
+import { UserSearchModal } from '../components/social/UserSearchModal';
+import { FriendRequestsModal } from '../components/social/FriendRequestsModal';
+import { ReferralModal } from '../components/social/ReferralModal';
+import { FollowersFollowingModal } from '../components/social/FollowersFollowingModal';
+import { FriendsListModal } from '../components/social/FriendsListModal';
 
 const AVATAR_OPTIONS = [
   '/characters/12.png',
@@ -90,6 +95,18 @@ export const ProfilePage: React.FC = () => {
   const [stats, setStats] = useState<ProfileStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Social Modals State
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [showReferralModal, setShowReferralModal] = useState(false);
+  const [showFriendRequestsModal, setShowFriendRequestsModal] = useState(false);
+  const [showFriendsModal, setShowFriendsModal] = useState(false);
+  const [showFollowersModal, setShowFollowersModal] = useState(false);
+  const [showFollowingModal, setShowFollowingModal] = useState(false);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+  const [friendsCount, setFriendsCount] = useState(0);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   // Customization State - Load from localStorage for persistence
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -194,6 +211,31 @@ export const ProfilePage: React.FC = () => {
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
+
+  // Fetch social stats
+  useEffect(() => {
+    if (!learnerId) return;
+
+    const fetchSocialStats = async () => {
+      try {
+        const [friendsRes, followersRes, followingRes, requestsRes] = await Promise.all([
+          socialApi.getFriends(learnerId),
+          socialApi.getFollowers(learnerId),
+          socialApi.getFollowing(learnerId),
+          socialApi.getFriendRequests(learnerId, 'received'),
+        ]);
+
+        setFriendsCount(friendsRes.count);
+        setFollowersCount(followersRes.count);
+        setFollowingCount(followingRes.count);
+        setPendingRequestsCount(requestsRes.count);
+      } catch (error) {
+        console.error('Failed to fetch social stats:', error);
+      }
+    };
+
+    fetchSocialStats();
+  }, [learnerId]);
 
   // Refresh stats when page becomes visible (e.g., after completing a lesson)
   useEffect(() => {
@@ -303,8 +345,17 @@ export const ProfilePage: React.FC = () => {
               <p className="text-[#a5a5a5] font-medium mb-2">{userData.username}</p>
               <p className="text-[#a5a5a5] text-sm font-medium mb-3">Joined {userData.joined}</p>
               <div className="flex gap-4 text-[#1cb0f6] font-bold text-sm">
-                <span className="cursor-pointer hover:opacity-80">{userData.following} Following</span>
-                <span className="cursor-pointer hover:opacity-80">{userData.followers} Followers</span>
+                <span className="cursor-pointer hover:opacity-80" onClick={() => setShowFollowingModal(true)}>
+                  {followingCount} Following
+                </span>
+                <span className="cursor-pointer hover:opacity-80" onClick={() => setShowFollowersModal(true)}>
+                  {followersCount} Followers
+                </span>
+                {friendsCount > 0 && (
+                  <span className="cursor-pointer hover:opacity-80" onClick={() => setShowFriendsModal(true)}>
+                    {friendsCount} Friends
+                  </span>
+                )}
               </div>
             </div>
 
@@ -464,11 +515,17 @@ export const ProfilePage: React.FC = () => {
         {/* Following/Followers Widget */}
         <div className="border-2 border-[#e5e5e5] rounded-2xl overflow-hidden bg-white">
           <div className="flex border-b-2 border-[#e5e5e5]">
-            <button className="flex-1 py-3 text-sm font-bold text-[#3c3c3c] border-b-2 border-[#1cb0f6] -mb-[2px]">
-              FOLLOWING
+            <button
+              onClick={() => setShowFollowingModal(true)}
+              className="flex-1 py-3 text-sm font-bold text-[#3c3c3c] border-b-2 border-[#1cb0f6] -mb-[2px] hover:bg-gray-50 transition-colors"
+            >
+              FOLLOWING ({followingCount})
             </button>
-            <button className="flex-1 py-3 text-sm font-bold text-[#777] hover:bg-gray-50">
-              FOLLOWERS
+            <button
+              onClick={() => setShowFollowersModal(true)}
+              className="flex-1 py-3 text-sm font-bold text-[#777] hover:bg-gray-50 transition-colors"
+            >
+              FOLLOWERS ({followersCount})
             </button>
           </div>
           <div className="p-8 text-center min-h-[200px] flex flex-col items-center justify-center">
@@ -483,7 +540,10 @@ export const ProfilePage: React.FC = () => {
         <div className="border-2 border-[#e5e5e5] rounded-2xl bg-white p-2">
           <h3 className="font-bold text-[#3c3c3c] text-lg px-4 py-2">Add friends</h3>
 
-          <button className="w-full flex items-center justify-between p-4 hover:bg-gray-50 rounded-xl transition-colors group">
+          <button
+            onClick={() => setShowSearchModal(true)}
+            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 rounded-xl transition-colors group"
+          >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
                 <Share2 className="w-5 h-5 text-[#1cb0f6]" />
@@ -493,7 +553,30 @@ export const ProfilePage: React.FC = () => {
             <ChevronRight className="w-5 h-5 text-[#ccc]" />
           </button>
 
-          <button className="w-full flex items-center justify-between p-4 hover:bg-gray-50 rounded-xl transition-colors group">
+          {pendingRequestsCount > 0 && (
+            <button
+              onClick={() => setShowFriendRequestsModal(true)}
+              className="w-full flex items-center justify-between p-4 hover:bg-gray-50 rounded-xl transition-colors group relative"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center relative">
+                  <UserPlus className="w-5 h-5 text-[#ce82ff]" />
+                  {pendingRequestsCount > 0 && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#ff4b4b] rounded-full flex items-center justify-center text-white text-xs font-bold">
+                      {pendingRequestsCount}
+                    </div>
+                  )}
+                </div>
+                <span className="font-bold text-[#3c3c3c] group-hover:text-[#ce82ff] transition-colors">Friend requests</span>
+              </div>
+              <ChevronRight className="w-5 h-5 text-[#ccc]" />
+            </button>
+          )}
+
+          <button
+            onClick={() => setShowReferralModal(true)}
+            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 rounded-xl transition-colors group"
+          >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
                 <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">✉️</div>
@@ -635,6 +718,22 @@ export const ProfilePage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Social Modals */}
+      <UserSearchModal isOpen={showSearchModal} onClose={() => setShowSearchModal(false)} />
+      <FriendRequestsModal isOpen={showFriendRequestsModal} onClose={() => setShowFriendRequestsModal(false)} />
+      <ReferralModal isOpen={showReferralModal} onClose={() => setShowReferralModal(false)} />
+      <FriendsListModal isOpen={showFriendsModal} onClose={() => setShowFriendsModal(false)} />
+      <FollowersFollowingModal
+        isOpen={showFollowersModal}
+        onClose={() => setShowFollowersModal(false)}
+        type="followers"
+      />
+      <FollowersFollowingModal
+        isOpen={showFollowingModal}
+        onClose={() => setShowFollowingModal(false)}
+        type="following"
+      />
     </div>
   );
 };

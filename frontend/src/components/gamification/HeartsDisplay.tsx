@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart } from 'lucide-react';
+import { Heart, Clock } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 interface HeartsDisplayProps {
@@ -8,6 +8,7 @@ interface HeartsDisplayProps {
   maxHearts?: number;
   size?: 'sm' | 'md' | 'lg';
   showEmpty?: boolean;
+  countdown?: string | null;
   className?: string;
 }
 
@@ -16,6 +17,7 @@ export const HeartsDisplay: React.FC<HeartsDisplayProps> = ({
   maxHearts = 5,
   size = 'md',
   showEmpty = true,
+  countdown = null,
   className,
 }) => {
   const sizeConfig = {
@@ -25,35 +27,49 @@ export const HeartsDisplay: React.FC<HeartsDisplayProps> = ({
   };
 
   const iconSize = sizeConfig[size];
+  const showTimer = countdown !== null && hearts < maxHearts;
 
   return (
-    <div className={cn('flex items-center gap-0.5', className)}>
-      {Array.from({ length: maxHearts }).map((_, index) => {
-        const isFilled = index < hearts;
-        
-        return (
-          <motion.div
-            key={index}
-            initial={false}
-            animate={
-              isFilled
-                ? { scale: 1, opacity: 1 }
-                : { scale: 0.85, opacity: 0.4 }
-            }
-            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-          >
-            <Heart
-              size={iconSize}
-              className={cn(
-                'transition-colors',
+    <div className={cn('flex items-center gap-2', className)}>
+      <div className="flex items-center gap-0.5">
+        {Array.from({ length: maxHearts }).map((_, index) => {
+          const isFilled = index < hearts;
+
+          return (
+            <motion.div
+              key={index}
+              initial={false}
+              animate={
                 isFilled
-                  ? 'text-[#FF4B4B] fill-[#FF4B4B]' // Duolingo exact red
-                  : 'text-[#E5E5E5] fill-[#F7F7F7]' // Duolingo exact gray
-              )}
-            />
-          </motion.div>
-        );
-      })}
+                  ? { scale: 1, opacity: 1 }
+                  : { scale: 0.85, opacity: 0.4 }
+              }
+              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+            >
+              <Heart
+                size={iconSize}
+                className={cn(
+                  'transition-colors',
+                  isFilled
+                    ? 'text-[#FF4B4B] fill-[#FF4B4B]' // Duolingo exact red
+                    : 'text-[#E5E5E5] fill-[#F7F7F7]' // Duolingo exact gray
+                )}
+              />
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {showTimer && (
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-1 text-xs text-gray-500"
+        >
+          <Clock size={12} />
+          <span className="font-medium">{countdown}</span>
+        </motion.div>
+      )}
     </div>
   );
 };

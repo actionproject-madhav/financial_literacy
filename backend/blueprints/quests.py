@@ -372,6 +372,15 @@ def claim_quest(learner_id, quest_id):
             {'$inc': {'total_xp': quest_def['xp_reward']}}
         )
 
+        # Update daily progress for leaderboard tracking
+        from datetime import date
+        today = date.today()
+        db.collections.update_daily_progress(
+            learner_id=learner_id,
+            date_obj=today,
+            xp_earned=quest_def['xp_reward']
+        )
+
         # Get updated total
         learner = db.collections.learners.find_one({'_id': learner_oid})
         total_xp = learner.get('total_xp', 0) if learner else 0

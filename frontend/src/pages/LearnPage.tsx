@@ -7,6 +7,8 @@ import { curriculumApi, adaptiveApi, Course } from '../services/api'
 import { LanguageSelector } from '../components/LanguageSelector'
 import { useLanguage } from '../contexts/LanguageContext'
 import { TranslatedText } from '../components/TranslatedText'
+import { HeartsDisplay } from '../components/gamification/HeartsDisplay'
+import { useHeartRecharge } from '../hooks/useHeartRecharge'
 
 // Extended Course type with personalization fields
 interface PersonalizedCourse extends Course {
@@ -30,6 +32,7 @@ export const LearnPage = () => {
     const { user, learnerId } = useUserStore()
     const navigate = useNavigate()
     const { t } = useLanguage()
+    const { hearts, countdown } = useHeartRecharge()
     const [courses, setCourses] = useState<PersonalizedCourse[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -299,9 +302,8 @@ export const LearnPage = () => {
                             <img src="/coin.svg" alt="Coins" className="w-6 h-6 object-contain" />
                             <span className="font-bold text-yellow-500">{user.gems || 0}</span>
                         </div>
-                        <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-2 px-3 rounded-xl transition-colors">
-                            <Heart className="w-5 h-5 text-red-500 fill-current" />
-                            <span className="font-bold text-red-500">{user.hearts || 5}</span>
+                        <div className="cursor-pointer hover:bg-gray-100 p-2 px-3 rounded-xl transition-colors">
+                            <HeartsDisplay hearts={hearts} countdown={countdown} size="sm" />
                         </div>
                     </div>
                 </div>

@@ -10,7 +10,7 @@ Handles:
 
 from flask import Blueprint, request, jsonify, current_app
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timedelta
 
 learners_bp = Blueprint('learners', __name__, url_prefix='/api/learners')
 
@@ -559,10 +559,19 @@ def get_learner_stats(learner_id):
         
         # Calculate level from XP (real calculation, not mock)
         level_info = calculate_level_from_xp(total_xp)
-        
+
+        # Count followers and following
+        followers_count = db.collections.follows.count_documents({
+            'following_id': ObjectId(learner_id)
+        })
+
+        following_count = db.collections.follows.count_documents({
+            'follower_id': ObjectId(learner_id)
+        })
+
         # Log for debugging (can be removed in production)
         print(f'[get_learner_stats] Learner {learner_id}: XP={total_xp}, Streak={streak_count}, Lessons={lessons_completed}, Level={level_info["level"]}')
-        
+
         return jsonify({
             'learner_id': str(learner['_id']),
             'display_name': learner.get('display_name', 'User'),
@@ -578,11 +587,138 @@ def get_learner_stats(learner_id):
             'xp_for_current_level': level_info['xp_for_current_level'],
             'xp_for_next_level': level_info['xp_for_next_level'],
             'xp_in_current_level': level_info['xp_in_current_level'],
-            'xp_needed_for_level': level_info['xp_needed_for_level']
+            'xp_needed_for_level': level_info['xp_needed_for_level'],
+            'followers': followers_count,
+            'following': following_count
         }), 200
         
     except Exception as e:
         print(f'[get_learner_stats] Error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+@learners_bp.route('/<learner_id>/hearts', methods=['GET'])
+def get_hearts(learner_id):
+    """
+    Get current hearts with automatic recharge calculation.
+    Hearts recharge at 1 per 5 minutes, up to max 5.
+
+    Response:
+    {
+        "hearts": 3,
+        "max_hearts": 5,
+        "next_heart_at": "2026-01-01T12:35:00Z",  # null if at max
+        "seconds_until_next_heart": 180,  # null if at max
+        "full_hearts_at": "2026-01-01T12:45:00Z"  # null if at max
+    }
+    """
+    try:
+        db = get_db()
+
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        MAX_HEARTS = 5
+        RECHARGE_MINUTES = 5  # 1 heart every 5 minutes
+
+        # Get stored hearts and last loss time
+        stored_hearts = learner.get('hearts', MAX_HEARTS)
+        last_heart_lost_at = learner.get('last_heart_lost_at')
+
+        # If already at max or never lost a heart, return max
+        if stored_hearts >= MAX_HEARTS or not last_heart_lost_at:
+            return jsonify({
+                'hearts': MAX_HEARTS,
+                'max_hearts': MAX_HEARTS,
+                'next_heart_at': None,
+                'seconds_until_next_heart': None,
+                'full_hearts_at': None
+            }), 200
+
+        # Calculate recharged hearts
+        now = datetime.utcnow()
+        time_since_loss = (now - last_heart_lost_at).total_seconds()
+        hearts_recharged = int(time_since_loss // (RECHARGE_MINUTES * 60))
+        current_hearts = min(stored_hearts + hearts_recharged, MAX_HEARTS)
+
+        # Update database if hearts have recharged
+        if current_hearts != stored_hearts:
+            db.collections.learners.update_one(
+                {'_id': ObjectId(learner_id)},
+                {'$set': {'hearts': current_hearts}}
+            )
+
+        # Calculate time until next heart
+        next_heart_at = None
+        seconds_until_next_heart = None
+        full_hearts_at = None
+
+        if current_hearts < MAX_HEARTS:
+            seconds_since_last_recharge = time_since_loss % (RECHARGE_MINUTES * 60)
+            seconds_until_next_heart = int((RECHARGE_MINUTES * 60) - seconds_since_last_recharge)
+            next_heart_at = (now + timedelta(seconds=seconds_until_next_heart)).isoformat() + 'Z'
+
+            # Calculate when hearts will be full
+            hearts_needed = MAX_HEARTS - current_hearts
+            seconds_until_full = seconds_until_next_heart + ((hearts_needed - 1) * RECHARGE_MINUTES * 60)
+            full_hearts_at = (now + timedelta(seconds=seconds_until_full)).isoformat() + 'Z'
+
+        return jsonify({
+            'hearts': current_hearts,
+            'max_hearts': MAX_HEARTS,
+            'next_heart_at': next_heart_at,
+            'seconds_until_next_heart': seconds_until_next_heart,
+            'full_hearts_at': full_hearts_at
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@learners_bp.route('/<learner_id>/hearts/lose', methods=['POST'])
+def lose_heart(learner_id):
+    """
+    Lose a heart (called when user gets a wrong answer).
+
+    Response:
+    {
+        "hearts": 4,
+        "max_hearts": 5,
+        "lost": true
+    }
+    """
+    try:
+        db = get_db()
+
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        MAX_HEARTS = 5
+        current_hearts = learner.get('hearts', MAX_HEARTS)
+
+        # Don't go below 0
+        new_hearts = max(0, current_hearts - 1)
+
+        # Update database
+        db.collections.learners.update_one(
+            {'_id': ObjectId(learner_id)},
+            {
+                '$set': {
+                    'hearts': new_hearts,
+                    'last_heart_lost_at': datetime.utcnow()
+                }
+            }
+        )
+
+        return jsonify({
+            'hearts': new_hearts,
+            'max_hearts': MAX_HEARTS,
+            'lost': True
+        }), 200
+
+    except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 

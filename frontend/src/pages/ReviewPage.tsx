@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { useUserStore } from '../stores/userStore'
 import { adaptiveApi } from '../services/api'
 import { TranslatedText } from '../components/TranslatedText'
+import { useHeartRecharge } from '../hooks/useHeartRecharge'
 
 interface ReviewItem {
   item_id: string
@@ -58,6 +59,7 @@ const REVIEW_REASON_CONFIG = {
 export const ReviewPage = () => {
   const { learnerId } = useUserStore()
   const navigate = useNavigate()
+  const { loseHeart } = useHeartRecharge()
 
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([])
   const [queueStats, setQueueStats] = useState<QueueStats | null>(null)
@@ -109,6 +111,13 @@ export const ReviewPage = () => {
     if (selectedOption === null) return
 
     const currentItem = reviewItems[currentIndex]
+
+    // Ensure content structure is valid
+    if (!currentItem?.content || typeof currentItem.content.correct_answer !== 'number') {
+      console.error('Invalid question content structure:', currentItem)
+      return
+    }
+
     const correct = selectedOption === currentItem.content.correct_answer
 
     setIsCorrect(correct)
@@ -117,6 +126,11 @@ export const ReviewPage = () => {
       correct: prev.correct + (correct ? 1 : 0),
       total: prev.total + 1
     }))
+
+    // Lose a heart if answer is incorrect
+    if (!correct) {
+      loseHeart()
+    }
 
     // Log interaction to adaptive system
     if (learnerId) {
@@ -275,6 +289,24 @@ export const ReviewPage = () => {
   }
 
   const currentItem = reviewItems[currentIndex]
+
+  // Safety check: ensure currentItem exists
+  if (!currentItem) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="text-center">
+          <p className="text-red-500 font-medium mb-4">Unable to load review question</p>
+          <button
+            onClick={() => navigate('/learn')}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg font-bold"
+          >
+            Back to Courses
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   const reasonConfig = REVIEW_REASON_CONFIG[currentItem.review_reason]
   const ReasonIcon = reasonConfig.icon
 
@@ -343,12 +375,12 @@ export const ReviewPage = () => {
               transition={{ duration: 0.2 }}
             >
               <h2 className="text-xl md:text-2xl font-extrabold text-gray-800 text-center mb-8">
-                <TranslatedText context="question">{currentItem.content.stem}</TranslatedText>
+                <TranslatedText context="question">{currentItem.content?.stem || 'Question not available'}</TranslatedText>
               </h2>
 
               {/* Options */}
               <div className="space-y-3">
-                {currentItem.content.choices.map((choice, index) => {
+                {(currentItem.content?.choices || []).map((choice, index) => {
                   const isSelected = selectedOption === index
                   const isCorrectAnswer = index === currentItem.content.correct_answer
 
@@ -414,7 +446,7 @@ export const ReviewPage = () => {
                         {isCorrect ? 'Great job!' : 'Not quite right'}
                       </p>
                       <p className="text-gray-600 text-sm">
-                        <TranslatedText context="explanation">{currentItem.content.explanation}</TranslatedText>
+                        <TranslatedText context="explanation">{currentItem.content?.explanation || 'No explanation available'}</TranslatedText>
                       </p>
                     </div>
                   </div>

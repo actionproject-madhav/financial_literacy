@@ -762,3 +762,171 @@ export const streaksApi = {
   healthCheck: () =>
     fetchApi<{ status: string }>('/api/streaks/health').catch(() => null),
 };
+
+// Social API
+export interface FriendRequest {
+  request_id: string;
+  from_user: {
+    user_id: string;
+    display_name: string;
+    total_xp: number;
+    streak_count: number;
+    profile_picture_url?: string;
+  };
+  to_user: {
+    user_id: string;
+    display_name: string;
+    total_xp: number;
+    streak_count: number;
+    profile_picture_url?: string;
+  };
+  created_at: string;
+  status: string;
+}
+
+export interface Friend {
+  user_id: string;
+  display_name: string;
+  total_xp: number;
+  streak_count: number;
+  profile_picture_url?: string;
+  friendship_since?: string;
+  following_since?: string;
+}
+
+export interface UserProfile {
+  user_id: string;
+  display_name: string;
+  total_xp: number;
+  streak_count: number;
+  profile_picture_url?: string;
+  level: number;
+  lessons_completed: number;
+  skills_mastered: number;
+  friends_count: number;
+  followers_count: number;
+  following_count: number;
+  is_friend?: boolean;
+  is_following?: boolean;
+  has_pending_request?: boolean;
+}
+
+export const socialApi = {
+  // Friend Requests
+  sendFriendRequest: (fromUserId: string, toUserId: string) =>
+    fetchApi<{ success: boolean; request_id: string; message: string }>(
+      '/api/social/friend-request/send',
+      {
+        method: 'POST',
+        body: JSON.stringify({ from_user_id: fromUserId, to_user_id: toUserId }),
+      }
+    ),
+
+  acceptFriendRequest: (requestId: string) =>
+    fetchApi<{ success: boolean; friendship_id: string; message: string }>(
+      '/api/social/friend-request/accept',
+      {
+        method: 'POST',
+        body: JSON.stringify({ request_id: requestId }),
+      }
+    ),
+
+  rejectFriendRequest: (requestId: string) =>
+    fetchApi<{ success: boolean; message: string }>(
+      '/api/social/friend-request/reject',
+      {
+        method: 'POST',
+        body: JSON.stringify({ request_id: requestId }),
+      }
+    ),
+
+  getFriendRequests: (learnerId: string, type: 'received' | 'sent' = 'received') =>
+    fetchApi<{ requests: FriendRequest[]; count: number }>(
+      `/api/social/friend-requests/${learnerId}?type=${type}`
+    ),
+
+  // Friends
+  getFriends: (learnerId: string) =>
+    fetchApi<{ friends: Friend[]; count: number }>(
+      `/api/social/friends/${learnerId}`
+    ),
+
+  removeFriend: (userId: string, friendId: string) =>
+    fetchApi<{ success: boolean; message: string }>(
+      '/api/social/friend/remove',
+      {
+        method: 'POST',
+        body: JSON.stringify({ user_id: userId, friend_id: friendId }),
+      }
+    ),
+
+  // Follow/Unfollow
+  followUser: (followerId: string, followingId: string) =>
+    fetchApi<{ success: boolean; message: string }>('/api/social/follow', {
+      method: 'POST',
+      body: JSON.stringify({ follower_id: followerId, following_id: followingId }),
+    }),
+
+  unfollowUser: (followerId: string, followingId: string) =>
+    fetchApi<{ success: boolean; message: string }>('/api/social/unfollow', {
+      method: 'POST',
+      body: JSON.stringify({ follower_id: followerId, following_id: followingId }),
+    }),
+
+  getFollowers: (learnerId: string) =>
+    fetchApi<{ followers: Friend[]; count: number }>(
+      `/api/social/followers/${learnerId}`
+    ),
+
+  getFollowing: (learnerId: string) =>
+    fetchApi<{ following: Friend[]; count: number }>(
+      `/api/social/following/${learnerId}`
+    ),
+
+  // User Search & Profile
+  searchUsers: (query: string, limit: number = 20) =>
+    fetchApi<{ users: UserProfile[]; count: number }>(
+      `/api/social/users/search?q=${encodeURIComponent(query)}&limit=${limit}`
+    ),
+
+  getUserProfile: (learnerId: string, viewerId?: string) => {
+    const params = viewerId ? `?viewer_id=${viewerId}` : '';
+    return fetchApi<UserProfile>(`/api/social/profile/${learnerId}${params}`);
+  },
+
+  // Referrals
+  getReferralCode: (learnerId: string) =>
+    fetchApi<{
+      referral_code: string;
+      referral_link: string;
+      total_referrals: number;
+    }>(`/api/social/referral/code/${learnerId}`),
+
+  trackReferral: (referralCode: string, referredUserId: string) =>
+    fetchApi<{
+      success: boolean;
+      referrer_id: string;
+      reward_xp: number;
+    }>('/api/social/referral/track', {
+      method: 'POST',
+      body: JSON.stringify({
+        referral_code: referralCode,
+        referred_user_id: referredUserId,
+      }),
+    }),
+
+  getReferrals: (learnerId: string) =>
+    fetchApi<{
+      referrals: Array<{
+        user_id: string;
+        display_name: string;
+        total_xp: number;
+        joined_at: string;
+      }>;
+      total_referrals: number;
+      total_rewards_earned: number;
+    }>(`/api/social/referrals/${learnerId}`),
+
+  healthCheck: () =>
+    fetchApi<{ status: string }>('/api/social/health').catch(() => null),
+};
