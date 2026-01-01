@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Users } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { useUserStore } from '../stores/userStore';
-import { leaderboardApi, MyLeagueResponse, League } from '../services/api';
+import { leaderboardApi, MyLeagueResponse, League, socialApi } from '../services/api';
 
 // --- Custom SVGs for "Non-Tacky" Look ---
 
@@ -60,6 +61,8 @@ export const LeaderboardPage: React.FC = () => {
   const [allLeagues, setAllLeagues] = useState<League[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [friendsOnly, setFriendsOnly] = useState(false);
+  const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,14 +76,19 @@ export const LeaderboardPage: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch all leagues and current user's league data
-        const [leaguesResponse, myLeagueResponse] = await Promise.all([
+        // Fetch all leagues, current user's league data, and friends
+        const [leaguesResponse, myLeagueResponse, friendsResponse] = await Promise.all([
           leaderboardApi.getLeagues(),
-          leaderboardApi.getMyLeague(learnerId)
+          leaderboardApi.getMyLeague(learnerId),
+          socialApi.getFriends(learnerId).catch(() => ({ friends: [], count: 0 }))
         ]);
 
         setAllLeagues(leaguesResponse.leagues);
         setLeagueData(myLeagueResponse);
+
+        // Store friend IDs for filtering
+        const ids = new Set(friendsResponse.friends.map(f => f.user_id));
+        setFriendIds(ids);
       } catch (err) {
         console.error('Error fetching leaderboard:', err);
         setError('Failed to load leaderboard. Please try again.');
@@ -121,6 +129,13 @@ export const LeaderboardPage: React.FC = () => {
   const currentLeagueIndex = allLeagues.findIndex(l => l.id === leagueData.league.id);
   const currentLeague = leagueData.league;
 
+  // Filter rankings based on friends-only toggle
+  const filteredRankings = friendsOnly
+    ? leagueData.rankings.filter(entry =>
+        entry.is_current_user || entry.learner_id === learnerId || friendIds.has(entry.learner_id)
+      )
+    : leagueData.rankings;
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-6xl mx-auto px-6 flex gap-8 items-start">
@@ -128,6 +143,25 @@ export const LeaderboardPage: React.FC = () => {
         <div className="flex-1 max-w-2xl">
           {/* League Header */}
           <div className="flex flex-col items-center mb-8 sticky top-0 bg-white z-50 pt-10 pb-6 border-b border-gray-100">
+            {/* Friends Filter Toggle */}
+            {friendIds.size > 0 && (
+              <div className="mb-4 w-full flex justify-end">
+                <button
+                  onClick={() => setFriendsOnly(!friendsOnly)}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all",
+                    friendsOnly
+                      ? "bg-[#1cb0f6] text-white shadow-md"
+                      : "bg-gray-100 text-[#777] hover:bg-gray-200"
+                  )}
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Friends Only</span>
+                  {friendsOnly && <span className="ml-1">({filteredRankings.length})</span>}
+                </button>
+              </div>
+            )}
+
             {/* League Icons */}
             <div className="flex items-center gap-4 mb-4">
               {allLeagues.map((league, idx) => {
@@ -165,7 +199,7 @@ export const LeaderboardPage: React.FC = () => {
 
           {/* List */}
           <div className="flex flex-col gap-0.5 relative z-0">
-            {leagueData.rankings.map((entry, index) => {
+            {filteredRankings.map((entry, index) => {
               const isTop3 = index < 3;
               const isPromotionCutoff = index === 9;
               const isCurrentUser = entry.is_current_user || entry.learner_id === learnerId;

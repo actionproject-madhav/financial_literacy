@@ -8,6 +8,7 @@ import confetti from 'canvas-confetti'
 import { CelebrationOverlay } from '../components/CelebrationOverlay'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useTranslateContent } from '../hooks/useTranslateContent'
+import { useHeartRecharge } from '../hooks/useHeartRecharge'
 
 interface StepBase {
   type: 'content' | 'quiz';
@@ -43,8 +44,9 @@ export const LessonPage = () => {
   const navigate = useNavigate()
 
   // Store actions
-  const { user, learnerId, setUser, addXP, loseHeart } = useUserStore()
+  const { user, learnerId, setUser, addXP } = useUserStore()
   const { language: globalLanguage } = useLanguage()
+  const { loseHeart } = useHeartRecharge()
 
   const [lesson, setLesson] = useState<LessonInfo | null>(null)
   const [steps, setSteps] = useState<Step[]>([])

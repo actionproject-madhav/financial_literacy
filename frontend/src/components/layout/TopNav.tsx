@@ -8,6 +8,7 @@ import { HeartsDisplay } from '../gamification/HeartsDisplay';
 import { IconButton } from '../ui';
 import { Avatar } from '../ui/Avatar';
 import { cn } from '../../utils/cn';
+import { useHeartRecharge } from '../../hooks/useHeartRecharge';
 
 interface TopNavProps {
   user?: {
@@ -26,6 +27,8 @@ export const TopNav: React.FC<TopNavProps> = ({
   onMenuClick,
   className,
 }) => {
+  const { hearts, countdown } = useHeartRecharge();
+
   return (
     <header
       className={cn(
@@ -35,7 +38,7 @@ export const TopNav: React.FC<TopNavProps> = ({
         'px-4 sm:px-5', // Duolingo padding
         className
       )}
-      style={{ 
+      style={{
         background: 'rgb(255, 255, 255)',
         borderBottom: '2px solid rgb(229, 229, 229)'
       }}
@@ -67,12 +70,12 @@ export const TopNav: React.FC<TopNavProps> = ({
         {user && (
           <div className="flex items-center gap-4"> {/* Duolingo uses 16px gap consistently */}
             <StreakCounter days={user.streak} size="sm" />
-            
+
             <div className="hidden sm:block">
               <GemDisplay amount={user.gems} size="sm" />
             </div>
-            
-            <HeartsDisplay hearts={user.hearts} size="sm" />
+
+            <HeartsDisplay hearts={hearts} size="sm" countdown={countdown} />
 
             <IconButton
               aria-label="Notifications"

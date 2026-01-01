@@ -110,12 +110,12 @@ export const CelebrationOverlay = ({
                                         </div>
                                     </motion.div>
 
-                                    {/* Gems Card - Blue Header style (swapped from green) */}
+                                    {/* Gems Card - Amber Header style to match coin theme */}
                                     <motion.div
                                         whileHover={{ scale: 1.05 }}
-                                        className="flex flex-col bg-white border-2 border-[#1cb0f6] rounded-2xl overflow-hidden min-w-[150px] shadow-sm"
+                                        className="flex flex-col bg-white border-2 border-amber-400 rounded-2xl overflow-hidden min-w-[150px] shadow-sm"
                                     >
-                                        <div className="bg-[#1cb0f6] py-2 px-4 text-center">
+                                        <div className="bg-amber-400 py-2 px-4 text-center">
                                             <span className="text-xs font-black text-white uppercase tracking-wider">
                                                 Gems
                                             </span>
@@ -126,7 +126,7 @@ export const CelebrationOverlay = ({
                                                 alt="Gems"
                                                 className="w-8 h-8 object-contain"
                                             />
-                                            <span className="text-3xl font-black text-[#1cb0f6]">
+                                            <span className="text-3xl font-black text-amber-500">
                                                 {gemsEarned}
                                             </span>
                                         </div>

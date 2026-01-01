@@ -69,6 +69,12 @@ class FinLitCollections:
         # Quests and leaderboard collections
         self.quest_claims = db.quest_claims
         self.leaderboard_history = db.leaderboard_history
+
+        # Social features collections
+        self.friendships = db.friendships  # Bidirectional friend connections
+        self.friend_requests = db.friend_requests  # Pending friend requests
+        self.follows = db.follows  # Unidirectional follows
+        self.referrals = db.referrals  # Referral tracking
     
     def _to_object_id(self, id_value):
         """Convert string ID to ObjectId, or return as-is if already ObjectId"""
@@ -217,6 +223,39 @@ class FinLitCollections:
             ("xp_earned", DESCENDING)
         ])
 
+        # Friendships indexes
+        self.friendships.create_index([
+            ("user1_id", ASCENDING),
+            ("user2_id", ASCENDING)
+        ], unique=True)
+        self.friendships.create_index([("user1_id", ASCENDING)])
+        self.friendships.create_index([("user2_id", ASCENDING)])
+        self.friendships.create_index([("created_at", DESCENDING)])
+
+        # Friend Requests indexes
+        self.friend_requests.create_index([
+            ("from_user_id", ASCENDING),
+            ("to_user_id", ASCENDING)
+        ], unique=True)
+        self.friend_requests.create_index([("to_user_id", ASCENDING)])
+        self.friend_requests.create_index([("status", ASCENDING)])
+        self.friend_requests.create_index([("created_at", DESCENDING)])
+
+        # Follows indexes
+        self.follows.create_index([
+            ("follower_id", ASCENDING),
+            ("following_id", ASCENDING)
+        ], unique=True)
+        self.follows.create_index([("follower_id", ASCENDING)])
+        self.follows.create_index([("following_id", ASCENDING)])
+        self.follows.create_index([("created_at", DESCENDING)])
+
+        # Referrals indexes
+        self.referrals.create_index([("referrer_id", ASCENDING)])
+        self.referrals.create_index([("referred_id", ASCENDING)], unique=True)
+        self.referrals.create_index([("referral_code", ASCENDING)], unique=True)
+        self.referrals.create_index([("created_at", DESCENDING)])
+
         print("All indexes created successfully!")
 
     # ========== LEARNER METHODS ==========
@@ -282,11 +321,20 @@ class FinLitCollections:
         return result.modified_count > 0
 
     def add_xp(self, learner_id: str, xp_amount: int) -> bool:
-        """Add XP to learner"""
+        """Add XP to learner and update daily progress for leaderboard tracking"""
         result = self.learners.update_one(
             {'_id': ObjectId(learner_id)},
             {'$inc': {'total_xp': xp_amount}}
         )
+
+        # Update daily progress for leaderboard tracking
+        today = date.today()
+        self.update_daily_progress(
+            learner_id=learner_id,
+            date_obj=today,
+            xp_earned=xp_amount
+        )
+
         return result.modified_count > 0
 
     # ========== KNOWLEDGE COMPONENT METHODS ==========
