@@ -26,6 +26,8 @@ export function QuestsPage() {
     const [claiming, setClaiming] = useState<Set<string>>(new Set());
     const [friendStreaks, setFriendStreaks] = useState<any[]>([]);
     const [stats, setStats] = useState<any>(null);
+    const [gems, setGems] = useState<number>(0);
+    const [hearts, setHearts] = useState<number>(5);
 
     // Fetch quests from backend
     useEffect(() => {
@@ -51,20 +53,41 @@ export function QuestsPage() {
         return () => clearInterval(interval);
     }, [learnerId, toast]);
 
-    // Fetch user stats
+    // Fetch user stats, gems, and hearts from backend
     useEffect(() => {
-        const fetchStats = async () => {
+        const fetchUserData = async () => {
             if (!learnerId) return;
             
             try {
-                const data = await learnerApi.getStats(learnerId);
-                setStats(data);
+                // Fetch stats (includes streak)
+                const statsData = await learnerApi.getStats(learnerId);
+                setStats(statsData);
+                
+                // Fetch gems directly from backend
+                try {
+                    const gemsData = await learnerApi.getGems(learnerId);
+                    setGems(gemsData.gems || 0);
+                } catch (err) {
+                    console.error('Failed to fetch gems:', err);
+                }
+                
+                // Fetch hearts directly from backend
+                try {
+                    const heartsData = await learnerApi.getHearts(learnerId);
+                    setHearts(heartsData.hearts || 5);
+                } catch (err) {
+                    console.error('Failed to fetch hearts:', err);
+                }
             } catch (error) {
                 console.error('Failed to fetch stats:', error);
             }
         };
 
-        fetchStats();
+        fetchUserData();
+        
+        // Refresh every 30 seconds to keep data current
+        const interval = setInterval(fetchUserData, 30000);
+        return () => clearInterval(interval);
     }, [learnerId]);
 
     // Fetch friend streaks
@@ -99,6 +122,19 @@ export function QuestsPage() {
                         totalXp: result.total_xp || user.totalXp,
                         gems: (result.total_gems !== undefined ? result.total_gems : user.gems)
                     });
+                }
+                
+                // Refresh gems and stats from backend
+                if (learnerId) {
+                    try {
+                        const gemsData = await learnerApi.getGems(learnerId);
+                        setGems(gemsData.gems || 0);
+                        
+                        const statsData = await learnerApi.getStats(learnerId);
+                        setStats(statsData);
+                    } catch (err) {
+                        console.error('Failed to refresh after quest claim:', err);
+                    }
                 }
 
                 toast.success(
@@ -162,7 +198,8 @@ export function QuestsPage() {
     // Week days for streak calendar
     const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
     const today = new Date().getDay();
-    const currentStreak = stats?.streak || user?.streak || 0;
+    // Use streak from stats (database) - fallback to user store only if stats not loaded yet
+    const currentStreak = stats?.streak ?? stats?.streak_count ?? user?.streak ?? 0;
 
     // Calculate monthly quest progress (completed quests this month)
     const monthlyProgress = quests ? 
@@ -382,11 +419,11 @@ export function QuestsPage() {
                             </div>
                             <div className="flex items-center gap-2">
                                 <img src="/coin.svg" alt="Gems" className="w-6 h-6" />
-                                <span className="font-bold text-gray-700">{user?.gems || 0}</span>
+                                <span className="font-bold text-gray-700">{gems}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Heart className="w-5 h-5 text-red-500 fill-current" />
-                                <span className="font-bold text-red-500">{user?.hearts || 5}</span>
+                                <span className="font-bold text-red-500">{hearts}</span>
                             </div>
                         </motion.div>
 
