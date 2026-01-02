@@ -322,7 +322,7 @@ export const LearnPage = () => {
                                         <span className="text-yellow-400">⚡</span>
                                     </div>
                                     <h2 className="text-2xl font-extrabold text-gray-800">
-                                        Hi, {user.displayName?.split(' ')[0] || 'Friend'}!
+                                        Hi, {user.name?.split(' ')[0] || 'Friend'}!
                                     </h2>
                                     <p className="text-xs text-gray-500 mt-1">Your AI Financial Guide!</p>
                                 </div>

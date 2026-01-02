@@ -29,10 +29,13 @@ export const FollowersFollowingModal: React.FC<FollowersFollowingModalProps> = (
     const fetchUsers = async () => {
       setLoading(true);
       try {
-        const response = type === 'followers'
-          ? await socialApi.getFollowers(targetUserId)
-          : await socialApi.getFollowing(targetUserId);
-        setUsers(response[type]);
+        if (type === 'followers') {
+          const response = await socialApi.getFollowers(targetUserId);
+          setUsers(response.followers);
+        } else {
+          const response = await socialApi.getFollowing(targetUserId);
+          setUsers(response.following);
+        }
       } catch (error) {
         console.error(`Failed to fetch ${type}:`, error);
       } finally {

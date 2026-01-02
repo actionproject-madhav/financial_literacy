@@ -57,7 +57,7 @@ def test_supabase():
     print("="*60)
     
     if not config.SUPABASE_URL or not config.SUPABASE_SERVICE_KEY:
-        print("❌ Supabase credentials not configured")
+        print(" Supabase credentials not configured")
         print("   Required: SUPABASE_URL, SUPABASE_SERVICE_KEY")
         return False
     
@@ -72,7 +72,7 @@ def test_supabase():
         buckets = test_supabase.storage.list_buckets()
         bucket_names = [b.name for b in buckets] if buckets else []
         
-        print(f"✅ Supabase Connected")
+        print(f" Supabase Connected")
         print(f"   URL: {config.SUPABASE_URL}")
         print(f"   Buckets: {', '.join(bucket_names) if bucket_names else 'None'}")
         
@@ -87,7 +87,7 @@ def test_supabase():
                 file=test_data,
                 file_options={"content-type": "text/plain"}
             )
-            print(f"✅ Upload test successful")
+            print(f" Upload test successful")
             
             # Get URL
             public_url = test_supabase.storage.from_(config.SUPABASE_BUCKET_NAME).get_public_url(test_path)
@@ -95,20 +95,20 @@ def test_supabase():
             
             # Delete
             test_supabase.storage.from_(config.SUPABASE_BUCKET_NAME).remove([test_path])
-            print(f"✅ Delete test successful")
+            print(f" Delete test successful")
             
             return True
         else:
-            print(f"⚠️  Bucket '{config.SUPABASE_BUCKET_NAME}' not found")
+            print(f"  Bucket '{config.SUPABASE_BUCKET_NAME}' not found")
             print(f"   Available buckets: {', '.join(bucket_names)}")
             return False
             
     except ImportError:
-        print("❌ supabase-py not installed")
+        print(" supabase-py not installed")
         print("   Run: pip install supabase")
         return False
     except Exception as e:
-        print(f"❌ Supabase Error: {e}")
+        print(f" Supabase Error: {e}")
         return False
 
 
@@ -119,7 +119,7 @@ def test_elevenlabs():
     print("="*60)
     
     if not config.ELEVENLABS_API_KEY:
-        print("⚠️  ElevenLabs API key not configured")
+        print("  ElevenLabs API key not configured")
         print("   Optional: ELEVENLABS_API_KEY")
         return False
     
@@ -132,17 +132,17 @@ def test_elevenlabs():
         voices = client.voices.get_all()
         voice_count = len(voices.voices) if voices else 0
         
-        print(f"✅ ElevenLabs Client Initialized")
+        print(f" ElevenLabs Client Initialized")
         print(f"   API Key: {config.ELEVENLABS_API_KEY[:10]}...{config.ELEVENLABS_API_KEY[-4:]}")
         print(f"   Available Voices: {voice_count}")
         return True
             
     except ImportError:
-        print("⚠️  elevenlabs package not installed")
+        print("  elevenlabs package not installed")
         print("   Run: pip install elevenlabs")
         return False
     except Exception as e:
-        print(f"❌ ElevenLabs Error: {e}")
+        print(f" ElevenLabs Error: {e}")
         return False
 
 

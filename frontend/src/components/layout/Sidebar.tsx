@@ -42,13 +42,13 @@ export const Sidebar = ({ onCoachClick }: SidebarProps) => {
 
       <nav className="flex-1 px-4 py-4 space-y-0 overflow-y-auto">
         {menuItems.map((item) => {
-          const isActive = !item.isButton && (
+          const isActive = (
             location.pathname === item.path ||
             (item.path !== '/' && location.pathname.startsWith(item.path)) ||
             (item.path === '/learn' && location.pathname.startsWith('/section'))
           )
 
-          if (item.isButton && item.label === t('nav.coach')) {
+          if (false) { // Removed coach button logic
             return (
               <button
                 key={item.path}
