@@ -6,9 +6,10 @@ import { Button } from '../components/ui';
 import { GemDisplay } from '../components/gamification/GemDisplay';
 import { useUserStore } from '../stores/userStore';
 import { learnerApi } from '../services/api';
-import { ShoppingBag, Zap, Heart, Flame, Crown, Star, Shield, Filter, Search, Plus } from 'lucide-react';
+import { ShoppingBag, Zap, Heart, Flame, Crown, Star, Shield, Filter, Search, Plus, CheckCircle2 } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { TranslatedText } from '../components/TranslatedText';
+import { useToast } from '../components/ui/Toast';
 
 // --- Types & Data ---
 
@@ -77,10 +78,12 @@ const CATEGORIES = [
 export const ShopPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, learnerId, setUser } = useUserStore();
+  const toast = useToast();
   const gems = user?.gems || 0;
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [purchasedItems, setPurchasedItems] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
   const filteredItems = selectedCategory === 'all'
@@ -109,12 +112,12 @@ export const ShopPage: React.FC = () => {
 
   const handlePurchase = async (item: ShopItem) => {
     if (!learnerId || !user) {
-      setError('Please log in to make purchases');
+      toast.error('Please log in to make purchases');
       return;
     }
 
     if (gems < item.price) {
-      setError(`Not enough gems! You need ${item.price} gems.`);
+      toast.error(`Not enough gems! You need ${item.price} gems.`);
       return;
     }
 
@@ -131,6 +134,9 @@ export const ShopPage: React.FC = () => {
       );
 
       if (result.success) {
+        // Mark as purchased for visual feedback
+        setPurchasedItems(prev => new Set(prev).add(item.id));
+        
         // Update user store with new gems and apply effects
         const updatedUser = {
           ...user,
@@ -140,20 +146,62 @@ export const ShopPage: React.FC = () => {
         // Apply item effects
         if (result.effect.type === 'refill_hearts') {
           updatedUser.hearts = result.effect.hearts;
+          // Also sync hearts from backend to ensure accuracy
+          try {
+            const heartsData = await learnerApi.getHearts(learnerId);
+            if (heartsData) {
+              updatedUser.hearts = heartsData.hearts;
+            }
+          } catch (err) {
+            console.error('Failed to sync hearts:', err);
+          }
         }
 
         setUser(updatedUser);
+        
+        // Sync gems from backend one more time to ensure accuracy
+        try {
+          const gemsData = await learnerApi.getGems(learnerId);
+          if (gemsData && gemsData.gems !== result.gems_remaining) {
+            // If there's a mismatch, use the backend value
+            setUser({
+              ...updatedUser,
+              gems: gemsData.gems
+            });
+          }
+        } catch (err) {
+          console.error('Failed to sync gems after purchase:', err);
+        }
 
-        // Show success message
-        alert(`Successfully purchased ${item.name}!`);
+        // Show success toast with item-specific message
+        let successMessage = `${item.name} purchased successfully!`;
+        if (result.effect.type === 'refill_hearts') {
+          successMessage = `Hearts refilled! You now have ${result.effect.hearts} hearts.`;
+        } else if (result.effect.type === 'double_xp') {
+          successMessage = `Double XP activated! Earn 2x XP for the next ${result.effect.duration_minutes} minutes.`;
+        } else if (result.effect.type === 'streak_freeze') {
+          successMessage = `Streak freeze activated! Your streak is protected for ${result.effect.days} day.`;
+        }
+        
+        toast.success(successMessage);
+        
+        // Clear purchased state after 3 seconds (for visual feedback)
+        setTimeout(() => {
+          setPurchasedItems(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(item.id);
+            return newSet;
+          });
+        }, 3000);
         
         // Clear any previous errors
         setError(null);
       } else {
-        setError('Purchase failed. Please try again.');
+        toast.error('Purchase failed. Please try again.');
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to purchase item');
+      const errorMessage = err?.message || 'Failed to purchase item';
+      toast.error(errorMessage);
       console.error('Purchase error:', err);
     } finally {
       setPurchasing(null);
@@ -314,21 +362,34 @@ export const ShopPage: React.FC = () => {
                   <div className="mt-4">
                     <button
                       className={cn(
-                        "w-full py-3 rounded-xl font-extrabold text-sm uppercase tracking-wide transition-colors",
+                        "w-full py-3 rounded-xl font-extrabold text-sm uppercase tracking-wide transition-all relative",
                         gems < item.price
                           ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                           : purchasing === item.id
                           ? "bg-orange-200 text-orange-600 cursor-wait"
-                          : "text-[#FF9600] hover:bg-orange-50"
+                          : purchasedItems.has(item.id)
+                          ? "bg-green-100 text-green-600 border-2 border-green-300"
+                          : "text-[#FF9600] hover:bg-orange-50 border-2 border-transparent hover:border-orange-200"
                       )}
                       onClick={() => handlePurchase(item)}
-                      disabled={gems < item.price || purchasing === item.id}
+                      disabled={gems < item.price || purchasing === item.id || purchasedItems.has(item.id)}
                     >
-                      {purchasing === item.id ? 'PURCHASING...' : gems < item.price ? 'INSUFFICIENT GEMS' : 'PURCHASE'}
+                      {purchasing === item.id ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <span className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin"></span>
+                          PURCHASING...
+                        </span>
+                      ) : purchasedItems.has(item.id) ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <CheckCircle2 className="w-5 h-5" />
+                          PURCHASED
+                        </span>
+                      ) : gems < item.price ? (
+                        'INSUFFICIENT GEMS'
+                      ) : (
+                        'PURCHASE'
+                      )}
                     </button>
-                    {error && (
-                      <p className="text-xs text-red-500 mt-2 text-center">{error}</p>
-                    )}
                   </div>
                 </motion.div>
               ))}

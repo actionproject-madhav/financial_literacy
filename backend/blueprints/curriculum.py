@@ -483,6 +483,43 @@ def complete_lesson(kc_id):
                 }
             )
         
+        # Check for active XP multiplier
+        xp_multiplier = 1.0
+        if learner.get('xp_multiplier_active', False):
+            activation_time = learner.get('xp_multiplier_activated_at')
+            duration_minutes = learner.get('xp_multiplier_duration_minutes', 15)
+            if activation_time:
+                try:
+                    if isinstance(activation_time, str):
+                        # Parse ISO format string
+                        if 'T' in activation_time:
+                            activation_time = datetime.fromisoformat(activation_time.replace('Z', '+00:00'))
+                        else:
+                            activation_time = datetime.strptime(activation_time, '%Y-%m-%d %H:%M:%S')
+                    elif not isinstance(activation_time, datetime):
+                        activation_time = datetime.utcnow()
+                    
+                    # Remove timezone if present for comparison
+                    if hasattr(activation_time, 'tzinfo') and activation_time.tzinfo:
+                        activation_time = activation_time.replace(tzinfo=None)
+                    
+                    elapsed = (datetime.utcnow() - activation_time).total_seconds() / 60
+                    if elapsed < duration_minutes:
+                        xp_multiplier = 2.0  # Double XP
+                    else:
+                        # Expired - deactivate
+                        db.collections.learners.update_one(
+                            {'_id': learner_oid},
+                            {'$set': {'xp_multiplier_active': False}}
+                        )
+                except Exception as e:
+                    # If parsing fails, just use normal XP
+                    print(f"Error parsing XP multiplier activation time: {e}")
+                    xp_multiplier = 1.0
+        
+        # Apply XP multiplier
+        actual_xp_earned = int(xp_earned * xp_multiplier)
+        
         # Award gems based on lesson completion (5 gems per lesson)
         gems_earned = 5
         
@@ -491,7 +528,7 @@ def complete_lesson(kc_id):
             {'_id': learner_oid},
             {
                 '$inc': {
-                    'total_xp': xp_earned,
+                    'total_xp': actual_xp_earned,
                     'gems': gems_earned
                 }
             }
@@ -502,7 +539,7 @@ def complete_lesson(kc_id):
         db.collections.update_daily_progress(
             learner_id=learner_id,
             date_obj=today,
-            xp_earned=xp_earned,
+            xp_earned=actual_xp_earned,
             lessons_completed=1,
             minutes_practiced=time_spent_minutes
         )
@@ -547,7 +584,8 @@ def complete_lesson(kc_id):
                 'p_mastery': round(new_mastery, 2)
             },
             'next_lesson_unlocked': next_lesson_unlocked,
-            'xp_earned': xp_earned,
+            'xp_earned': actual_xp_earned,
+            'xp_multiplier_applied': xp_multiplier > 1.0,
             'total_xp': updated_learner.get('total_xp', 0),
             'gems': updated_learner.get('gems', 0),
             'gems_earned': gems_earned

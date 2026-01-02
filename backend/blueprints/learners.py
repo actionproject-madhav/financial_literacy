@@ -940,7 +940,6 @@ def purchase_item(learner_id):
             return jsonify({'error': 'Insufficient gems'}), 400
         
         # Deduct gems
-        new_gems = current_gems - price
         db.collections.learners.update_one(
             {'_id': ObjectId(learner_id)},
             {
@@ -948,6 +947,10 @@ def purchase_item(learner_id):
                 '$set': {'updated_at': datetime.utcnow()}
             }
         )
+        
+        # Get updated learner to return accurate gems count
+        updated_learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        new_gems = updated_learner.get('gems', current_gems - price)
         
         # Apply item effect
         effect = {}
@@ -963,21 +966,45 @@ def purchase_item(learner_id):
                     }
                 }
             )
-            effect = {'type': 'refill_hearts', 'hearts': MAX_HEARTS}
+            # Get updated hearts count
+            updated_learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+            actual_hearts = updated_learner.get('hearts', MAX_HEARTS)
+            effect = {'type': 'refill_hearts', 'hearts': actual_hearts}
         
         elif item_id == 'double-xp':
-            # Set XP multiplier (would need to track this in session/state)
-            # For now, just return success - frontend can handle the multiplier
-            effect = {'type': 'double_xp', 'duration_minutes': 15}
+            # Store XP multiplier activation time in learner document
+            activation_time = datetime.utcnow()
+            db.collections.learners.update_one(
+                {'_id': ObjectId(learner_id)},
+                {
+                    '$set': {
+                        'xp_multiplier_active': True,
+                        'xp_multiplier_activated_at': activation_time,
+                        'xp_multiplier_duration_minutes': 15
+                    }
+                }
+            )
+            effect = {'type': 'double_xp', 'duration_minutes': 15, 'activated_at': activation_time.isoformat()}
         
         elif item_id == 'streak-freeze':
-            # Streak freeze would be handled by streaks service
+            # Store streak freeze in learner document
+            db.collections.learners.update_one(
+                {'_id': ObjectId(learner_id)},
+                {
+                    '$set': {
+                        'streak_freeze_active': True,
+                        'streak_freeze_days': 1,
+                        'streak_freeze_activated_at': datetime.utcnow()
+                    }
+                }
+            )
             effect = {'type': 'streak_freeze', 'days': 1}
         
         return jsonify({
             'success': True,
             'item_id': item_id,
             'gems_remaining': new_gems,
+            'gems_deducted': price,
             'effect': effect
         }), 200
         
