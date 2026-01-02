@@ -274,6 +274,9 @@ class FinLitCollections:
             'streak_count': 0,
             'streak_last_date': None,
             'total_xp': 0,
+            'gems': kwargs.get('gems', 0),  # Start with 0 gems
+            'hearts': kwargs.get('hearts', 5),  # Start with 5 hearts
+            'last_heart_lost_at': None,  # Track when last heart was lost for recharge
             'country_of_origin': kwargs.get('country_of_origin'),
             'visa_type': kwargs.get('visa_type'),
             'has_ssn': kwargs.get('has_ssn'),

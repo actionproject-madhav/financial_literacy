@@ -483,10 +483,18 @@ def complete_lesson(kc_id):
                 }
             )
         
-        # Update learner's total XP
+        # Award gems based on lesson completion (5 gems per lesson)
+        gems_earned = 5
+        
+        # Update learner's total XP and gems
         db.collections.learners.update_one(
             {'_id': learner_oid},
-            {'$inc': {'total_xp': xp_earned}}
+            {
+                '$inc': {
+                    'total_xp': xp_earned,
+                    'gems': gems_earned
+                }
+            }
         )
         
         # Update daily progress
@@ -528,6 +536,9 @@ def complete_lesson(kc_id):
                 )
                 next_lesson_unlocked = True
         
+        # Get updated learner data
+        updated_learner = db.collections.learners.find_one({'_id': learner_oid})
+        
         return jsonify({
             'success': True,
             'lesson': {
@@ -537,7 +548,9 @@ def complete_lesson(kc_id):
             },
             'next_lesson_unlocked': next_lesson_unlocked,
             'xp_earned': xp_earned,
-            'total_xp': learner.get('total_xp', 0) + xp_earned
+            'total_xp': updated_learner.get('total_xp', 0),
+            'gems': updated_learner.get('gems', 0),
+            'gems_earned': gems_earned
         }), 200
         
     except Exception as e:

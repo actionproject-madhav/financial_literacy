@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useUserStore } from '../stores/userStore';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 interface HeartRechargeData {
   hearts: number;
@@ -31,6 +31,9 @@ export const useHeartRecharge = () => {
       setIsLoading(true);
       const response = await fetch(`${API_BASE_URL}/api/learners/${learnerId}/hearts`, {
         credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       if (response.ok) {
@@ -63,6 +66,9 @@ export const useHeartRecharge = () => {
       const response = await fetch(`${API_BASE_URL}/api/learners/${learnerId}/hearts/lose`, {
         method: 'POST',
         credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       if (response.ok) {

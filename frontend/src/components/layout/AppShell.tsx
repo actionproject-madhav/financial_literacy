@@ -3,13 +3,13 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { BottomNav } from './BottomNav';
 import { Sidebar } from './Sidebar';
 import { useUserStore } from '../../stores/userStore';
-import { mockUser } from '../../data/mockData';
+import { learnerApi } from '../../services/api';
 import { FinAICoachPanel } from '../FinAICoachPanel';
 import { CoachButton } from '../CoachButton';
 import { useCoach } from '../../contexts/CoachContext';
 
 export const AppShell: React.FC = () => {
-  const { user, setUser } = useUserStore();
+  const { user, learnerId, setUser } = useUserStore();
   const location = useLocation();
   const isLessonPage = location.pathname.startsWith('/lesson');
   const { isOpen: isCoachOpen, openCoach, closeCoach, toggleCoach } = useCoach();
@@ -25,21 +25,32 @@ export const AppShell: React.FC = () => {
     };
   }, [openCoach]);
 
-  // Initialize with mock user if no user exists
+  // Sync user data from backend when learnerId is available
   useEffect(() => {
-    if (!user) {
-      setUser({
-        name: mockUser.name,
-        email: mockUser.email,
-        country: mockUser.country,
-        visaType: mockUser.visaType,
-        streak: mockUser.streak,
-        totalXp: mockUser.totalXp,
-        hearts: mockUser.hearts,
-        gems: mockUser.gems,
-      });
-    }
-  }, [user, setUser]);
+    const syncUserData = async () => {
+      if (learnerId && user) {
+        try {
+          const stats = await learnerApi.getStats(learnerId);
+          setUser({
+            ...user,
+            totalXp: stats.total_xp,
+            streak: stats.streak_count,
+            gems: stats.gems,
+            hearts: stats.hearts,
+          });
+        } catch (error) {
+          console.error('Failed to sync user data:', error);
+        }
+      }
+    };
+
+    // Sync on mount and when learnerId changes
+    syncUserData();
+    
+    // Also sync periodically (every 30 seconds) to keep data fresh
+    const interval = setInterval(syncUserData, 30000);
+    return () => clearInterval(interval);
+  }, [learnerId, user, setUser]);
 
   // If we are in a lesson, render only the content (immersive mode)
   if (isLessonPage) {

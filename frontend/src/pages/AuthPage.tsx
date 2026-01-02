@@ -19,18 +19,18 @@ export const AuthPage: React.FC = () => {
         if (sessionUser && sessionUser.learner_id) {
           setLearnerId(sessionUser.learner_id);
 
-          // Load full learner profile
+          // Load full learner stats (includes XP, gems, hearts from database)
           try {
-            const learner = await learnerApi.getProfile(sessionUser.learner_id);
+            const stats = await learnerApi.getStats(sessionUser.learner_id);
             setUser({
-              name: learner.display_name || sessionUser.name || 'User',
-              email: sessionUser.email || learner.email || '',
-              country: learner.country_of_origin || 'US',
-              visaType: learner.visa_type || 'Other',
-              streak: learner.streak_count || 0,
-              totalXp: learner.total_xp || 0,
-              hearts: 5,
-              gems: 0,
+              name: stats.display_name || sessionUser.name || 'User',
+              email: sessionUser.email || stats.email || '',
+              country: stats.country_of_origin || 'US',
+              visaType: stats.visa_type || 'Other',
+              streak: stats.streak_count || 0,
+              totalXp: stats.total_xp || 0,
+              hearts: stats.hearts || 5,
+              gems: stats.gems || 0,
             });
 
             // Redirect based on onboarding status

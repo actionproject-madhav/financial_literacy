@@ -588,6 +588,8 @@ def get_learner_stats(learner_id):
             'xp_for_next_level': level_info['xp_for_next_level'],
             'xp_in_current_level': level_info['xp_in_current_level'],
             'xp_needed_for_level': level_info['xp_needed_for_level'],
+            'gems': learner.get('gems', 0),
+            'hearts': learner.get('hearts', 5),
             'followers': followers_count,
             'following': following_count
         }), 200
@@ -718,6 +720,229 @@ def lose_heart(learner_id):
             'lost': True
         }), 200
 
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@learners_bp.route('/<learner_id>/gems', methods=['GET'])
+def get_gems(learner_id):
+    """
+    Get current gems for a learner.
+    
+    Response:
+    {
+        "gems": 150,
+        "learner_id": "..."
+    }
+    """
+    try:
+        db = get_db()
+        
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+        
+        gems = learner.get('gems', 0)
+        
+        return jsonify({
+            'gems': gems,
+            'learner_id': learner_id
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@learners_bp.route('/<learner_id>/gems/add', methods=['POST'])
+def add_gems(learner_id):
+    """
+    Add gems to a learner (e.g., from completing quests, achievements).
+    
+    Request JSON:
+    {
+        "amount": 50,
+        "reason": "quest_completion"
+    }
+    
+    Response:
+    {
+        "gems": 200,
+        "added": 50,
+        "learner_id": "..."
+    }
+    """
+    try:
+        db = get_db()
+        data = request.get_json()
+        
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+        
+        amount = int(data.get('amount', 0))
+        if amount <= 0:
+            return jsonify({'error': 'Amount must be positive'}), 400
+        
+        current_gems = learner.get('gems', 0)
+        new_gems = current_gems + amount
+        
+        db.collections.learners.update_one(
+            {'_id': ObjectId(learner_id)},
+            {
+                '$inc': {'gems': amount},
+                '$set': {'updated_at': datetime.utcnow()}
+            }
+        )
+        
+        return jsonify({
+            'gems': new_gems,
+            'added': amount,
+            'learner_id': learner_id
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@learners_bp.route('/<learner_id>/gems/deduct', methods=['POST'])
+def deduct_gems(learner_id):
+    """
+    Deduct gems from a learner (e.g., for shop purchases).
+    
+    Request JSON:
+    {
+        "amount": 50,
+        "reason": "shop_purchase"
+    }
+    
+    Response:
+    {
+        "gems": 100,
+        "deducted": 50,
+        "learner_id": "..."
+    }
+    """
+    try:
+        db = get_db()
+        data = request.get_json()
+        
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+        
+        amount = int(data.get('amount', 0))
+        if amount <= 0:
+            return jsonify({'error': 'Amount must be positive'}), 400
+        
+        current_gems = learner.get('gems', 0)
+        if current_gems < amount:
+            return jsonify({'error': 'Insufficient gems'}), 400
+        
+        new_gems = current_gems - amount
+        
+        db.collections.learners.update_one(
+            {'_id': ObjectId(learner_id)},
+            {
+                '$inc': {'gems': -amount},
+                '$set': {'updated_at': datetime.utcnow()}
+            }
+        )
+        
+        return jsonify({
+            'gems': new_gems,
+            'deducted': amount,
+            'learner_id': learner_id
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@learners_bp.route('/<learner_id>/shop/purchase', methods=['POST'])
+def purchase_item(learner_id):
+    """
+    Purchase an item from the shop.
+    
+    Request JSON:
+    {
+        "item_id": "refill-hearts",
+        "item_name": "Refill Hearts",
+        "price": 100,
+        "currency": "gems"
+    }
+    
+    Response:
+    {
+        "success": true,
+        "item_id": "refill-hearts",
+        "gems_remaining": 50,
+        "effect": {
+            "type": "refill_hearts",
+            "hearts": 5
+        }
+    }
+    """
+    try:
+        db = get_db()
+        data = request.get_json()
+        
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+        
+        item_id = data.get('item_id')
+        price = int(data.get('price', 0))
+        currency = data.get('currency', 'gems')
+        
+        if currency != 'gems':
+            return jsonify({'error': 'Only gems currency supported'}), 400
+        
+        current_gems = learner.get('gems', 0)
+        if current_gems < price:
+            return jsonify({'error': 'Insufficient gems'}), 400
+        
+        # Deduct gems
+        new_gems = current_gems - price
+        db.collections.learners.update_one(
+            {'_id': ObjectId(learner_id)},
+            {
+                '$inc': {'gems': -price},
+                '$set': {'updated_at': datetime.utcnow()}
+            }
+        )
+        
+        # Apply item effect
+        effect = {}
+        if item_id == 'refill-hearts':
+            # Refill hearts to max
+            MAX_HEARTS = 5
+            db.collections.learners.update_one(
+                {'_id': ObjectId(learner_id)},
+                {
+                    '$set': {
+                        'hearts': MAX_HEARTS,
+                        'last_heart_lost_at': None  # Reset recharge timer
+                    }
+                }
+            )
+            effect = {'type': 'refill_hearts', 'hearts': MAX_HEARTS}
+        
+        elif item_id == 'double-xp':
+            # Set XP multiplier (would need to track this in session/state)
+            # For now, just return success - frontend can handle the multiplier
+            effect = {'type': 'double_xp', 'duration_minutes': 15}
+        
+        elif item_id == 'streak-freeze':
+            # Streak freeze would be handled by streaks service
+            effect = {'type': 'streak_freeze', 'days': 1}
+        
+        return jsonify({
+            'success': True,
+            'item_id': item_id,
+            'gems_remaining': new_gems,
+            'effect': effect
+        }), 200
+        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

@@ -755,25 +755,32 @@ export const LessonPage = () => {
             xp_earned: 20,
             accuracy: accuracy,
             time_spent_minutes: timeSpentMinutes
-          }).then((result) => {
-            if (result) {
-              // Update user XP from backend response
-              if (user) {
-                setUser({
-                  ...user,
-                  gems: user.gems + 5,
-                  totalXp: result.total_xp || user.totalXp + 20
-                })
+          }).then(async (result) => {
+            if (result && user) {
+              // Update user data from backend response (includes XP and gems)
+              setUser({
+                ...user,
+                totalXp: result.total_xp || user.totalXp,
+                gems: result.gems || user.gems,
+              })
+              
+              // Also sync hearts from backend
+              try {
+                const heartsData = await learnerApi.getHearts(learnerId!)
+                if (heartsData) {
+                  setUser({
+                    ...user,
+                    totalXp: result.total_xp || user.totalXp,
+                    gems: result.gems || user.gems,
+                    hearts: heartsData.hearts
+                  })
+                }
+              } catch (err) {
+                console.error('Failed to sync hearts:', err)
               }
-              addXP(20)
             }
           }).catch((error) => {
             console.error('Failed to save lesson completion:', error)
-            // Still show celebration even if save fails
-            addXP(20)
-            if (user) {
-              setUser({ ...user, gems: user.gems + 5 })
-            }
           })
         } else {
           // Fallback if no lessonId or learnerId

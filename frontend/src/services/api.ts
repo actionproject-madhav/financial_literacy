@@ -62,6 +62,8 @@ export const learnerApi = {
       xp_for_next_level: number;
       xp_in_current_level: number;
       xp_needed_for_level: number;
+      gems: number;
+      hearts: number;
     }>(`/api/learners/${learnerId}/stats`),
 
   updateProfile: (learnerId: string, data: any) =>
@@ -102,6 +104,44 @@ export const learnerApi = {
 
   getDailyProgress: (learnerId: string) =>
     fetchApi<any>(`/api/learners/${learnerId}/daily-prog`),
+
+  getGems: (learnerId: string) =>
+    fetchApi<{ gems: number; learner_id: string }>(`/api/learners/${learnerId}/gems`),
+
+  addGems: (learnerId: string, amount: number, reason?: string) =>
+    fetchApi<{ gems: number; added: number; learner_id: string }>(`/api/learners/${learnerId}/gems/add`, {
+      method: 'POST',
+      body: JSON.stringify({ amount, reason }),
+    }),
+
+  deductGems: (learnerId: string, amount: number, reason?: string) =>
+    fetchApi<{ gems: number; deducted: number; learner_id: string }>(`/api/learners/${learnerId}/gems/deduct`, {
+      method: 'POST',
+      body: JSON.stringify({ amount, reason }),
+    }),
+
+  purchaseItem: (learnerId: string, itemId: string, itemName: string, price: number, currency: string = 'gems') =>
+    fetchApi<{
+      success: boolean;
+      item_id: string;
+      gems_remaining: number;
+      effect: {
+        type: string;
+        [key: string]: any;
+      };
+    }>(`/api/learners/${learnerId}/shop/purchase`, {
+      method: 'POST',
+      body: JSON.stringify({ item_id: itemId, item_name: itemName, price, currency }),
+    }),
+
+  getHearts: (learnerId: string) =>
+    fetchApi<{
+      hearts: number;
+      max_hearts: number;
+      next_heart_at: string | null;
+      seconds_until_next_heart: number | null;
+      full_hearts_at: string | null;
+    }>(`/api/learners/${learnerId}/hearts`),
 };
 
 // Adaptive Learning API
