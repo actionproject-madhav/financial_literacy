@@ -141,7 +141,7 @@ export const LessonComplete: React.FC<LessonCompleteProps> = ({
 
             {/* Streak */}
             <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-duo-lg">
-              <div className="w-8 h-8 flex items-center justify-center">
+              <div className="w-12 h-12 flex items-center justify-center">
                 <Lottie 
                   animationData={fireAnimation} 
                   loop={true} 

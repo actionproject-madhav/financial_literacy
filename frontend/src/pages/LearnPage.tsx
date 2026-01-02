@@ -136,7 +136,7 @@ export const LearnPage = () => {
                     <div className="mb-8">
                         <div className="bg-[#ddf4ff] border-2 border-[#ddf4ff] rounded-2xl p-0.5 relative overflow-hidden group hover:bg-[#cbeaff] transition-colors">
                             <div className="p-5 flex items-start gap-4">
-                                <div className="p-2 rounded-xl w-12 h-12 flex items-center justify-center">
+                                <div className="p-2 rounded-xl w-16 h-16 flex items-center justify-center">
                                     <Lottie 
                                         animationData={fireAnimation} 
                                         loop={true} 
@@ -357,7 +357,7 @@ export const LearnPage = () => {
                                         window.dispatchEvent(event);
                                     }}
                                 >
-                                    <div className="w-6 h-6 mb-2 flex items-center justify-center bg-white/50 rounded-lg overflow-hidden">
+                                    <div className="w-10 h-10 mb-2 flex items-center justify-center bg-white/50 rounded-lg overflow-hidden">
                                         <LottieAnimation 
                                             src="card.json" 
                                             className="w-full h-full"

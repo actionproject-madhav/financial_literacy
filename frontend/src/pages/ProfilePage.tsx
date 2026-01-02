@@ -418,7 +418,7 @@ export const ProfilePage: React.FC = () => {
 
             {/* League Card */}
             <div className="border-2 border-[#e5e5e5] rounded-2xl p-4 flex items-center gap-4">
-              <div className="w-7 h-7 flex items-center justify-center overflow-hidden">
+              <div className="w-12 h-12 flex items-center justify-center overflow-hidden">
                 <LottieAnimation 
                   src="shield.json" 
                   className="w-full h-full"
