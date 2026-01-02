@@ -148,6 +148,59 @@ export const learnerApi = {
       seconds_until_next_heart: number | null;
       full_hearts_at: string | null;
     }>(`/api/learners/${learnerId}/hearts`),
+
+  getPreferences: (learnerId: string) =>
+    fetchApi<{
+      sound_effects: boolean;
+      animations: boolean;
+      motivational_messages: boolean;
+      listening_exercises: boolean;
+      dark_mode: boolean;
+      push_notifications: boolean;
+      practice_reminders: boolean;
+      learning_language: string;
+    }>(`/api/learners/${learnerId}/preferences`),
+
+  updatePreferences: (learnerId: string, preferences: {
+    sound_effects?: boolean;
+    animations?: boolean;
+    motivational_messages?: boolean;
+    listening_exercises?: boolean;
+    dark_mode?: boolean;
+    push_notifications?: boolean;
+    practice_reminders?: boolean;
+    learning_language?: string;
+  }) =>
+    fetchApi<{ success: boolean; updated_preferences: any }>(`/api/learners/${learnerId}/preferences`, {
+      method: 'PUT',
+      body: JSON.stringify(preferences),
+    }),
+
+  exportData: (learnerId: string) =>
+    fetch(`${API_BASE}/api/learners/${learnerId}/export`, {
+      credentials: 'include',
+    }).then(async (response) => {
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.message || error.error || 'Export failed');
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `finlit_export_${learnerId}_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      return { success: true };
+    }),
+
+  deleteAccount: (learnerId: string) =>
+    fetchApi<{ success: boolean; message: string }>(`/api/learners/${learnerId}/delete`, {
+      method: 'POST',
+      body: JSON.stringify({ confirm: true }),
+    }),
 };
 
 // Adaptive Learning API
@@ -533,6 +586,8 @@ export const curriculumApi = {
       next_lesson_unlocked: boolean;
       xp_earned: number;
       total_xp: number;
+      gems: number;
+      gems_earned: number;
     }>(`/api/curriculum/lessons/${kcId}/complete`, {
       method: 'POST',
       body: JSON.stringify(data),

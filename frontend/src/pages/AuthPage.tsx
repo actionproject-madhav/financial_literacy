@@ -34,7 +34,7 @@ export const AuthPage: React.FC = () => {
             });
 
             // Redirect based on onboarding status
-            if (!learner.onboarding_completed || sessionUser.is_new_user) {
+            if (sessionUser.is_new_user) {
               navigate('/onboarding');
             } else {
               navigate('/learn');

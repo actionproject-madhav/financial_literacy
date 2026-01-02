@@ -204,8 +204,8 @@ export const ProfilePage: React.FC = () => {
           socialApi.getFollowing(learnerId),
           socialApi.getFriendRequests(learnerId, 'received'),
           socialApi.getFriendSuggestions(learnerId, 5),
-          learnerApi.getAchievements(learnerId).catch(() => ({ achievements: [] })),
-          adaptiveApi.getAvailableAchievements(learnerId).catch(() => ({ achievements: [] })),
+          learnerApi.getAchievements(learnerId).catch(() => []),
+          adaptiveApi.getAvailableAchievements(learnerId).catch(() => []),
         ]);
 
         setFriendsCount(friendsRes.count);
@@ -213,8 +213,8 @@ export const ProfilePage: React.FC = () => {
         setFollowingCount(followingRes.count);
         setPendingRequestsCount(requestsRes.count);
         setFriendSuggestions(suggestionsRes.suggestions || []);
-        setEarnedAchievements(earnedAchievementsRes.achievements || []);
-        setAvailableAchievements(availableAchievementsRes.achievements || []);
+        setEarnedAchievements(Array.isArray(earnedAchievementsRes) ? earnedAchievementsRes : (earnedAchievementsRes as any).achievements || []);
+        setAvailableAchievements(Array.isArray(availableAchievementsRes) ? availableAchievementsRes : (availableAchievementsRes as any).achievements || []);
       } catch (error) {
         console.error('Failed to fetch social data:', error);
       }
