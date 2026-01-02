@@ -694,6 +694,7 @@ export interface Quest {
   progress: number;
   target: number;
   xp_reward: number;
+  gems_reward?: number;
   icon: string;
   completed: boolean;
   can_claim: boolean;
@@ -715,7 +716,9 @@ export const questsApi = {
     fetchApi<{
       success: boolean;
       xp_earned: number;
+      gems_earned?: number;
       total_xp: number;
+      total_gems?: number;
     }>(`/api/quests/${learnerId}/claim/${questId}`, {
       method: 'POST',
     }),
