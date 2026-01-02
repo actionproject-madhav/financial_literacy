@@ -53,7 +53,14 @@ export const FollowersFollowingModal: React.FC<FollowersFollowingModalProps> = (
     setProcessing(userId);
     try {
       await socialApi.unfollowUser(learnerId, userId);
-      setUsers(prev => prev.filter(user => user.user_id !== userId));
+      // Refresh the list from database
+      if (type === 'following' && targetUserId) {
+        const response = await socialApi.getFollowing(targetUserId);
+        setUsers(response.following);
+      } else if (targetUserId) {
+        const response = await socialApi.getFollowers(targetUserId);
+        setUsers(response.followers);
+      }
     } catch (error) {
       console.error('Failed to unfollow user:', error);
     } finally {

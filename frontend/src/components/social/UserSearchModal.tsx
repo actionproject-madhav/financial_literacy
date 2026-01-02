@@ -32,8 +32,30 @@ export const UserSearchModal: React.FC<UserSearchModalProps> = ({ isOpen, onClos
       try {
         const response = await socialApi.searchUsers(searchQuery, 20);
         // Filter out current user from results
-        const filtered = response.users.filter(u => u.user_id !== learnerId);
-        setSearchResults(filtered);
+        let filtered = response.users.filter(u => u.user_id !== learnerId);
+        
+        // For each user, check their relationship status with current user
+        if (learnerId) {
+          const usersWithStatus = await Promise.all(
+            filtered.map(async (user) => {
+              try {
+                const profile = await socialApi.getUserProfile(user.user_id, learnerId);
+                return {
+                  ...user,
+                  is_friend: profile.is_friend || false,
+                  is_following: profile.is_following || false,
+                  has_pending_request: profile.has_pending_request || false
+                };
+              } catch (err) {
+                console.error(`Failed to get profile for ${user.user_id}:`, err);
+                return user;
+              }
+            })
+          );
+          setSearchResults(usersWithStatus);
+        } else {
+          setSearchResults(filtered);
+        }
       } catch (error) {
         console.error('Search failed:', error);
         setSearchResults([]);
@@ -51,24 +73,26 @@ export const UserSearchModal: React.FC<UserSearchModalProps> = ({ isOpen, onClos
     setSendingRequest(userId);
     try {
       await socialApi.sendFriendRequest(learnerId, userId);
-      // Success - update the user in the results to show pending status
-      const user = searchResults.find(u => u.user_id === userId);
-      setSearchResults(prev =>
-        prev.map(u =>
-          u.user_id === userId
-            ? { ...u, has_pending_request: true }
-            : u
-        )
-      );
-      // Show success message
-      toast.success(`Friend request sent to ${user?.display_name || 'user'}!`);
-    } catch (error: any) {
-      console.error('Failed to send friend request:', error);
-      const errorMessage = error?.message || 'Failed to send friend request';
-      const user = searchResults.find(u => u.user_id === userId);
-      
-      if (errorMessage.includes('already exists') || errorMessage.includes('Friend request already exists')) {
-        // Request already exists - mark as pending and show friendly message
+      // Refresh user profile to get updated status from database
+      try {
+        const profile = await socialApi.getUserProfile(userId, learnerId);
+        setSearchResults(prev =>
+          prev.map(u =>
+            u.user_id === userId
+              ? { 
+                  ...u, 
+                  has_pending_request: profile.has_pending_request || true,
+                  is_friend: profile.is_friend || false
+                }
+              : u
+          )
+        );
+        toast.success(`Friend request sent to ${profile.display_name || 'user'}!`);
+        // Trigger refresh on ProfilePage
+        window.dispatchEvent(new CustomEvent('social-action'));
+      } catch (err) {
+        // Fallback to optimistic update
+        const user = searchResults.find(u => u.user_id === userId);
         setSearchResults(prev =>
           prev.map(u =>
             u.user_id === userId
@@ -76,16 +100,63 @@ export const UserSearchModal: React.FC<UserSearchModalProps> = ({ isOpen, onClos
               : u
           )
         );
+        toast.success(`Friend request sent to ${user?.display_name || 'user'}!`);
+        window.dispatchEvent(new CustomEvent('social-action'));
+      }
+    } catch (error: any) {
+      console.error('Failed to send friend request:', error);
+      const errorMessage = error?.message || 'Failed to send friend request';
+      const user = searchResults.find(u => u.user_id === userId);
+      
+      if (errorMessage.includes('already exists') || errorMessage.includes('Friend request already exists')) {
+        // Refresh from database to get actual status
+        try {
+          const profile = await socialApi.getUserProfile(userId, learnerId);
+          setSearchResults(prev =>
+            prev.map(u =>
+              u.user_id === userId
+                ? { 
+                    ...u, 
+                    has_pending_request: profile.has_pending_request || true,
+                    is_friend: profile.is_friend || false
+                  }
+                : u
+            )
+          );
+        } catch (err) {
+          setSearchResults(prev =>
+            prev.map(u =>
+              u.user_id === userId
+                ? { ...u, has_pending_request: true }
+                : u
+            )
+          );
+        }
         toast.info(`You've already sent a friend request to ${user?.display_name || 'this user'}. They'll see it in their notifications.`);
       } else if (errorMessage.includes('Already friends')) {
-        // Already friends - update status
-        setSearchResults(prev =>
-          prev.map(u =>
-            u.user_id === userId
-              ? { ...u, is_friend: true, has_pending_request: false }
-              : u
-          )
-        );
+        // Refresh from database
+        try {
+          const profile = await socialApi.getUserProfile(userId, learnerId);
+          setSearchResults(prev =>
+            prev.map(u =>
+              u.user_id === userId
+                ? { 
+                    ...u, 
+                    is_friend: profile.is_friend || true,
+                    has_pending_request: false
+                  }
+                : u
+            )
+          );
+        } catch (err) {
+          setSearchResults(prev =>
+            prev.map(u =>
+              u.user_id === userId
+                ? { ...u, is_friend: true, has_pending_request: false }
+                : u
+            )
+          );
+        }
         toast.success(`You're already friends with ${user?.display_name || 'this user'}!`);
       } else {
         // Other error
@@ -101,15 +172,38 @@ export const UserSearchModal: React.FC<UserSearchModalProps> = ({ isOpen, onClos
 
     try {
       await socialApi.followUser(learnerId, userId);
-      setSearchResults(prev =>
-        prev.map(user =>
-          user.user_id === userId
-            ? { ...user, is_following: true }
-            : user
-        )
-      );
-    } catch (error) {
+      // Refresh user profile to get updated status from database
+      try {
+        const profile = await socialApi.getUserProfile(userId, learnerId);
+        setSearchResults(prev =>
+          prev.map(user =>
+            user.user_id === userId
+              ? { ...user, is_following: profile.is_following || true }
+              : user
+          )
+        );
+        toast.success(`Now following ${profile.display_name || 'user'}`);
+        // Trigger refresh on ProfilePage
+        window.dispatchEvent(new CustomEvent('social-action'));
+      } catch (err) {
+        // Fallback to optimistic update
+        setSearchResults(prev =>
+          prev.map(user =>
+            user.user_id === userId
+              ? { ...user, is_following: true }
+              : user
+          )
+        );
+        window.dispatchEvent(new CustomEvent('social-action'));
+      }
+    } catch (error: any) {
       console.error('Failed to follow user:', error);
+      const errorMessage = error?.message || 'Failed to follow user';
+      if (errorMessage.includes('Already following')) {
+        toast.info('You are already following this user.');
+      } else {
+        toast.error(errorMessage);
+      }
     }
   };
 
@@ -118,15 +212,33 @@ export const UserSearchModal: React.FC<UserSearchModalProps> = ({ isOpen, onClos
 
     try {
       await socialApi.unfollowUser(learnerId, userId);
-      setSearchResults(prev =>
-        prev.map(user =>
-          user.user_id === userId
-            ? { ...user, is_following: false }
-            : user
-        )
-      );
-    } catch (error) {
+      // Refresh user profile to get updated status from database
+      try {
+        const profile = await socialApi.getUserProfile(userId, learnerId);
+        setSearchResults(prev =>
+          prev.map(user =>
+            user.user_id === userId
+              ? { ...user, is_following: profile.is_following || false }
+              : user
+          )
+        );
+        toast.success(`Unfollowed ${profile.display_name || 'user'}`);
+        // Trigger refresh on ProfilePage
+        window.dispatchEvent(new CustomEvent('social-action'));
+      } catch (err) {
+        // Fallback to optimistic update
+        setSearchResults(prev =>
+          prev.map(user =>
+            user.user_id === userId
+              ? { ...user, is_following: false }
+              : user
+          )
+        );
+        window.dispatchEvent(new CustomEvent('social-action'));
+      }
+    } catch (error: any) {
       console.error('Failed to unfollow user:', error);
+      toast.error(error?.message || 'Failed to unfollow user');
     }
   };
 

@@ -116,12 +116,14 @@ export const ProfilePage: React.FC = () => {
     total_xp: number;
     streak_count: number;
     reason: string;
+    is_friend?: boolean;
+    has_pending_request?: boolean;
+    is_following?: boolean;
   }>>([]);
   const [earnedAchievements, setEarnedAchievements] = useState<any[]>([]);
   const [availableAchievements, setAvailableAchievements] = useState<any[]>([]);
-  // Track friend request states
+  // Track friend request states (only for UI feedback during action)
   const [sendingRequests, setSendingRequests] = useState<Set<string>>(new Set());
-  const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
   const toast = useToast();
 
   // Customization State - Load from localStorage for persistence
@@ -247,8 +249,30 @@ export const ProfilePage: React.FC = () => {
         setFriendsCount(friendsRes.count);
         setFollowersCount(followersRes.count);
         setFollowingCount(followingRes.count);
+        
+        // For each suggestion, check relationship status from database
+        if (suggestionsRes.suggestions && learnerId) {
+          const suggestionsWithStatus = await Promise.all(
+            suggestionsRes.suggestions.map(async (suggestion) => {
+              try {
+                const profile = await socialApi.getUserProfile(suggestion.user_id, learnerId);
+                return {
+                  ...suggestion,
+                  is_friend: profile.is_friend || false,
+                  has_pending_request: profile.has_pending_request || false,
+                  is_following: profile.is_following || false
+                };
+              } catch (err) {
+                console.error(`Failed to get profile for suggestion ${suggestion.user_id}:`, err);
+                return suggestion;
+              }
+            })
+          );
+          setFriendSuggestions(suggestionsWithStatus);
+        } else {
+          setFriendSuggestions(suggestionsRes.suggestions || []);
+        }
         setPendingRequestsCount(requestsRes.count);
-        setFriendSuggestions(suggestionsRes.suggestions || []);
         setEarnedAchievements(Array.isArray(earnedAchievementsRes) ? earnedAchievementsRes : (earnedAchievementsRes as any).achievements || []);
         setAvailableAchievements(Array.isArray(availableAchievementsRes) ? availableAchievementsRes : (availableAchievementsRes as any).achievements || []);
       } catch (error) {
@@ -257,6 +281,20 @@ export const ProfilePage: React.FC = () => {
     };
 
     fetchSocialData();
+    
+    // Refresh social data every 30 seconds to keep it in sync
+    const interval = setInterval(fetchSocialData, 30000);
+    
+    // Also listen for social action events to refresh immediately
+    const handleSocialAction = () => {
+      fetchSocialData();
+    };
+    window.addEventListener('social-action', handleSocialAction);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('social-action', handleSocialAction);
+    };
   }, [learnerId]);
 
   // Refresh stats when page becomes visible (e.g., after completing a lesson)
@@ -469,7 +507,7 @@ export const ProfilePage: React.FC = () => {
 
                   <button 
                     onClick={async () => {
-                      if (!learnerId || sendingRequests.has(suggestion.user_id) || sentRequests.has(suggestion.user_id)) {
+                      if (!learnerId || sendingRequests.has(suggestion.user_id) || suggestion.has_pending_request || suggestion.is_friend) {
                         return;
                       }
 
@@ -477,14 +515,54 @@ export const ProfilePage: React.FC = () => {
                       
                       try {
                         await socialApi.sendFriendRequest(learnerId, suggestion.user_id);
-                        // Success - mark as sent
-                        setSentRequests(prev => new Set(prev).add(suggestion.user_id));
-                        // Show success message
-                        toast.success(`Friend request sent to ${suggestion.display_name}!`);
-                        // Refresh suggestions to remove this user
+                        // Refresh user profile from database to get actual status
+                        try {
+                          const profile = await socialApi.getUserProfile(suggestion.user_id, learnerId);
+                          // Update suggestion with database state
+                          setFriendSuggestions(prev =>
+                            prev.map(s =>
+                              s.user_id === suggestion.user_id
+                                ? {
+                                    ...s,
+                                    has_pending_request: profile.has_pending_request || true,
+                                    is_friend: profile.is_friend || false
+                                  }
+                                : s
+                            )
+                          );
+                          toast.success(`Friend request sent to ${suggestion.display_name}!`);
+                          // Trigger refresh of social data
+                          window.dispatchEvent(new CustomEvent('social-action'));
+                        } catch (profileErr) {
+                          // Fallback - update state anyway
+                          toast.success(`Friend request sent to ${suggestion.display_name}!`);
+                          window.dispatchEvent(new CustomEvent('social-action'));
+                        }
+                        
+                        // Refresh suggestions list to remove users with pending requests
                         try {
                           const res = await socialApi.getFriendSuggestions(learnerId, 5);
-                          setFriendSuggestions(res.suggestions || []);
+                          // Check status for each new suggestion
+                          if (res.suggestions && learnerId) {
+                            const suggestionsWithStatus = await Promise.all(
+                              res.suggestions.map(async (s) => {
+                                try {
+                                  const p = await socialApi.getUserProfile(s.user_id, learnerId);
+                                  return {
+                                    ...s,
+                                    is_friend: p.is_friend || false,
+                                    has_pending_request: p.has_pending_request || false,
+                                    is_following: p.is_following || false
+                                  };
+                                } catch (err) {
+                                  return s;
+                                }
+                              })
+                            );
+                            setFriendSuggestions(suggestionsWithStatus);
+                          } else {
+                            setFriendSuggestions(res.suggestions || []);
+                          }
                         } catch (refreshErr) {
                           console.error('Failed to refresh suggestions:', refreshErr);
                         }
@@ -493,13 +571,45 @@ export const ProfilePage: React.FC = () => {
                         // Handle specific error cases
                         const errorMessage = err?.message || 'Failed to send friend request';
                         if (errorMessage.includes('already exists') || errorMessage.includes('Friend request already exists')) {
-                          // Request already exists - mark as sent and show friendly message
-                          setSentRequests(prev => new Set(prev).add(suggestion.user_id));
+                          // Refresh from database
+                          try {
+                            const profile = await socialApi.getUserProfile(suggestion.user_id, learnerId);
+                            setFriendSuggestions(prev =>
+                              prev.map(s =>
+                                s.user_id === suggestion.user_id
+                                  ? {
+                                      ...s,
+                                      has_pending_request: profile.has_pending_request || true,
+                                      is_friend: profile.is_friend || false
+                                    }
+                                  : s
+                              )
+                            );
+                          } catch (profileErr) {
+                            // Fallback - update state anyway
+                          }
                           toast.info(`You've already sent a friend request to ${suggestion.display_name}. They'll see it in their notifications.`);
+                          window.dispatchEvent(new CustomEvent('social-action'));
                         } else if (errorMessage.includes('Already friends')) {
-                          // Already friends - mark as sent
-                          setSentRequests(prev => new Set(prev).add(suggestion.user_id));
+                          // Refresh from database
+                          try {
+                            const profile = await socialApi.getUserProfile(suggestion.user_id, learnerId);
+                            setFriendSuggestions(prev =>
+                              prev.map(s =>
+                                s.user_id === suggestion.user_id
+                                  ? {
+                                      ...s,
+                                      is_friend: profile.is_friend || true,
+                                      has_pending_request: false
+                                    }
+                                  : s
+                              )
+                            );
+                          } catch (profileErr) {
+                            // Fallback - update state anyway
+                          }
                           toast.success(`You're already friends with ${suggestion.display_name}!`);
+                          window.dispatchEvent(new CustomEvent('social-action'));
                         } else {
                           // Other error
                           toast.error(`Unable to send friend request: ${errorMessage}`);
@@ -512,11 +622,17 @@ export const ProfilePage: React.FC = () => {
                         });
                       }
                     }}
-                    disabled={sendingRequests.has(suggestion.user_id) || sentRequests.has(suggestion.user_id)}
+                    disabled={
+                      sendingRequests.has(suggestion.user_id) || 
+                      suggestion.has_pending_request || 
+                      suggestion.is_friend
+                    }
                     className={cn(
                       "w-full font-extrabold py-3.5 rounded-xl uppercase tracking-widest text-sm transition-all",
-                      sentRequests.has(suggestion.user_id)
+                      suggestion.is_friend
                         ? "bg-[#58cc02] hover:bg-[#46a302] text-white shadow-[0_4px_0_#46a302] active:shadow-none active:translate-y-[4px] cursor-default"
+                        : suggestion.has_pending_request
+                        ? "bg-[#ffc800] hover:bg-[#e6b400] text-white shadow-[0_4px_0_#e6b400] active:shadow-none active:translate-y-[4px] cursor-default"
                         : sendingRequests.has(suggestion.user_id)
                         ? "bg-[#afafaf] text-white shadow-[0_4px_0_#999] cursor-wait"
                         : "bg-[#1cb0f6] hover:bg-[#1899d6] text-white shadow-[0_4px_0_#1899d6] active:shadow-none active:translate-y-[4px]"
@@ -524,9 +640,11 @@ export const ProfilePage: React.FC = () => {
                   >
                     {sendingRequests.has(suggestion.user_id) 
                       ? 'Sending...' 
-                      : sentRequests.has(suggestion.user_id)
+                      : suggestion.is_friend
+                      ? 'Friends ✓'
+                      : suggestion.has_pending_request
                       ? 'Request Sent ✓'
-                      : 'Follow'}
+                      : 'Add Friend'}
                   </button>
                 </div>
               ))}

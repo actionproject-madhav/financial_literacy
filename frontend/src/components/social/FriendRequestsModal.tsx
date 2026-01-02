@@ -41,10 +41,20 @@ export const FriendRequestsModal: React.FC<FriendRequestsModalProps> = ({ isOpen
   }, [isOpen, learnerId]);
 
   const handleAccept = async (requestId: string) => {
+    if (!learnerId) return;
+    
     setProcessing(requestId);
     try {
       await socialApi.acceptFriendRequest(requestId);
-      setReceivedRequests(prev => prev.filter(req => req.request_id !== requestId));
+      // Refresh from database
+      const [received, sent] = await Promise.all([
+        socialApi.getFriendRequests(learnerId, 'received'),
+        socialApi.getFriendRequests(learnerId, 'sent'),
+      ]);
+      setReceivedRequests(received.requests);
+      setSentRequests(sent.requests);
+      // Trigger refresh on ProfilePage
+      window.dispatchEvent(new CustomEvent('social-action'));
     } catch (error) {
       console.error('Failed to accept request:', error);
     } finally {
@@ -53,10 +63,20 @@ export const FriendRequestsModal: React.FC<FriendRequestsModalProps> = ({ isOpen
   };
 
   const handleReject = async (requestId: string) => {
+    if (!learnerId) return;
+    
     setProcessing(requestId);
     try {
       await socialApi.rejectFriendRequest(requestId);
-      setReceivedRequests(prev => prev.filter(req => req.request_id !== requestId));
+      // Refresh from database
+      const [received, sent] = await Promise.all([
+        socialApi.getFriendRequests(learnerId, 'received'),
+        socialApi.getFriendRequests(learnerId, 'sent'),
+      ]);
+      setReceivedRequests(received.requests);
+      setSentRequests(sent.requests);
+      // Trigger refresh on ProfilePage
+      window.dispatchEvent(new CustomEvent('social-action'));
     } catch (error) {
       console.error('Failed to reject request:', error);
     } finally {
