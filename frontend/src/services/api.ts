@@ -49,6 +49,7 @@ export const learnerApi = {
     fetchApi<{
       learner_id: string;
       display_name: string;
+      username?: string;
       email: string;
       country_of_origin: string;
       visa_type: string;
@@ -64,6 +65,11 @@ export const learnerApi = {
       xp_needed_for_level: number;
       gems: number;
       hearts: number;
+      followers: number;
+      following: number;
+      joined_date: string;
+      current_league: string;
+      top_3_finishes: number;
     }>(`/api/learners/${learnerId}/stats`),
 
   updateProfile: (learnerId: string, data: any) =>
@@ -928,6 +934,18 @@ export const socialApi = {
     fetchApi<{ users: UserProfile[]; count: number }>(
       `/api/social/users/search?q=${encodeURIComponent(query)}&limit=${limit}`
     ),
+
+  getFriendSuggestions: (learnerId: string, limit = 5) =>
+    fetchApi<{
+      suggestions: Array<{
+        user_id: string;
+        display_name: string;
+        total_xp: number;
+        streak_count: number;
+        reason: string;
+      }>;
+      count: number;
+    }>(`/api/social/suggestions/${learnerId}?limit=${limit}`),
 
   getUserProfile: (learnerId: string, viewerId?: string) => {
     const params = viewerId ? `?viewer_id=${viewerId}` : '';

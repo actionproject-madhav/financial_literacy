@@ -569,12 +569,45 @@ def get_learner_stats(learner_id):
             'follower_id': ObjectId(learner_id)
         })
 
+        # Get join date from created_at
+        created_at = learner.get('created_at')
+        joined_date = None
+        if created_at:
+            # Format as "Month Year" (e.g., "January 2024")
+            joined_date = created_at.strftime('%B %Y')
+        else:
+            joined_date = 'January 2024'  # Fallback if no created_at
+
+        # Calculate league from XP (using leaderboard logic)
+        # League definitions - Duolingo-style
+        LEAGUES = [
+            {'id': 'bronze', 'name': 'Bronze', 'min_xp': 0},
+            {'id': 'silver', 'name': 'Silver', 'min_xp': 500},
+            {'id': 'gold', 'name': 'Gold', 'min_xp': 1500},
+            {'id': 'emerald', 'name': 'Emerald', 'min_xp': 3000},
+            {'id': 'diamond', 'name': 'Diamond', 'min_xp': 5000},
+            {'id': 'master', 'name': 'Master', 'min_xp': 10000},
+        ]
+        current_league_info = LEAGUES[0]
+        for league in LEAGUES:
+            if total_xp >= league['min_xp']:
+                current_league_info = league
+        current_league = current_league_info.get('name', 'Bronze')
+
+        # Count top 3 finishes (weeks where user finished in top 3 of their league)
+        # This would require tracking weekly leaderboard history, for now return 0
+        top_3_finishes = 0  # TODO: Implement weekly leaderboard history tracking
+
+        # Get username if available (could be stored in learner document)
+        username = learner.get('username') or None
+
         # Log for debugging (can be removed in production)
-        print(f'[get_learner_stats] Learner {learner_id}: XP={total_xp}, Streak={streak_count}, Lessons={lessons_completed}, Level={level_info["level"]}')
+        print(f'[get_learner_stats] Learner {learner_id}: XP={total_xp}, Streak={streak_count}, Lessons={lessons_completed}, Level={level_info["level"]}, League={current_league}')
 
         return jsonify({
             'learner_id': str(learner['_id']),
             'display_name': learner.get('display_name', 'User'),
+            'username': username,
             'email': learner.get('email', ''),
             'country_of_origin': learner.get('country_of_origin', 'US'),
             'visa_type': learner.get('visa_type', 'Other'),
@@ -591,7 +624,10 @@ def get_learner_stats(learner_id):
             'gems': learner.get('gems', 0),
             'hearts': learner.get('hearts', 5),
             'followers': followers_count,
-            'following': following_count
+            'following': following_count,
+            'joined_date': joined_date,
+            'current_league': current_league,
+            'top_3_finishes': top_3_finishes
         }), 200
         
     except Exception as e:

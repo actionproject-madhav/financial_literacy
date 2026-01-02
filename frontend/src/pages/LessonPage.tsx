@@ -75,6 +75,8 @@ export const LessonPage = () => {
   const [streak, setStreak] = useState(0)
   const [showStreakMilestone, setShowStreakMilestone] = useState(false)
   const [hasShownStreak, setHasShownStreak] = useState(false) // Track if streak was already shown
+  const [gemsEarned, setGemsEarned] = useState(5) // Store actual gems earned from backend
+  const [xpEarned, setXpEarned] = useState(20) // Store actual XP earned from backend
 
   // Audio recording refs
   const mediaRecorder = useRef<MediaRecorder | null>(null)
@@ -757,6 +759,12 @@ export const LessonPage = () => {
             time_spent_minutes: timeSpentMinutes
           }).then(async (result) => {
             if (result && user) {
+              // Store actual earned values from backend
+              const actualGemsEarned = result.gems_earned || 5
+              const actualXpEarned = result.xp_earned || 20
+              setGemsEarned(actualGemsEarned)
+              setXpEarned(actualXpEarned)
+              
               // Update user data from backend response (includes XP and gems)
               setUser({
                 ...user,
@@ -781,6 +789,9 @@ export const LessonPage = () => {
             }
           }).catch((error) => {
             console.error('Failed to save lesson completion:', error)
+            // Use default values if backend call fails
+            setGemsEarned(5)
+            setXpEarned(20)
           })
         } else {
           // Fallback if no lessonId or learnerId
@@ -898,8 +909,8 @@ export const LessonPage = () => {
       <CelebrationOverlay
         isVisible={showCelebration}
         onComplete={handleCelebrationComplete}
-        xpEarned={20}
-        gemsEarned={5}
+        xpEarned={xpEarned}
+        gemsEarned={gemsEarned}
         accuracy={totalQuizQuestions > 0 ? Math.round((correctAnswers / totalQuizQuestions) * 100) : 100}
         title="Lesson Complete!"
       />

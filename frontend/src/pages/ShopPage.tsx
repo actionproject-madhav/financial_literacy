@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui';
 import { Button } from '../components/ui';
 import { GemDisplay } from '../components/gamification/GemDisplay';
@@ -74,6 +75,7 @@ const CATEGORIES = [
 ];
 
 export const ShopPage: React.FC = () => {
+  const navigate = useNavigate();
   const { user, learnerId, setUser } = useUserStore();
   const gems = user?.gems || 0;
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -84,6 +86,26 @@ export const ShopPage: React.FC = () => {
   const filteredItems = selectedCategory === 'all'
     ? shopItems
     : shopItems.filter(item => item.category === selectedCategory);
+
+  // Sync gems from backend on mount
+  useEffect(() => {
+    const syncGems = async () => {
+      if (learnerId) {
+        try {
+          const gemsData = await learnerApi.getGems(learnerId);
+          if (gemsData && user) {
+            setUser({
+              ...user,
+              gems: gemsData.gems
+            });
+          }
+        } catch (err) {
+          console.error('Failed to sync gems:', err);
+        }
+      }
+    };
+    syncGems();
+  }, [learnerId]); // Only sync when learnerId changes
 
   const handlePurchase = async (item: ShopItem) => {
     if (!learnerId || !user) {
@@ -109,23 +131,26 @@ export const ShopPage: React.FC = () => {
       );
 
       if (result.success) {
-        // Update user store with new gems
-        setUser({
+        // Update user store with new gems and apply effects
+        const updatedUser = {
           ...user,
           gems: result.gems_remaining
-        });
+        };
 
         // Apply item effects
-        if (result.effect.type === 'refill_hearts' && user) {
-          setUser({
-            ...user,
-            gems: result.gems_remaining,
-            hearts: result.effect.hearts
-          });
+        if (result.effect.type === 'refill_hearts') {
+          updatedUser.hearts = result.effect.hearts;
         }
+
+        setUser(updatedUser);
 
         // Show success message
         alert(`Successfully purchased ${item.name}!`);
+        
+        // Clear any previous errors
+        setError(null);
+      } else {
+        setError('Purchase failed. Please try again.');
       }
     } catch (err: any) {
       setError(err.message || 'Failed to purchase item');
@@ -182,7 +207,14 @@ export const ShopPage: React.FC = () => {
           <div className="mt-auto p-4 bg-orange-50 rounded-2xl border border-orange-100">
             <h3 className="font-extrabold text-[#FF9600] mb-1">Need more Gems?</h3>
             <p className="text-xs text-orange-600/80 mb-3">Complete daily quests to earn bonus gems!</p>
-            <Button size="sm" fullWidth variant="primary">View Quests</Button>
+            <Button 
+              size="sm" 
+              fullWidth 
+              variant="primary"
+              onClick={() => navigate('/quests')}
+            >
+              View Quests
+            </Button>
           </div>
         </div>
 
@@ -294,7 +326,7 @@ export const ShopPage: React.FC = () => {
                     >
                       {purchasing === item.id ? 'PURCHASING...' : gems < item.price ? 'INSUFFICIENT GEMS' : 'PURCHASE'}
                     </button>
-                    {error && item.id === purchasing && (
+                    {error && (
                       <p className="text-xs text-red-500 mt-2 text-center">{error}</p>
                     )}
                   </div>
