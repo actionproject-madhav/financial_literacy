@@ -734,6 +734,9 @@ export interface League {
 }
 
 export interface LeaderboardEntry {
+  profile_image?: string;
+  profile_picture_url?: string;
+  avatar_url?: string;
   rank: number;
   learner_id: string;
   display_name: string;
@@ -873,6 +876,7 @@ export interface FriendRequest {
     total_xp: number;
     streak_count: number;
     profile_picture_url?: string;
+    avatar_url?: string;
   };
   to_user: {
     user_id: string;
@@ -880,6 +884,7 @@ export interface FriendRequest {
     total_xp: number;
     streak_count: number;
     profile_picture_url?: string;
+    avatar_url?: string;
   };
   created_at: string;
   status: string;
@@ -891,6 +896,7 @@ export interface Friend {
   total_xp: number;
   streak_count: number;
   profile_picture_url?: string;
+  avatar_url?: string;
   friendship_since?: string;
   following_since?: string;
 }
@@ -901,6 +907,7 @@ export interface UserProfile {
   total_xp: number;
   streak_count: number;
   profile_picture_url?: string;
+  avatar_url?: string;
   level: number;
   lessons_completed: number;
   skills_mastered: number;

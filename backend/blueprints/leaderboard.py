@@ -136,7 +136,7 @@ def get_leaderboard():
         # Exclude mock/test users in production
         all_learners = list(db.collections.learners.find(
             {'is_mock': {'$ne': True}},  # Exclude mock users
-            {'total_xp': 1, 'display_name': 1, 'streak_count': 1}
+            {'total_xp': 1, 'display_name': 1, 'streak_count': 1, 'profile_picture_url': 1, 'avatar_url': 1}
         ))
         learner_xp_map = {str(l['_id']): l.get('total_xp', 0) for l in all_learners}
         learner_info_map = {str(l['_id']): l for l in all_learners}
@@ -173,12 +173,18 @@ def get_leaderboard():
             learner_info = learner_info_map.get(lid, {})
             display_name = learner_info.get('display_name', 'Anonymous')
             
+            # Get profile picture (prefer avatar_url, fallback to profile_picture_url)
+            avatar_url = learner_info.get('avatar_url') or learner_info.get('profile_picture_url') or ''
+            
             league_rankings.append({
                 'learner_id': lid,
                 'weekly_xp': weekly_xp,
                 'total_xp': l_xp,
                 'display_name': display_name,
                 'initials': get_user_initials(display_name),
+                'profile_picture_url': learner_info.get('profile_picture_url', ''),
+                'avatar_url': learner_info.get('avatar_url', ''),
+                'profile_image': avatar_url,  # Combined field for easy frontend use
                 'league': l_league,
                 'streak': learner_info.get('streak_count', 0)
             })

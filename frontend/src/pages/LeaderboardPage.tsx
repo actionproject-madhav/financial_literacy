@@ -229,15 +229,32 @@ export const LeaderboardPage: React.FC = () => {
             </div>
 
             {/* Avatar */}
-                    <div className={cn(
-                      "w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shadow-sm",
-                      index === 0 ? "bg-yellow-400" :
-                        index === 1 ? "bg-gray-400" :
-                          index === 2 ? "bg-orange-400" :
-                            isCurrentUser ? "bg-sky-400" : "bg-indigo-400"
-                    )}>
-                      {entry.initials || entry.display_name.charAt(0).toUpperCase()}
-                    </div>
+                    {entry.profile_image ? (
+                      <img
+                        src={entry.profile_image}
+                        alt={entry.display_name}
+                        className="w-12 h-12 rounded-full object-cover shadow-sm border-2 border-white"
+                        onError={(e) => {
+                          // Fallback to initials if image fails to load
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent) {
+                            parent.innerHTML = `<div class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shadow-sm ${index === 0 ? 'bg-yellow-400' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-orange-400' : isCurrentUser ? 'bg-sky-400' : 'bg-indigo-400'}">${entry.initials || entry.display_name.charAt(0).toUpperCase()}</div>`;
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className={cn(
+                        "w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shadow-sm",
+                        index === 0 ? "bg-yellow-400" :
+                          index === 1 ? "bg-gray-400" :
+                            index === 2 ? "bg-orange-400" :
+                              isCurrentUser ? "bg-sky-400" : "bg-indigo-400"
+                      )}>
+                        {entry.initials || entry.display_name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
 
                     {/* Name */}
                     <div className="flex-1 font-bold text-gray-700">

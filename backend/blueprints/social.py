@@ -274,14 +274,16 @@ def get_friend_requests(learner_id):
                     'display_name': from_user.get('display_name', 'User'),
                     'total_xp': from_user.get('total_xp', 0),
                     'streak_count': from_user.get('streak_count', 0),
-                    'profile_picture_url': from_user.get('profile_picture_url')
+                    'profile_picture_url': from_user.get('profile_picture_url', ''),
+                    'avatar_url': from_user.get('avatar_url', '')
                 } if from_user else None,
                 'to_user': {
                     'user_id': str(to_user['_id']),
                     'display_name': to_user.get('display_name', 'User'),
                     'total_xp': to_user.get('total_xp', 0),
                     'streak_count': to_user.get('streak_count', 0),
-                    'profile_picture_url': to_user.get('profile_picture_url')
+                    'profile_picture_url': to_user.get('profile_picture_url', ''),
+                    'avatar_url': to_user.get('avatar_url', '')
                 } if to_user else None,
                 'created_at': req['created_at'].isoformat() if req.get('created_at') else None,
                 'status': req.get('status', 'pending')
@@ -345,7 +347,8 @@ def get_friends(learner_id):
                     'display_name': friend.get('display_name', 'User'),
                     'total_xp': friend.get('total_xp', 0),
                     'streak_count': friend.get('streak_count', 0),
-                    'profile_picture_url': friend.get('profile_picture_url'),
+                    'profile_picture_url': friend.get('profile_picture_url', ''),
+                    'avatar_url': friend.get('avatar_url', ''),
                     'friendship_since': friendship['created_at'].isoformat() if friendship.get('created_at') else None
                 })
 
@@ -555,7 +558,8 @@ def get_followers(learner_id):
                     'display_name': follower.get('display_name', 'User'),
                     'total_xp': follower.get('total_xp', 0),
                     'streak_count': follower.get('streak_count', 0),
-                    'profile_picture_url': follower.get('profile_picture_url'),
+                    'profile_picture_url': follower.get('profile_picture_url', ''),
+                    'avatar_url': follower.get('avatar_url', ''),
                     'following_since': follow['created_at'].isoformat() if follow.get('created_at') else None
                 })
 
@@ -609,7 +613,8 @@ def get_following(learner_id):
                     'display_name': user.get('display_name', 'User'),
                     'total_xp': user.get('total_xp', 0),
                     'streak_count': user.get('streak_count', 0),
-                    'profile_picture_url': user.get('profile_picture_url'),
+                    'profile_picture_url': user.get('profile_picture_url', ''),
+                    'avatar_url': user.get('avatar_url', ''),
                     'following_since': follow['created_at'].isoformat() if follow.get('created_at') else None
                 })
 
@@ -670,7 +675,8 @@ def search_users():
                 'email': user.get('email', ''),
                 'total_xp': user.get('total_xp', 0),
                 'streak_count': user.get('streak_count', 0),
-                'profile_picture_url': user.get('profile_picture_url')
+                'profile_picture_url': user.get('profile_picture_url', ''),
+                'avatar_url': user.get('avatar_url', '')
             })
 
         return jsonify({
@@ -763,7 +769,8 @@ def get_user_profile(learner_id):
             'display_name': user.get('display_name', 'User'),
             'total_xp': total_xp,
             'streak_count': streak_count,
-            'profile_picture_url': user.get('profile_picture_url'),
+            'profile_picture_url': user.get('profile_picture_url', ''),
+            'avatar_url': user.get('avatar_url', ''),
             'level': level_info['level'],
             'lessons_completed': lessons_completed,
             'skills_mastered': lessons_completed,  # Same as lessons_completed

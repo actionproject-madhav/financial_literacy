@@ -137,7 +137,8 @@ def get_learner(learner_id):
             'learner_id': str(learner['_id']),
             'email': learner.get('email'),
             'display_name': learner.get('display_name'),
-            'profile_picture_url': learner.get('profile_picture_url'),
+            'profile_picture_url': learner.get('profile_picture_url', ''),
+            'avatar_url': learner.get('avatar_url', ''),
             'native_language': learner.get('native_language'),
             'english_proficiency': learner.get('english_proficiency'),
             'country_of_origin': learner.get('country_of_origin'),
@@ -193,7 +194,8 @@ def update_learner(learner_id):
             'display_name', 'native_language', 'english_proficiency',
             'country_of_origin', 'immigration_status', 'visa_type',
             'has_ssn', 'sends_remittances', 'financial_goals',
-            'financial_experience_level', 'daily_goal_minutes', 'timezone'
+            'financial_experience_level', 'daily_goal_minutes', 'timezone',
+            'avatar_url', 'profile_picture_url'  # Profile picture fields
         ]
 
         update_data = {

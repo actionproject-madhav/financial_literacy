@@ -3,6 +3,7 @@ import { Search, UserPlus, Loader2 } from 'lucide-react';
 import { Modal } from './Modal';
 import { socialApi, UserProfile } from '../../services/api';
 import { useUserStore } from '../../stores/userStore';
+import { ProfileAvatar } from './ProfileAvatar';
 
 interface UserSearchModalProps {
   isOpen: boolean;
@@ -48,16 +49,46 @@ export const UserSearchModal: React.FC<UserSearchModalProps> = ({ isOpen, onClos
     setSendingRequest(userId);
     try {
       await socialApi.sendFriendRequest(learnerId, userId);
-      // Update the user in the results to show pending status
+      // Success - update the user in the results to show pending status
+      const user = searchResults.find(u => u.user_id === userId);
       setSearchResults(prev =>
-        prev.map(user =>
-          user.user_id === userId
-            ? { ...user, has_pending_request: true }
-            : user
+        prev.map(u =>
+          u.user_id === userId
+            ? { ...u, has_pending_request: true }
+            : u
         )
       );
-    } catch (error) {
+      // Show success message
+      alert(`Friend request sent to ${user?.display_name || 'user'}!`);
+    } catch (error: any) {
       console.error('Failed to send friend request:', error);
+      const errorMessage = error?.message || 'Failed to send friend request';
+      const user = searchResults.find(u => u.user_id === userId);
+      
+      if (errorMessage.includes('already exists') || errorMessage.includes('Friend request already exists')) {
+        // Request already exists - mark as pending and show friendly message
+        setSearchResults(prev =>
+          prev.map(u =>
+            u.user_id === userId
+              ? { ...u, has_pending_request: true }
+              : u
+          )
+        );
+        alert(`You've already sent a friend request to ${user?.display_name || 'this user'}. They'll see it in their notifications.`);
+      } else if (errorMessage.includes('Already friends')) {
+        // Already friends - update status
+        setSearchResults(prev =>
+          prev.map(u =>
+            u.user_id === userId
+              ? { ...u, is_friend: true, has_pending_request: false }
+              : u
+          )
+        );
+        alert(`You're already friends with ${user?.display_name || 'this user'}!`);
+      } else {
+        // Other error
+        alert(`Unable to send friend request: ${errorMessage}`);
+      }
     } finally {
       setSendingRequest(null);
     }
@@ -136,9 +167,11 @@ export const UserSearchModal: React.FC<UserSearchModalProps> = ({ isOpen, onClos
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   {/* Avatar */}
-                  <div className="w-12 h-12 rounded-full bg-[#1cb0f6] flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                    {user.display_name.charAt(0).toUpperCase()}
-                  </div>
+                  <ProfileAvatar
+                    profilePictureUrl={user.profile_picture_url}
+                    avatarUrl={user.avatar_url}
+                    displayName={user.display_name}
+                  />
 
                   {/* User Info */}
                   <div className="flex-1 min-w-0">

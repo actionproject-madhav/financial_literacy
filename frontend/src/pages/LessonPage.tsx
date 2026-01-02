@@ -772,10 +772,23 @@ export const LessonPage = () => {
                 gems: result.gems || user.gems,
               })
               
-              // Also sync hearts from backend
+              // Also sync hearts and refresh full stats from backend
               try {
-                const heartsData = await learnerApi.getHearts(learnerId!)
-                if (heartsData) {
+                const [heartsData, stats] = await Promise.all([
+                  learnerApi.getHearts(learnerId!),
+                  learnerApi.getStats(learnerId!)
+                ])
+                
+                if (heartsData && stats) {
+                  // Use stats from getStats for most accurate data
+                  setUser({
+                    ...user,
+                    totalXp: stats.total_xp || result.total_xp || user.totalXp,
+                    gems: stats.gems || result.gems || user.gems,
+                    hearts: heartsData.hearts,
+                    streak: stats.streak_count || user.streak
+                  })
+                } else if (heartsData) {
                   setUser({
                     ...user,
                     totalXp: result.total_xp || user.totalXp,
@@ -784,7 +797,15 @@ export const LessonPage = () => {
                   })
                 }
               } catch (err) {
-                console.error('Failed to sync hearts:', err)
+                console.error('Failed to sync user data:', err)
+                // Fallback to using result data
+                if (result) {
+                  setUser({
+                    ...user,
+                    totalXp: result.total_xp || user.totalXp,
+                    gems: result.gems || user.gems
+                  })
+                }
               }
             }
           }).catch((error) => {

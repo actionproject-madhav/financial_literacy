@@ -282,6 +282,8 @@ class FinLitCollections:
             'has_ssn': kwargs.get('has_ssn'),
             'sends_remittances': kwargs.get('sends_remittances'),
             'financial_goals': kwargs.get('financial_goals', []),
+            'profile_picture_url': kwargs.get('profile_picture_url', ''),  # Google profile picture
+            'avatar_url': kwargs.get('avatar_url', ''),  # Built-in character avatar or uploaded
             'created_at': datetime.utcnow(),
             'last_active_at': None
         }
