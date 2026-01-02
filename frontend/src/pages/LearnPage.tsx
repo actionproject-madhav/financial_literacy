@@ -9,6 +9,9 @@ import { useLanguage } from '../contexts/LanguageContext'
 import { TranslatedText } from '../components/TranslatedText'
 import { HeartsDisplay } from '../components/gamification/HeartsDisplay'
 import { useHeartRecharge } from '../hooks/useHeartRecharge'
+import Lottie from 'lottie-react'
+import fireAnimation from '../assets/animations/streak-fire.json'
+import { LottieAnimation } from '../components/LottieAnimation'
 
 // Extended Course type with personalization fields
 interface PersonalizedCourse extends Course {
@@ -133,8 +136,12 @@ export const LearnPage = () => {
                     <div className="mb-8">
                         <div className="bg-[#ddf4ff] border-2 border-[#ddf4ff] rounded-2xl p-0.5 relative overflow-hidden group hover:bg-[#cbeaff] transition-colors">
                             <div className="p-5 flex items-start gap-4">
-                                <div className="p-2 rounded-xl">
-                                    <img src="/fire.svg" alt="Fire" className="w-8 h-8 object-contain" />
+                                <div className="p-2 rounded-xl w-12 h-12 flex items-center justify-center">
+                                    <Lottie 
+                                        animationData={fireAnimation} 
+                                        loop={true} 
+                                        className="w-full h-full"
+                                    />
                                 </div>
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
@@ -350,8 +357,12 @@ export const LearnPage = () => {
                                         window.dispatchEvent(event);
                                     }}
                                 >
-                                    <div className="w-6 h-6 mb-2 flex items-center justify-center bg-white/50 rounded-lg">
-                                        <span className="text-sm">💳</span>
+                                    <div className="w-6 h-6 mb-2 flex items-center justify-center bg-white/50 rounded-lg overflow-hidden">
+                                        <LottieAnimation 
+                                            src="card.json" 
+                                            className="w-full h-full"
+                                            loop={true}
+                                        />
                                     </div>
                                     <p className="text-xs font-bold text-gray-700">How to build credit?</p>
                                     <p className="text-[10px] text-gray-500 mt-1">Start from scratch...</p>

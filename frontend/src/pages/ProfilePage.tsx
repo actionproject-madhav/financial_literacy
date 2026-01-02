@@ -17,6 +17,7 @@ import { FollowersFollowingModal } from '../components/social/FollowersFollowing
 import { FriendsListModal } from '../components/social/FriendsListModal';
 import { cn } from '../utils/cn';
 import { useToast } from '../components/ui/Toast';
+import { LottieAnimation } from '../components/LottieAnimation';
 
 const AVATAR_OPTIONS = [
   '/characters/12.png',
@@ -417,8 +418,12 @@ export const ProfilePage: React.FC = () => {
 
             {/* League Card */}
             <div className="border-2 border-[#e5e5e5] rounded-2xl p-4 flex items-center gap-4">
-              <div className="w-7 h-7">
-                <span className="text-2xl">🛡️</span>
+              <div className="w-7 h-7 flex items-center justify-center overflow-hidden">
+                <LottieAnimation 
+                  src="shield.json" 
+                  className="w-full h-full"
+                  loop={true}
+                />
               </div>
               <div>
                 <div className="text-xl font-bold text-[#4b4b4b]">{userData.stats.league}</div>

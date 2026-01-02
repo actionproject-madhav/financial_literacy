@@ -4,6 +4,8 @@ import ConfettiExplosion from 'react-confetti-explosion';
 import { Trophy, Star, Zap, Clock, Target } from 'lucide-react';
 import { Button, Card } from '../ui';
 import { cn } from '../../utils/cn';
+import Lottie from 'lottie-react';
+import fireAnimation from '../../assets/animations/streak-fire.json';
 
 interface LessonStats {
   xpEarned: number;
@@ -139,7 +141,13 @@ export const LessonComplete: React.FC<LessonCompleteProps> = ({
 
             {/* Streak */}
             <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-duo-lg">
-              <span className="text-2xl">🔥</span>
+              <div className="w-8 h-8 flex items-center justify-center">
+                <Lottie 
+                  animationData={fireAnimation} 
+                  loop={true} 
+                  className="w-full h-full"
+                />
+              </div>
               <div>
                 <p className="text-sm text-duo-text-muted">Streak</p>
                 <p className="text-xl font-extrabold text-duo-orange">
