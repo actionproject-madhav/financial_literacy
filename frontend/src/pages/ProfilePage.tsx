@@ -16,6 +16,7 @@ import { ReferralModal } from '../components/social/ReferralModal';
 import { FollowersFollowingModal } from '../components/social/FollowersFollowingModal';
 import { FriendsListModal } from '../components/social/FriendsListModal';
 import { cn } from '../utils/cn';
+import { useToast } from '../components/ui/Toast';
 
 const AVATAR_OPTIONS = [
   '/characters/12.png',
@@ -120,6 +121,7 @@ export const ProfilePage: React.FC = () => {
   // Track friend request states
   const [sendingRequests, setSendingRequests] = useState<Set<string>>(new Set());
   const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
+  const toast = useToast();
 
   // Customization State - Load from localStorage for persistence
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -158,10 +160,10 @@ export const ProfilePage: React.FC = () => {
       localStorage.setItem('profileVisaStatus', selectedVisaStatus);
       
       setIsEditingProfile(false);
-      alert('Profile updated successfully!');
+      toast.success('Profile updated successfully!');
     } catch (error) {
       console.error('Failed to save profile:', error);
-      alert('Failed to save profile. Please try again.');
+      toast.error('Failed to save profile. Please try again.');
     }
   };
 
@@ -473,7 +475,7 @@ export const ProfilePage: React.FC = () => {
                         // Success - mark as sent
                         setSentRequests(prev => new Set(prev).add(suggestion.user_id));
                         // Show success message
-                        alert(`Friend request sent to ${suggestion.display_name}!`);
+                        toast.success(`Friend request sent to ${suggestion.display_name}!`);
                         // Refresh suggestions to remove this user
                         try {
                           const res = await socialApi.getFriendSuggestions(learnerId, 5);
@@ -488,14 +490,14 @@ export const ProfilePage: React.FC = () => {
                         if (errorMessage.includes('already exists') || errorMessage.includes('Friend request already exists')) {
                           // Request already exists - mark as sent and show friendly message
                           setSentRequests(prev => new Set(prev).add(suggestion.user_id));
-                          alert(`You've already sent a friend request to ${suggestion.display_name}. They'll see it in their notifications.`);
+                          toast.info(`You've already sent a friend request to ${suggestion.display_name}. They'll see it in their notifications.`);
                         } else if (errorMessage.includes('Already friends')) {
                           // Already friends - mark as sent
                           setSentRequests(prev => new Set(prev).add(suggestion.user_id));
-                          alert(`You're already friends with ${suggestion.display_name}!`);
+                          toast.success(`You're already friends with ${suggestion.display_name}!`);
                         } else {
                           // Other error
-                          alert(`Unable to send friend request: ${errorMessage}`);
+                          toast.error(`Unable to send friend request: ${errorMessage}`);
                         }
                       } finally {
                         setSendingRequests(prev => {

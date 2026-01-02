@@ -4,6 +4,7 @@ import { Modal } from './Modal';
 import { socialApi, UserProfile } from '../../services/api';
 import { useUserStore } from '../../stores/userStore';
 import { ProfileAvatar } from './ProfileAvatar';
+import { useToast } from '../ui/Toast';
 
 interface UserSearchModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface UserSearchModalProps {
 
 export const UserSearchModal: React.FC<UserSearchModalProps> = ({ isOpen, onClose }) => {
   const { learnerId } = useUserStore();
+  const toast = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(false);
@@ -59,7 +61,7 @@ export const UserSearchModal: React.FC<UserSearchModalProps> = ({ isOpen, onClos
         )
       );
       // Show success message
-      alert(`Friend request sent to ${user?.display_name || 'user'}!`);
+      toast.success(`Friend request sent to ${user?.display_name || 'user'}!`);
     } catch (error: any) {
       console.error('Failed to send friend request:', error);
       const errorMessage = error?.message || 'Failed to send friend request';
@@ -74,7 +76,7 @@ export const UserSearchModal: React.FC<UserSearchModalProps> = ({ isOpen, onClos
               : u
           )
         );
-        alert(`You've already sent a friend request to ${user?.display_name || 'this user'}. They'll see it in their notifications.`);
+        toast.info(`You've already sent a friend request to ${user?.display_name || 'this user'}. They'll see it in their notifications.`);
       } else if (errorMessage.includes('Already friends')) {
         // Already friends - update status
         setSearchResults(prev =>
@@ -84,10 +86,10 @@ export const UserSearchModal: React.FC<UserSearchModalProps> = ({ isOpen, onClos
               : u
           )
         );
-        alert(`You're already friends with ${user?.display_name || 'this user'}!`);
+        toast.success(`You're already friends with ${user?.display_name || 'this user'}!`);
       } else {
         // Other error
-        alert(`Unable to send friend request: ${errorMessage}`);
+        toast.error(`Unable to send friend request: ${errorMessage}`);
       }
     } finally {
       setSendingRequest(null);
