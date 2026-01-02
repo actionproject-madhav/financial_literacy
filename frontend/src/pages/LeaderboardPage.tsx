@@ -63,6 +63,13 @@ export const LeaderboardPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [friendsOnly, setFriendsOnly] = useState(false);
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
+  const [friendStreaks, setFriendStreaks] = useState<Array<{
+    user_id: string;
+    display_name: string;
+    streak_count: number;
+    profile_picture_url?: string;
+    avatar_url?: string;
+  }>>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,11 +83,12 @@ export const LeaderboardPage: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch all leagues, current user's league data, and friends
-        const [leaguesResponse, myLeagueResponse, friendsResponse] = await Promise.all([
+        // Fetch all leagues, current user's league data, friends, and friend streaks
+        const [leaguesResponse, myLeagueResponse, friendsResponse, streaksResponse] = await Promise.all([
           leaderboardApi.getLeagues(),
           leaderboardApi.getMyLeague(learnerId),
-          socialApi.getFriends(learnerId).catch(() => ({ friends: [], count: 0 }))
+          socialApi.getFriends(learnerId).catch(() => ({ friends: [], count: 0 })),
+          socialApi.getFriendStreaks(learnerId).catch(() => ({ active_streaks: [], count: 0 }))
         ]);
 
         setAllLeagues(leaguesResponse.leagues);
@@ -89,6 +97,9 @@ export const LeaderboardPage: React.FC = () => {
         // Store friend IDs for filtering
         const ids = new Set(friendsResponse.friends.map(f => f.user_id));
         setFriendIds(ids);
+        
+        // Store friend streaks
+        setFriendStreaks(streaksResponse.active_streaks || []);
       } catch (err) {
         console.error('Error fetching leaderboard:', err);
         setError('Failed to load leaderboard. Please try again.');
@@ -229,9 +240,9 @@ export const LeaderboardPage: React.FC = () => {
             </div>
 
             {/* Avatar */}
-                    {entry.profile_image ? (
+                    {(entry.profile_image || entry.avatar_url || entry.profile_picture_url) ? (
                       <img
-                        src={entry.profile_image}
+                        src={entry.profile_image || entry.avatar_url || entry.profile_picture_url}
                         alt={entry.display_name}
                         className="w-12 h-12 rounded-full object-cover shadow-sm border-2 border-white"
                         onError={(e) => {
@@ -316,9 +327,46 @@ export const LeaderboardPage: React.FC = () => {
 
           {/* Friend Streaks */}
           <div className="bg-[#FF6D00] rounded-2xl p-6 text-white relative flex flex-col items-start gap-4">
-            <div className="relative z-10">
-              <h3 className="text-lg font-extrabold">Friend Streaks</h3>
-              <p className="text-white/80 text-sm font-medium">0 active Friend Streaks</p>
+            <div className="relative z-10 w-full">
+              <h3 className="text-lg font-extrabold mb-2">Friend Streaks</h3>
+              <p className="text-white/80 text-sm font-medium mb-4">
+                {friendStreaks.length} active Friend Streak{friendStreaks.length !== 1 ? 's' : ''}
+              </p>
+              
+              {/* Friend Streaks List */}
+              {friendStreaks.length > 0 ? (
+                <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
+                  {friendStreaks.slice(0, 5).map((friend) => (
+                    <div key={friend.user_id} className="flex items-center gap-2 bg-white/10 rounded-lg p-2">
+                      {(friend.avatar_url || friend.profile_picture_url) ? (
+                        <img
+                          src={friend.avatar_url || friend.profile_picture_url}
+                          alt={friend.display_name}
+                          className="w-8 h-8 rounded-full object-cover border-2 border-white/20"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.innerHTML = `<div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-xs">${friend.display_name.charAt(0).toUpperCase()}</div>`;
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-xs">
+                          {friend.display_name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white font-bold text-sm truncate">{friend.display_name}</div>
+                        <div className="text-white/80 text-xs">{friend.streak_count} day streak</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-white/60 text-xs mb-4">No friends with active streaks yet</p>
+              )}
             </div>
             <button className="w-full py-3 bg-white text-[#FF6D00] font-extrabold rounded-xl text-sm hover:bg-gray-50 transition-colors uppercase tracking-wide">
               View List

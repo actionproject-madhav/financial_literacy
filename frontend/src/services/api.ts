@@ -959,6 +959,18 @@ export const socialApi = {
       `/api/social/friends/${learnerId}`
     ),
 
+  getFriendStreaks: (learnerId: string) =>
+    fetchApi<{
+      active_streaks: Array<{
+        user_id: string;
+        display_name: string;
+        streak_count: number;
+        profile_picture_url?: string;
+        avatar_url?: string;
+      }>;
+      count: number;
+    }>(`/api/social/friends/${learnerId}/streaks`),
+
   removeFriend: (userId: string, friendId: string) =>
     fetchApi<{ success: boolean; message: string }>(
       '/api/social/friend/remove',
