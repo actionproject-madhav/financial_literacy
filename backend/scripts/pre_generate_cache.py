@@ -39,12 +39,12 @@ def pre_generate_all():
     # Check API keys before starting
     from config.services import config
     
-    print("🔑 Checking API keys...")
+    print(" Checking API keys...")
     if not config.ELEVENLABS_API_KEY:
-        print("❌ ELEVENLABS_API_KEY not found in .env file")
+        print("ELEVENLABS_API_KEY not found in .env file")
         print("   Please add: ELEVENLABS_API_KEY=sk-your-key-here")
         return
-    print(f"   ✅ ElevenLabs API key found: {config.ELEVENLABS_API_KEY[:10]}...{config.ELEVENLABS_API_KEY[-4:]}")
+    print(f"    ElevenLabs API key found: {config.ELEVENLABS_API_KEY[:10]}...{config.ELEVENLABS_API_KEY[-4:]}")
     
     if not config.OPENAI_API_KEY:
         print("❌ OPENAI_API_KEY not found in .env file")

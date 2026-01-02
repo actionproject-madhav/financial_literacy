@@ -1,26 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
 import { Button } from '../components/ui';
-import {
-  Bell,
-  Volume2,
-  Globe,
-  Moon,
-  Shield,
-  HelpCircle,
-  LogOut,
-  User,
-  Trash2,
-  Download,
-  Target,
-  Image,
-  MessageSquare,
-  Headphones,
-} from 'lucide-react';
 import { cn } from '../utils/cn';
 import { useUserStore } from '../stores/userStore';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { authApi } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { authApi, learnerApi } from '../services/api';
 import { LanguageSelector } from '../components/LanguageSelector';
 
 interface SettingsSection {
@@ -42,10 +25,11 @@ interface SettingsItem {
 
 export const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { logout } = useUserStore();
+  const { logout, learnerId, user } = useUserStore();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  // Settings State
+  // Settings State - loaded from backend
   const [soundEffects, setSoundEffects] = useState(true);
   const [animations, setAnimations] = useState(true);
   const [motivationalMessages, setMotivationalMessages] = useState(true);
@@ -53,8 +37,51 @@ export const SettingsPage: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [pushNotifications, setPushNotifications] = useState(true);
   const [practiceReminders, setPracticeReminders] = useState(true);
+  const [learningLanguage, setLearningLanguage] = useState('en');
 
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Load preferences from backend
+  useEffect(() => {
+    const loadPreferences = async () => {
+      if (!learnerId) return;
+      
+      try {
+        setLoading(true);
+        const prefs = await learnerApi.getPreferences(learnerId);
+        setSoundEffects(prefs.sound_effects);
+        setAnimations(prefs.animations);
+        setMotivationalMessages(prefs.motivational_messages);
+        setListeningExercises(prefs.listening_exercises);
+        setDarkMode(prefs.dark_mode);
+        setPushNotifications(prefs.push_notifications);
+        setPracticeReminders(prefs.practice_reminders);
+        setLearningLanguage(prefs.learning_language);
+      } catch (error) {
+        console.error('Failed to load preferences:', error);
+        // Keep defaults if loading fails
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPreferences();
+  }, [learnerId]);
+
+  // Save preferences to backend
+  const savePreferences = async (updates: Record<string, any>) => {
+    if (!learnerId) return;
+    
+    try {
+      setSaving(true);
+      await learnerApi.updatePreferences(learnerId, updates);
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      alert('Failed to save preferences. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const scrollToSection = (id: string) => {
     sectionRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -68,6 +95,54 @@ export const SettingsPage: React.FC = () => {
     }
     logout();
     navigate('/auth');
+  };
+
+  const handleToggle = async (
+    key: string,
+    currentValue: boolean,
+    setter: (value: boolean) => void
+  ) => {
+    const newValue = !currentValue;
+    setter(newValue);
+    await savePreferences({ [key]: newValue });
+  };
+
+  const handleExportData = async () => {
+    if (!learnerId) return;
+    
+    try {
+      await learnerApi.exportData(learnerId);
+      alert('Your data has been exported successfully!');
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export data. Please try again.');
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!learnerId) return;
+    
+    const confirmed = window.confirm(
+      'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently deleted.'
+    );
+    
+    if (!confirmed) return;
+    
+    const doubleConfirm = window.confirm(
+      'This is your last chance. Are you absolutely sure? All your progress, achievements, and data will be lost forever.'
+    );
+    
+    if (!doubleConfirm) return;
+    
+    try {
+      await learnerApi.deleteAccount(learnerId);
+      alert('Your account has been deleted. You will be logged out.');
+      logout();
+      navigate('/auth');
+    } catch (error) {
+      console.error('Delete account failed:', error);
+      alert('Failed to delete account. Please try again.');
+    }
   };
 
   const sections: SettingsSection[] = [
@@ -85,7 +160,9 @@ export const SettingsPage: React.FC = () => {
           id: 'password',
           label: 'Change Password',
           type: 'button',
-          onClick: () => console.log('Change password'),
+          onClick: () => {
+            alert('Password changes are managed through your Google account. Please visit your Google Account settings to change your password.');
+          },
         },
       ],
     },
@@ -98,28 +175,28 @@ export const SettingsPage: React.FC = () => {
           label: 'Sound effects',
           type: 'toggle',
           value: soundEffects,
-          onClick: () => setSoundEffects(!soundEffects),
+          onClick: () => handleToggle('sound_effects', soundEffects, setSoundEffects),
         },
         {
           id: 'animations',
           label: 'Animations',
           type: 'toggle',
           value: animations,
-          onClick: () => setAnimations(!animations),
+          onClick: () => handleToggle('animations', animations, setAnimations),
         },
         {
           id: 'motivation',
           label: 'Motivational messages',
           type: 'toggle',
           value: motivationalMessages,
-          onClick: () => setMotivationalMessages(!motivationalMessages),
+          onClick: () => handleToggle('motivational_messages', motivationalMessages, setMotivationalMessages),
         },
         {
           id: 'listening',
           label: 'Listening exercises',
           type: 'toggle',
           value: listeningExercises,
-          onClick: () => setListeningExercises(!listeningExercises),
+          onClick: () => handleToggle('listening_exercises', listeningExercises, setListeningExercises),
         },
       ],
     },
@@ -130,10 +207,9 @@ export const SettingsPage: React.FC = () => {
         {
           id: 'dark_mode',
           label: 'Dark mode',
-          type: 'dropdown', // Visualized as dropdown in React but simple text here
+          type: 'toggle',
           value: darkMode,
-          onClick: () => setDarkMode(!darkMode),
-          description: darkMode ? 'ON' : 'OFF',
+          onClick: () => handleToggle('dark_mode', darkMode, setDarkMode),
         },
       ],
     },
@@ -146,14 +222,14 @@ export const SettingsPage: React.FC = () => {
           label: 'Push notifications',
           type: 'toggle',
           value: pushNotifications,
-          onClick: () => setPushNotifications(!pushNotifications),
+          onClick: () => handleToggle('push_notifications', pushNotifications, setPushNotifications),
         },
         {
           id: 'reminders',
           label: 'Practice reminders',
           type: 'toggle',
           value: practiceReminders,
-          onClick: () => setPracticeReminders(!practiceReminders),
+          onClick: () => handleToggle('practice_reminders', practiceReminders, setPracticeReminders),
         },
       ],
     },
@@ -164,8 +240,8 @@ export const SettingsPage: React.FC = () => {
         {
           id: 'language',
           label: 'Learning Language',
-          type: 'button', // Using button to wrap LanguageSelector logic
-          onClick: () => { }, // Handled by inline component
+          type: 'button',
+          onClick: () => {}, // Handled by inline component
         },
       ],
     },
@@ -177,22 +253,26 @@ export const SettingsPage: React.FC = () => {
           id: 'export',
           label: 'Export Data',
           type: 'button',
-          onClick: () => console.log('Export'),
+          onClick: handleExportData,
         },
         {
           id: 'delete',
           label: 'Delete Account',
           type: 'button',
           danger: true,
-          onClick: () => {
-            if (confirm('Delete account? This cannot be undone.')) {
-              console.log('Delete');
-            }
-          },
+          onClick: handleDeleteAccount,
         },
       ],
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-gray-500">Loading settings...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white flex justify-center">
@@ -200,6 +280,9 @@ export const SettingsPage: React.FC = () => {
         {/* === Left: Main Content === */}
         <div className="flex-1 max-w-[700px]">
           <h1 className="text-3xl font-extrabold text-[#3c3c3c] mb-8">Preferences</h1>
+          {saving && (
+            <div className="mb-4 text-sm text-[#1cb0f6]">Saving preferences...</div>
+          )}
 
           <div className="space-y-10">
             {sections.map((section) => (
@@ -232,9 +315,11 @@ export const SettingsPage: React.FC = () => {
                       {item.type === 'toggle' && (
                         <button
                           onClick={item.onClick}
+                          disabled={saving}
                           className={cn(
                             "w-12 h-7 rounded-full relative transition-colors duration-200",
-                            item.value ? "bg-[#1cb0f6]" : "bg-[#e5e5e5]"
+                            item.value ? "bg-[#1cb0f6]" : "bg-[#e5e5e5]",
+                            saving && "opacity-50 cursor-not-allowed"
                           )}
                         >
                           <div
@@ -247,13 +332,24 @@ export const SettingsPage: React.FC = () => {
                       )}
 
                       {(item.type === 'button' || item.type === 'link') && item.id !== 'language' && !item.danger && (
-                        <Button variant="ghost" size="sm" onClick={item.onClick} className="text-[#1cb0f6] font-bold uppercase">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={item.onClick} 
+                          disabled={saving}
+                          className="text-[#1cb0f6] font-bold uppercase"
+                        >
                           Edit
                         </Button>
                       )}
 
                       {item.type === 'button' && item.danger && (
-                        <Button variant="danger" size="sm" onClick={item.onClick}>
+                        <Button 
+                          variant="danger" 
+                          size="sm" 
+                          onClick={item.onClick}
+                          disabled={saving}
+                        >
                           Delete
                         </Button>
                       )}
@@ -262,7 +358,11 @@ export const SettingsPage: React.FC = () => {
                         <div className="relative">
                           <button
                             onClick={item.onClick}
-                            className="px-4 py-2 bg-white border-2 border-gray-200 rounded-xl font-bold text-gray-600 min-w-[120px] text-left flex justify-between items-center"
+                            disabled={saving}
+                            className={cn(
+                              "px-4 py-2 bg-white border-2 border-gray-200 rounded-xl font-bold text-gray-600 min-w-[120px] text-left flex justify-between items-center",
+                              saving && "opacity-50 cursor-not-allowed"
+                            )}
                           >
                             <span>{item.description}</span>
                             <span className="text-gray-400">▼</span>
@@ -291,25 +391,15 @@ export const SettingsPage: React.FC = () => {
                     {section.title === 'Lesson experience' ? 'Preferences' : section.title}
                   </button>
                 ))}
-                <button className="text-left px-4 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-colors">
-                  Duolingo for Schools
-                </button>
-                <button className="text-left px-4 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-colors">
-                  Social accounts
-                </button>
               </div>
             </div>
 
             <div className="border-[2px] border-gray-200 rounded-2xl p-4 bg-white">
-              <h3 className="px-4 font-bold text-gray-800 text-lg mb-2">Subscription</h3>
-              <button className="w-full text-left px-4 py-2 font-bold text-[#1cb0f6] hover:bg-gray-50 rounded-xl transition-colors">
-                Choose a plan
-              </button>
-            </div>
-
-            <div className="border-[2px] border-gray-200 rounded-2xl p-4 bg-white">
               <h3 className="px-4 font-bold text-gray-800 text-lg mb-2">Support</h3>
-              <button className="w-full text-left px-4 py-2 font-bold text-[#1cb0f6] hover:bg-gray-50 rounded-xl transition-colors">
+              <button 
+                onClick={() => navigate('/help')}
+                className="w-full text-left px-4 py-2 font-bold text-[#1cb0f6] hover:bg-gray-50 rounded-xl transition-colors"
+              >
                 Help Center
               </button>
               <div className="my-2 border-t border-gray-100 mx-4" />
@@ -326,4 +416,3 @@ export const SettingsPage: React.FC = () => {
     </div>
   );
 };
-

@@ -9,7 +9,7 @@ import { StreakCounter } from '../components/gamification/StreakCounter';
 import { XPDisplay } from '../components/gamification/XPDisplay';
 import { AchievementBadge } from '../components/gamification/AchievementBadge';
 import { useUserStore } from '../stores/userStore';
-import { learnerApi, socialApi } from '../services/api';
+import { learnerApi, socialApi, adaptiveApi } from '../services/api';
 import { UserSearchModal } from '../components/social/UserSearchModal';
 import { FriendRequestsModal } from '../components/social/FriendRequestsModal';
 import { ReferralModal } from '../components/social/ReferralModal';
@@ -107,6 +107,15 @@ export const ProfilePage: React.FC = () => {
   const [friendsCount, setFriendsCount] = useState(0);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [friendSuggestions, setFriendSuggestions] = useState<Array<{
+    user_id: string;
+    display_name: string;
+    total_xp: number;
+    streak_count: number;
+    reason: string;
+  }>>([]);
+  const [earnedAchievements, setEarnedAchievements] = useState<any[]>([]);
+  const [availableAchievements, setAvailableAchievements] = useState<any[]>([]);
 
   // Customization State - Load from localStorage for persistence
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -122,18 +131,9 @@ export const ProfilePage: React.FC = () => {
     }
     return '#89e219';
   });
-  const [selectedCountry, setSelectedCountry] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('profileCountry') || 'fr';
-    }
-    return 'fr';
-  });
-  const [selectedVisaStatus, setSelectedVisaStatus] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('profileVisaStatus') || 'F-1 Student';
-    }
-    return 'F-1 Student';
-  });
+  // Country and visa status from database (not localStorage)
+  const [selectedCountry, setSelectedCountry] = useState('us');
+  const [selectedVisaStatus, setSelectedVisaStatus] = useState('Other');
 
   // Save to localStorage when user saves changes
   const handleSaveProfile = () => {
@@ -146,35 +146,8 @@ export const ProfilePage: React.FC = () => {
 
   // Fetch real profile stats from backend
   const fetchStats = React.useCallback(async () => {
-    // Check if learnerId is valid MongoDB ObjectId
-    const isValidLearnerId = learnerId && /^[0-9a-fA-F]{24}$/.test(learnerId)
-
-    if (!isValidLearnerId) {
-      // Use mock data for UI testing
-      console.log('[ProfilePage] Using mock data for UI testing');
-      setStats({
-        learner_id: 'mock-user',
-        display_name: 'Koshish Shrestha',
-        username: 'KoshishShr',
-        joined_date: 'November 2023',
-        email: 'alex.johnson@email.com',
-        country_of_origin: 'France',
-        visa_type: 'F-1 Student',
-        total_xp: 1647,
-        streak_count: 5,
-        lessons_completed: 24,
-        skills_mastered: 8,
-        level: 5,
-        level_progress: 65,
-        current_league: 'Gold',
-        top_3_finishes: 1,
-        following: 0,
-        followers: 0,
-        xp_for_current_level: 2000,
-        xp_for_next_level: 3000,
-        xp_in_current_level: 450,
-        xp_needed_for_level: 1000
-      });
+    if (!learnerId) {
+      setError('Please log in to view your profile');
       setIsLoading(false);
       return;
     }
@@ -185,24 +158,31 @@ export const ProfilePage: React.FC = () => {
       console.log('[ProfilePage] Fetching stats from database for learner:', learnerId);
       const profileStats = await learnerApi.getStats(learnerId);
 
-      // Merge with mock fields for design matching if missing
-      // Cast defaults to ensure we don't break if backend doesn't have these fields yet
-      const ps = profileStats as any;
+      // Use ALL data from backend - NO MOCK DATA
       setStats({
         ...profileStats,
-        username: ps.username || 'User123',
-        joined_date: ps.joined_date || 'January 2024',
-        current_league: ps.current_league || 'Bronze',
-        top_3_finishes: ps.top_3_finishes || 0,
-        following: ps.following || 0,
-        followers: ps.followers || 0
-      } as any);
+        username: profileStats.username || undefined,
+        joined_date: profileStats.joined_date || 'January 2024', // Fallback only if backend doesn't provide
+        current_league: profileStats.current_league || 'Bronze', // Fallback only if backend doesn't provide
+        top_3_finishes: profileStats.top_3_finishes || 0,
+        following: profileStats.following || 0,
+        followers: profileStats.followers || 0
+      } as ProfileStats);
+
+      // Update country and visa status from database
+      if (profileStats.country_of_origin) {
+        // Convert country code to lowercase for flag display
+        const countryCode = profileStats.country_of_origin.toLowerCase();
+        setSelectedCountry(countryCode);
+      }
+      if (profileStats.visa_type) {
+        setSelectedVisaStatus(profileStats.visa_type);
+      }
 
     } catch (err) {
       console.error('[ProfilePage] Failed to fetch profile stats:', err);
-      // For production, we should show an error if real data fetch fails
-      // setStats(null); // Keep null to trigger error state
       setError('Failed to load profile data. Please check your connection.');
+      setStats(null); // Trigger error state
     } finally {
       setIsLoading(false);
     }
@@ -212,29 +192,35 @@ export const ProfilePage: React.FC = () => {
     fetchStats();
   }, [fetchStats]);
 
-  // Fetch social stats
+  // Fetch social stats, friend suggestions, and achievements
   useEffect(() => {
     if (!learnerId) return;
 
-    const fetchSocialStats = async () => {
+    const fetchSocialData = async () => {
       try {
-        const [friendsRes, followersRes, followingRes, requestsRes] = await Promise.all([
+        const [friendsRes, followersRes, followingRes, requestsRes, suggestionsRes, earnedAchievementsRes, availableAchievementsRes] = await Promise.all([
           socialApi.getFriends(learnerId),
           socialApi.getFollowers(learnerId),
           socialApi.getFollowing(learnerId),
           socialApi.getFriendRequests(learnerId, 'received'),
+          socialApi.getFriendSuggestions(learnerId, 5),
+          learnerApi.getAchievements(learnerId).catch(() => []),
+          adaptiveApi.getAvailableAchievements(learnerId).catch(() => []),
         ]);
 
         setFriendsCount(friendsRes.count);
         setFollowersCount(followersRes.count);
         setFollowingCount(followingRes.count);
         setPendingRequestsCount(requestsRes.count);
+        setFriendSuggestions(suggestionsRes.suggestions || []);
+        setEarnedAchievements(Array.isArray(earnedAchievementsRes) ? earnedAchievementsRes : (earnedAchievementsRes as any).achievements || []);
+        setAvailableAchievements(Array.isArray(availableAchievementsRes) ? availableAchievementsRes : (availableAchievementsRes as any).achievements || []);
       } catch (error) {
-        console.error('Failed to fetch social stats:', error);
+        console.error('Failed to fetch social data:', error);
       }
     };
 
-    fetchSocialStats();
+    fetchSocialData();
   }, [learnerId]);
 
   // Refresh stats when page becomes visible (e.g., after completing a lesson)
@@ -277,18 +263,18 @@ export const ProfilePage: React.FC = () => {
     );
   }
 
-  // Use real data from backend
+  // Use real data from backend - ALL FROM DATABASE
   const userData = {
     name: stats.display_name,
-    username: stats.username || '@username',
-    joined: stats.joined_date || 'January 2024',
-    following: stats.following || 0,
-    followers: stats.followers || 0,
+    username: stats.username || `@${stats.display_name.toLowerCase().replace(/\s+/g, '')}`,
+    joined: stats.joined_date, // From database created_at
+    following: stats.following, // From database
+    followers: stats.followers, // From database
     stats: {
-      streak: stats.streak_count,
-      totalXP: stats.total_xp,
-      league: stats.current_league || 'Bronze',
-      topFinishes: stats.top_3_finishes || 0
+      streak: stats.streak_count, // From database
+      totalXP: stats.total_xp, // From database
+      league: stats.current_league, // Calculated from XP
+      topFinishes: stats.top_3_finishes // From database (currently 0, can be implemented later)
     }
   };
 
@@ -422,25 +408,55 @@ export const ProfilePage: React.FC = () => {
         <div>
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-[#3c3c3c]">Friend suggestions</h2>
-            <button className="text-[#1cb0f6] font-bold text-sm uppercase tracking-wider hover:opacity-80">VIEW ALL</button>
+            <button 
+              onClick={() => setShowSearchModal(true)}
+              className="text-[#1cb0f6] font-bold text-sm uppercase tracking-wider hover:opacity-80"
+            >
+              VIEW ALL
+            </button>
           </div>
 
-          <div className="border-2 border-[#e5e5e5] rounded-2xl p-6 relative flex flex-col items-center">
-            <button className="absolute top-4 right-4 text-[#e5e5e5] hover:text-[#afafaf] transition-colors">
-              <X className="w-5 h-5" strokeWidth={3} />
-            </button>
+          {friendSuggestions.length > 0 ? (
+            <div className="space-y-4">
+              {friendSuggestions.map((suggestion) => (
+                <div key={suggestion.user_id} className="border-2 border-[#e5e5e5] rounded-2xl p-6 relative flex flex-col items-center">
+                  <div className="w-20 h-20 rounded-full bg-[#1cb0f6] flex items-center justify-center text-white text-3xl font-extrabold mb-3 shadow-sm">
+                    {suggestion.display_name.charAt(0).toUpperCase()}
+                  </div>
 
-            <div className="w-20 h-20 rounded-full bg-[#ff4b4b] flex items-center justify-center text-white text-3xl font-extrabold mb-3 shadow-sm">
-              B
+                  <div className="text-xl font-bold text-[#3c3c3c] mb-1">{suggestion.display_name}</div>
+                  <div className="text-[#afafaf] font-bold text-sm mb-6">{suggestion.reason}</div>
+
+                  <button 
+                    onClick={() => {
+                      // Navigate to user profile or send follow request
+                      socialApi.sendFriendRequest(learnerId!, suggestion.user_id).then(() => {
+                        // Refresh suggestions
+                        socialApi.getFriendSuggestions(learnerId!, 5).then(res => {
+                          setFriendSuggestions(res.suggestions);
+                        });
+                      }).catch(err => {
+                        console.error('Failed to send friend request:', err);
+                      });
+                    }}
+                    className="w-full bg-[#1cb0f6] hover:bg-[#1899d6] text-white font-extrabold py-3.5 rounded-xl uppercase tracking-widest text-sm shadow-[0_4px_0_#1899d6] active:shadow-none active:translate-y-[4px] transition-all"
+                  >
+                    Follow
+                  </button>
+                </div>
+              ))}
             </div>
-
-            <div className="text-xl font-bold text-[#3c3c3c] mb-1">beth</div>
-            <div className="text-[#afafaf] font-bold text-sm mb-6">From your league</div>
-
-            <button className="w-full bg-[#1cb0f6] hover:bg-[#1899d6] text-white font-extrabold py-3.5 rounded-xl uppercase tracking-widest text-sm shadow-[0_4px_0_#1899d6] active:shadow-none active:translate-y-[4px] transition-all">
-              Follow
-            </button>
-          </div>
+          ) : (
+            <div className="border-2 border-[#e5e5e5] rounded-2xl p-6 text-center">
+              <p className="text-[#afafaf] font-bold text-sm">No suggestions available</p>
+              <button 
+                onClick={() => setShowSearchModal(true)}
+                className="mt-4 text-[#1cb0f6] font-bold text-sm uppercase tracking-wider hover:opacity-80"
+              >
+                Search for friends
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Achievements Section */}
@@ -451,59 +467,68 @@ export const ProfilePage: React.FC = () => {
           </div>
 
           <div className="border-2 border-[#e5e5e5] rounded-2xl overflow-hidden">
-            {/* Achievement: Wildfire */}
-            <div className="p-6 flex gap-6 items-center border-b-2 border-[#e5e5e5]">
-              <div className="w-20 h-24 bg-[#ff4b4b] rounded-xl flex flex-col items-center justify-center relative shrink-0 transform rotate-[-3deg] shadow-sm border-b-4 border-[#ce3a3a]">
-                <img src="/fire.svg" alt="Wildfire" className="w-10 h-10 mb-2 filter brightness-0 invert" />
-                <div className="absolute bottom-2 text-[10px] font-black text-white uppercase tracking-wide">Level 6</div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between mb-2">
-                  <h3 className="font-bold text-[#3c3c3c] text-lg">Wildfire</h3>
-                  <span className="text-[#afafaf] font-bold">66/75</span>
+            {/* Show earned achievements first */}
+            {earnedAchievements.length > 0 && earnedAchievements.slice(0, 3).map((achievement, index) => {
+              const isLast = index === Math.min(earnedAchievements.length - 1, 2) && availableAchievements.length === 0;
+              return (
+                <div key={achievement.achievement_id || index} className={`p-6 flex gap-6 items-center ${!isLast ? 'border-b-2 border-[#e5e5e5]' : ''}`}>
+                  <div className="w-20 h-24 bg-[#58cc02] rounded-xl flex flex-col items-center justify-center relative shrink-0 transform rotate-[2deg] shadow-sm border-b-4 border-[#46a302]">
+                    {achievement.icon_url ? (
+                      <img src={achievement.icon_url} alt={achievement.name} className="w-12 h-12 mb-2 object-contain" />
+                    ) : (
+                      <img src="/trophy.svg" alt={achievement.name} className="w-10 h-10 mb-2 filter brightness-0 invert" />
+                    )}
+                    <div className="absolute bottom-2 text-[10px] font-black text-white uppercase tracking-wide">Earned</div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between mb-2">
+                      <h3 className="font-bold text-[#3c3c3c] text-lg">{achievement.name}</h3>
+                    </div>
+                    <p className="text-[#777] text-md font-medium">{achievement.description}</p>
+                  </div>
                 </div>
-                <div className="h-4 bg-[#e5e5e5] rounded-full overflow-hidden mb-3">
-                  <div className="h-full bg-[#ffc800] w-[88%] rounded-full"></div>
-                </div>
-                <p className="text-[#777] text-md font-medium">Reach a 75 day streak</p>
-              </div>
-            </div>
+              );
+            })}
 
-            {/* Achievement: Sage */}
-            <div className="p-6 flex gap-6 items-center border-b-2 border-[#e5e5e5]">
-              <div className="w-20 h-24 bg-[#58cc02] rounded-xl flex flex-col items-center justify-center relative shrink-0 transform rotate-[2deg] shadow-sm border-b-4 border-[#46a302]">
-                <img src="/man.gif" alt="Sage" className="w-12 h-12 mb-2 object-contain" />
-                <div className="absolute bottom-2 text-[10px] font-black text-white uppercase tracking-wide">Level 5</div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between mb-2">
-                  <h3 className="font-bold text-[#3c3c3c] text-lg">Sage</h3>
-                  <span className="text-[#afafaf] font-bold">1647/2000</span>
+            {/* Show available achievements with progress */}
+            {availableAchievements.length > 0 && availableAchievements.slice(0, 3 - earnedAchievements.length).map((achievement, index) => {
+              const progress = achievement.progress || 0;
+              const threshold = achievement.threshold || 1;
+              const progressPercent = Math.min((progress / threshold) * 100, 100);
+              const isLast = index === availableAchievements.length - 1 && earnedAchievements.length === 0;
+              
+              return (
+                <div key={achievement.achievement_id || `available-${index}`} className={`p-6 flex gap-6 items-center ${!isLast ? 'border-b-2 border-[#e5e5e5]' : ''}`}>
+                  <div className="w-20 h-24 bg-[#ff4b4b] rounded-xl flex flex-col items-center justify-center relative shrink-0 transform rotate-[-3deg] shadow-sm border-b-4 border-[#ce3a3a]">
+                    {achievement.icon_url ? (
+                      <img src={achievement.icon_url} alt={achievement.name} className="w-10 h-10 mb-2 filter brightness-0 invert" />
+                    ) : (
+                      <img src="/fire.svg" alt={achievement.name} className="w-10 h-10 mb-2 filter brightness-0 invert" />
+                    )}
+                    <div className="absolute bottom-2 text-[10px] font-black text-white uppercase tracking-wide">
+                      {progress >= threshold ? 'Done' : `${Math.floor(progressPercent)}%`}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between mb-2">
+                      <h3 className="font-bold text-[#3c3c3c] text-lg">{achievement.name}</h3>
+                      <span className="text-[#afafaf] font-bold">{progress}/{threshold}</span>
+                    </div>
+                    <div className="h-4 bg-[#e5e5e5] rounded-full overflow-hidden mb-3">
+                      <div className="h-full bg-[#ffc800] rounded-full" style={{ width: `${progressPercent}%` }}></div>
+                    </div>
+                    <p className="text-[#777] text-md font-medium">{achievement.description}</p>
+                  </div>
                 </div>
-                <div className="h-4 bg-[#e5e5e5] rounded-full overflow-hidden mb-3">
-                  <div className="h-full bg-[#ffc800] w-[82%] rounded-full"></div>
-                </div>
-                <p className="text-[#777] text-md font-medium">Earn 2000 XP</p>
-              </div>
-            </div>
+              );
+            })}
 
-            {/* Achievement: Champion */}
-            <div className="p-6 flex gap-6 items-center">
-              <div className="w-20 h-24 bg-[#ce82ff] rounded-xl flex flex-col items-center justify-center relative shrink-0 transform rotate-[-2deg] shadow-sm border-b-4 border-[#a568cc]">
-                <img src="/trophy.svg" alt="Champion" className="w-10 h-10 mb-2 filter brightness-0 invert" />
-                <div className="absolute bottom-2 text-[10px] font-black text-white uppercase tracking-wide">Level 6</div>
+            {/* Show message if no achievements */}
+            {earnedAchievements.length === 0 && availableAchievements.length === 0 && (
+              <div className="p-6 text-center">
+                <p className="text-[#afafaf] font-bold text-sm">No achievements yet. Complete lessons to earn achievements!</p>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between mb-2">
-                  <h3 className="font-bold text-[#3c3c3c] text-lg">Champion</h3>
-                  <span className="text-[#afafaf] font-bold">5/6</span>
-                </div>
-                <div className="h-4 bg-[#e5e5e5] rounded-full overflow-hidden mb-3">
-                  <div className="h-full bg-[#ffc800] w-[83%] rounded-full"></div>
-                </div>
-                <p className="text-[#777] text-md font-medium">Advance to the Emerald League</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 

@@ -49,6 +49,7 @@ export const learnerApi = {
     fetchApi<{
       learner_id: string;
       display_name: string;
+      username?: string;
       email: string;
       country_of_origin: string;
       visa_type: string;
@@ -62,6 +63,13 @@ export const learnerApi = {
       xp_for_next_level: number;
       xp_in_current_level: number;
       xp_needed_for_level: number;
+      gems: number;
+      hearts: number;
+      followers: number;
+      following: number;
+      joined_date: string;
+      current_league: string;
+      top_3_finishes: number;
     }>(`/api/learners/${learnerId}/stats`),
 
   updateProfile: (learnerId: string, data: any) =>
@@ -102,6 +110,97 @@ export const learnerApi = {
 
   getDailyProgress: (learnerId: string) =>
     fetchApi<any>(`/api/learners/${learnerId}/daily-prog`),
+
+  getGems: (learnerId: string) =>
+    fetchApi<{ gems: number; learner_id: string }>(`/api/learners/${learnerId}/gems`),
+
+  addGems: (learnerId: string, amount: number, reason?: string) =>
+    fetchApi<{ gems: number; added: number; learner_id: string }>(`/api/learners/${learnerId}/gems/add`, {
+      method: 'POST',
+      body: JSON.stringify({ amount, reason }),
+    }),
+
+  deductGems: (learnerId: string, amount: number, reason?: string) =>
+    fetchApi<{ gems: number; deducted: number; learner_id: string }>(`/api/learners/${learnerId}/gems/deduct`, {
+      method: 'POST',
+      body: JSON.stringify({ amount, reason }),
+    }),
+
+  purchaseItem: (learnerId: string, itemId: string, itemName: string, price: number, currency: string = 'gems') =>
+    fetchApi<{
+      success: boolean;
+      item_id: string;
+      gems_remaining: number;
+      effect: {
+        type: string;
+        [key: string]: any;
+      };
+    }>(`/api/learners/${learnerId}/shop/purchase`, {
+      method: 'POST',
+      body: JSON.stringify({ item_id: itemId, item_name: itemName, price, currency }),
+    }),
+
+  getHearts: (learnerId: string) =>
+    fetchApi<{
+      hearts: number;
+      max_hearts: number;
+      next_heart_at: string | null;
+      seconds_until_next_heart: number | null;
+      full_hearts_at: string | null;
+    }>(`/api/learners/${learnerId}/hearts`),
+
+  getPreferences: (learnerId: string) =>
+    fetchApi<{
+      sound_effects: boolean;
+      animations: boolean;
+      motivational_messages: boolean;
+      listening_exercises: boolean;
+      dark_mode: boolean;
+      push_notifications: boolean;
+      practice_reminders: boolean;
+      learning_language: string;
+    }>(`/api/learners/${learnerId}/preferences`),
+
+  updatePreferences: (learnerId: string, preferences: {
+    sound_effects?: boolean;
+    animations?: boolean;
+    motivational_messages?: boolean;
+    listening_exercises?: boolean;
+    dark_mode?: boolean;
+    push_notifications?: boolean;
+    practice_reminders?: boolean;
+    learning_language?: string;
+  }) =>
+    fetchApi<{ success: boolean; updated_preferences: any }>(`/api/learners/${learnerId}/preferences`, {
+      method: 'PUT',
+      body: JSON.stringify(preferences),
+    }),
+
+  exportData: (learnerId: string) =>
+    fetch(`${API_BASE}/api/learners/${learnerId}/export`, {
+      credentials: 'include',
+    }).then(async (response) => {
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.message || error.error || 'Export failed');
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `finlit_export_${learnerId}_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      return { success: true };
+    }),
+
+  deleteAccount: (learnerId: string) =>
+    fetchApi<{ success: boolean; message: string }>(`/api/learners/${learnerId}/delete`, {
+      method: 'POST',
+      body: JSON.stringify({ confirm: true }),
+    }),
 };
 
 // Adaptive Learning API
@@ -487,6 +586,8 @@ export const curriculumApi = {
       next_lesson_unlocked: boolean;
       xp_earned: number;
       total_xp: number;
+      gems: number;
+      gems_earned: number;
     }>(`/api/curriculum/lessons/${kcId}/complete`, {
       method: 'POST',
       body: JSON.stringify(data),
@@ -888,6 +989,18 @@ export const socialApi = {
     fetchApi<{ users: UserProfile[]; count: number }>(
       `/api/social/users/search?q=${encodeURIComponent(query)}&limit=${limit}`
     ),
+
+  getFriendSuggestions: (learnerId: string, limit = 5) =>
+    fetchApi<{
+      suggestions: Array<{
+        user_id: string;
+        display_name: string;
+        total_xp: number;
+        streak_count: number;
+        reason: string;
+      }>;
+      count: number;
+    }>(`/api/social/suggestions/${learnerId}?limit=${limit}`),
 
   getUserProfile: (learnerId: string, viewerId?: string) => {
     const params = viewerId ? `?viewer_id=${viewerId}` : '';

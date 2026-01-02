@@ -569,12 +569,45 @@ def get_learner_stats(learner_id):
             'follower_id': ObjectId(learner_id)
         })
 
+        # Get join date from created_at
+        created_at = learner.get('created_at')
+        joined_date = None
+        if created_at:
+            # Format as "Month Year" (e.g., "January 2024")
+            joined_date = created_at.strftime('%B %Y')
+        else:
+            joined_date = 'January 2024'  # Fallback if no created_at
+
+        # Calculate league from XP (using leaderboard logic)
+        # League definitions - Duolingo-style
+        LEAGUES = [
+            {'id': 'bronze', 'name': 'Bronze', 'min_xp': 0},
+            {'id': 'silver', 'name': 'Silver', 'min_xp': 500},
+            {'id': 'gold', 'name': 'Gold', 'min_xp': 1500},
+            {'id': 'emerald', 'name': 'Emerald', 'min_xp': 3000},
+            {'id': 'diamond', 'name': 'Diamond', 'min_xp': 5000},
+            {'id': 'master', 'name': 'Master', 'min_xp': 10000},
+        ]
+        current_league_info = LEAGUES[0]
+        for league in LEAGUES:
+            if total_xp >= league['min_xp']:
+                current_league_info = league
+        current_league = current_league_info.get('name', 'Bronze')
+
+        # Count top 3 finishes (weeks where user finished in top 3 of their league)
+        # This would require tracking weekly leaderboard history, for now return 0
+        top_3_finishes = 0  # TODO: Implement weekly leaderboard history tracking
+
+        # Get username if available (could be stored in learner document)
+        username = learner.get('username') or None
+
         # Log for debugging (can be removed in production)
-        print(f'[get_learner_stats] Learner {learner_id}: XP={total_xp}, Streak={streak_count}, Lessons={lessons_completed}, Level={level_info["level"]}')
+        print(f'[get_learner_stats] Learner {learner_id}: XP={total_xp}, Streak={streak_count}, Lessons={lessons_completed}, Level={level_info["level"]}, League={current_league}')
 
         return jsonify({
             'learner_id': str(learner['_id']),
             'display_name': learner.get('display_name', 'User'),
+            'username': username,
             'email': learner.get('email', ''),
             'country_of_origin': learner.get('country_of_origin', 'US'),
             'visa_type': learner.get('visa_type', 'Other'),
@@ -588,8 +621,13 @@ def get_learner_stats(learner_id):
             'xp_for_next_level': level_info['xp_for_next_level'],
             'xp_in_current_level': level_info['xp_in_current_level'],
             'xp_needed_for_level': level_info['xp_needed_for_level'],
+            'gems': learner.get('gems', 0),
+            'hearts': learner.get('hearts', 5),
             'followers': followers_count,
-            'following': following_count
+            'following': following_count,
+            'joined_date': joined_date,
+            'current_league': current_league,
+            'top_3_finishes': top_3_finishes
         }), 200
         
     except Exception as e:
@@ -718,6 +756,548 @@ def lose_heart(learner_id):
             'lost': True
         }), 200
 
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@learners_bp.route('/<learner_id>/gems', methods=['GET'])
+def get_gems(learner_id):
+    """
+    Get current gems for a learner.
+    
+    Response:
+    {
+        "gems": 150,
+        "learner_id": "..."
+    }
+    """
+    try:
+        db = get_db()
+        
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+        
+        gems = learner.get('gems', 0)
+        
+        return jsonify({
+            'gems': gems,
+            'learner_id': learner_id
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@learners_bp.route('/<learner_id>/gems/add', methods=['POST'])
+def add_gems(learner_id):
+    """
+    Add gems to a learner (e.g., from completing quests, achievements).
+    
+    Request JSON:
+    {
+        "amount": 50,
+        "reason": "quest_completion"
+    }
+    
+    Response:
+    {
+        "gems": 200,
+        "added": 50,
+        "learner_id": "..."
+    }
+    """
+    try:
+        db = get_db()
+        data = request.get_json()
+        
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+        
+        amount = int(data.get('amount', 0))
+        if amount <= 0:
+            return jsonify({'error': 'Amount must be positive'}), 400
+        
+        current_gems = learner.get('gems', 0)
+        new_gems = current_gems + amount
+        
+        db.collections.learners.update_one(
+            {'_id': ObjectId(learner_id)},
+            {
+                '$inc': {'gems': amount},
+                '$set': {'updated_at': datetime.utcnow()}
+            }
+        )
+        
+        return jsonify({
+            'gems': new_gems,
+            'added': amount,
+            'learner_id': learner_id
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@learners_bp.route('/<learner_id>/gems/deduct', methods=['POST'])
+def deduct_gems(learner_id):
+    """
+    Deduct gems from a learner (e.g., for shop purchases).
+    
+    Request JSON:
+    {
+        "amount": 50,
+        "reason": "shop_purchase"
+    }
+    
+    Response:
+    {
+        "gems": 100,
+        "deducted": 50,
+        "learner_id": "..."
+    }
+    """
+    try:
+        db = get_db()
+        data = request.get_json()
+        
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+        
+        amount = int(data.get('amount', 0))
+        if amount <= 0:
+            return jsonify({'error': 'Amount must be positive'}), 400
+        
+        current_gems = learner.get('gems', 0)
+        if current_gems < amount:
+            return jsonify({'error': 'Insufficient gems'}), 400
+        
+        new_gems = current_gems - amount
+        
+        db.collections.learners.update_one(
+            {'_id': ObjectId(learner_id)},
+            {
+                '$inc': {'gems': -amount},
+                '$set': {'updated_at': datetime.utcnow()}
+            }
+        )
+        
+        return jsonify({
+            'gems': new_gems,
+            'deducted': amount,
+            'learner_id': learner_id
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@learners_bp.route('/<learner_id>/shop/purchase', methods=['POST'])
+def purchase_item(learner_id):
+    """
+    Purchase an item from the shop.
+    
+    Request JSON:
+    {
+        "item_id": "refill-hearts",
+        "item_name": "Refill Hearts",
+        "price": 100,
+        "currency": "gems"
+    }
+    
+    Response:
+    {
+        "success": true,
+        "item_id": "refill-hearts",
+        "gems_remaining": 50,
+        "effect": {
+            "type": "refill_hearts",
+            "hearts": 5
+        }
+    }
+    """
+    try:
+        db = get_db()
+        data = request.get_json()
+        
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+        
+        item_id = data.get('item_id')
+        price = int(data.get('price', 0))
+        currency = data.get('currency', 'gems')
+        
+        if currency != 'gems':
+            return jsonify({'error': 'Only gems currency supported'}), 400
+        
+        current_gems = learner.get('gems', 0)
+        if current_gems < price:
+            return jsonify({'error': 'Insufficient gems'}), 400
+        
+        # Deduct gems
+        new_gems = current_gems - price
+        db.collections.learners.update_one(
+            {'_id': ObjectId(learner_id)},
+            {
+                '$inc': {'gems': -price},
+                '$set': {'updated_at': datetime.utcnow()}
+            }
+        )
+        
+        # Apply item effect
+        effect = {}
+        if item_id == 'refill-hearts':
+            # Refill hearts to max
+            MAX_HEARTS = 5
+            db.collections.learners.update_one(
+                {'_id': ObjectId(learner_id)},
+                {
+                    '$set': {
+                        'hearts': MAX_HEARTS,
+                        'last_heart_lost_at': None  # Reset recharge timer
+                    }
+                }
+            )
+            effect = {'type': 'refill_hearts', 'hearts': MAX_HEARTS}
+        
+        elif item_id == 'double-xp':
+            # Set XP multiplier (would need to track this in session/state)
+            # For now, just return success - frontend can handle the multiplier
+            effect = {'type': 'double_xp', 'duration_minutes': 15}
+        
+        elif item_id == 'streak-freeze':
+            # Streak freeze would be handled by streaks service
+            effect = {'type': 'streak_freeze', 'days': 1}
+        
+        return jsonify({
+            'success': True,
+            'item_id': item_id,
+            'gems_remaining': new_gems,
+            'effect': effect
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@learners_bp.route('/<learner_id>/preferences', methods=['GET'])
+def get_preferences(learner_id):
+    """
+    Get user preferences/settings.
+    
+    Response:
+    {
+        "sound_effects": true,
+        "animations": true,
+        "motivational_messages": true,
+        "listening_exercises": true,
+        "dark_mode": false,
+        "push_notifications": true,
+        "practice_reminders": true,
+        "learning_language": "en"
+    }
+    """
+    try:
+        db = get_db()
+        
+        # Verify learner exists
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+        
+        # Get preferences from learner document (defaults if not set)
+        preferences = learner.get('preferences', {})
+        
+        return jsonify({
+            'sound_effects': preferences.get('sound_effects', True),
+            'animations': preferences.get('animations', True),
+            'motivational_messages': preferences.get('motivational_messages', True),
+            'listening_exercises': preferences.get('listening_exercises', True),
+            'dark_mode': preferences.get('dark_mode', False),
+            'push_notifications': preferences.get('push_notifications', True),
+            'practice_reminders': preferences.get('practice_reminders', True),
+            'learning_language': preferences.get('learning_language', learner.get('native_language', 'en'))
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@learners_bp.route('/<learner_id>/preferences', methods=['PUT'])
+def update_preferences(learner_id):
+    """
+    Update user preferences/settings.
+    
+    Request JSON:
+    {
+        "sound_effects": true,
+        "animations": false,
+        "motivational_messages": true,
+        "listening_exercises": true,
+        "dark_mode": true,
+        "push_notifications": false,
+        "practice_reminders": true,
+        "learning_language": "es"
+    }
+    
+    Response:
+    {
+        "success": true,
+        "updated_preferences": {...}
+    }
+    """
+    try:
+        data = request.get_json()
+        db = get_db()
+        
+        # Verify learner exists
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+        
+        # Allowed preference fields
+        allowed_fields = [
+            'sound_effects', 'animations', 'motivational_messages',
+            'listening_exercises', 'dark_mode', 'push_notifications',
+            'practice_reminders', 'learning_language'
+        ]
+        
+        # Get existing preferences or create new dict
+        preferences = learner.get('preferences', {})
+        
+        # Update only provided fields
+        updated_preferences = {}
+        for field in allowed_fields:
+            if field in data:
+                preferences[field] = data[field]
+                updated_preferences[field] = data[field]
+        
+        # Save to database
+        db.collections.learners.update_one(
+            {'_id': ObjectId(learner_id)},
+            {
+                '$set': {
+                    'preferences': preferences,
+                    'updated_at': datetime.utcnow()
+                }
+            }
+        )
+        
+        return jsonify({
+            'success': True,
+            'updated_preferences': updated_preferences
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@learners_bp.route('/<learner_id>/export', methods=['GET'])
+def export_data(learner_id):
+    """
+    Export all user data as JSON.
+    
+    Response: JSON file with all user data including:
+    - Profile information
+    - Progress (XP, streak, lessons completed)
+    - Skill states
+    - Interactions
+    - Achievements
+    - Daily progress
+    """
+    try:
+        from flask import Response
+        import json
+        
+        db = get_db()
+        
+        # Verify learner exists
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+        
+        # Collect all user data
+        export_data = {
+            'profile': {
+                'email': learner.get('email'),
+                'display_name': learner.get('display_name'),
+                'country_of_origin': learner.get('country_of_origin'),
+                'visa_type': learner.get('visa_type'),
+                'native_language': learner.get('native_language'),
+                'created_at': learner.get('created_at').isoformat() if learner.get('created_at') else None,
+            },
+            'progress': {
+                'total_xp': learner.get('total_xp', 0),
+                'streak_count': learner.get('streak_count', 0),
+                'gems': learner.get('gems', 0),
+                'hearts': learner.get('hearts', 5),
+            },
+            'preferences': learner.get('preferences', {}),
+            'skill_states': [],
+            'interactions': [],
+            'achievements': [],
+            'daily_progress': []
+        }
+        
+        # Get skill states
+        skill_states = list(db.collections.learner_skill_states.find({
+            'learner_id': ObjectId(learner_id)
+        }))
+        for state in skill_states:
+            export_data['skill_states'].append({
+                'kc_id': str(state.get('kc_id')),
+                'status': state.get('status'),
+                'mastery': state.get('mastery', 0),
+                'elo': state.get('elo', 1500),
+                'updated_at': state.get('updated_at').isoformat() if state.get('updated_at') else None
+            })
+        
+        # Get recent interactions (limit to last 1000)
+        interactions = list(db.collections.interactions.find({
+            'learner_id': ObjectId(learner_id)
+        }).sort('timestamp', -1).limit(1000))
+        for interaction in interactions:
+            export_data['interactions'].append({
+                'item_id': str(interaction.get('item_id')),
+                'correct': interaction.get('correct'),
+                'timestamp': interaction.get('timestamp').isoformat() if interaction.get('timestamp') else None
+            })
+        
+        # Get achievements
+        achievements = list(db.collections.learner_achievements.find({
+            'learner_id': ObjectId(learner_id)
+        }))
+        for achievement in achievements:
+            export_data['achievements'].append({
+                'achievement_id': str(achievement.get('achievement_id')),
+                'progress': achievement.get('progress', 0),
+                'unlocked_at': achievement.get('unlocked_at').isoformat() if achievement.get('unlocked_at') else None
+            })
+        
+        # Get daily progress (last 90 days)
+        daily_progress = list(db.collections.daily_progress.find({
+            'learner_id': ObjectId(learner_id)
+        }).sort('date', -1).limit(90))
+        for progress in daily_progress:
+            export_data['daily_progress'].append({
+                'date': progress.get('date').isoformat() if progress.get('date') else None,
+                'xp_earned': progress.get('xp_earned', 0),
+                'lessons_completed': progress.get('lessons_completed', 0)
+            })
+        
+        # Create JSON response
+        json_data = json.dumps(export_data, indent=2, default=str)
+        
+        return Response(
+            json_data,
+            mimetype='application/json',
+            headers={
+                'Content-Disposition': f'attachment; filename=finlit_export_{learner_id}_{datetime.utcnow().strftime("%Y%m%d")}.json'
+            }
+        )
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@learners_bp.route('/<learner_id>/delete', methods=['POST'])
+def delete_account(learner_id):
+    """
+    Delete user account and all associated data.
+    
+    Request JSON:
+    {
+        "confirm": true  // Must be true to proceed
+    }
+    
+    Response:
+    {
+        "success": true,
+        "message": "Account deleted successfully"
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        # Require explicit confirmation
+        if not data.get('confirm'):
+            return jsonify({'error': 'Confirmation required. Set "confirm": true'}), 400
+        
+        db = get_db()
+        
+        # Verify learner exists
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+        
+        # Delete all associated data
+        # Note: In production, you might want to soft-delete (mark as deleted) instead
+        
+        # Delete skill states
+        db.collections.learner_skill_states.delete_many({
+            'learner_id': ObjectId(learner_id)
+        })
+        
+        # Delete interactions
+        db.collections.interactions.delete_many({
+            'learner_id': ObjectId(learner_id)
+        })
+        
+        # Delete achievements
+        db.collections.learner_achievements.delete_many({
+            'learner_id': ObjectId(learner_id)
+        })
+        
+        # Delete daily progress
+        db.collections.daily_progress.delete_many({
+            'learner_id': ObjectId(learner_id)
+        })
+        
+        # Delete voice responses
+        db.collections.voice_responses.delete_many({
+            'learner_id': ObjectId(learner_id)
+        })
+        
+        # Delete quest claims
+        db.collections.quest_claims.delete_many({
+            'learner_id': ObjectId(learner_id)
+        })
+        
+        # Delete social connections (friendships, follows, friend requests)
+        db.collections.friendships.delete_many({
+            '$or': [
+                {'user1_id': ObjectId(learner_id)},
+                {'user2_id': ObjectId(learner_id)}
+            ]
+        })
+        
+        db.collections.follows.delete_many({
+            '$or': [
+                {'follower_id': ObjectId(learner_id)},
+                {'following_id': ObjectId(learner_id)}
+            ]
+        })
+        
+        db.collections.friend_requests.delete_many({
+            '$or': [
+                {'from_user_id': ObjectId(learner_id)},
+                {'to_user_id': ObjectId(learner_id)}
+            ]
+        })
+        
+        # Finally, delete the learner document
+        db.collections.learners.delete_one({
+            '_id': ObjectId(learner_id)
+        })
+        
+        return jsonify({
+            'success': True,
+            'message': 'Account and all associated data deleted successfully'
+        }), 200
+        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

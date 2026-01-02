@@ -28,6 +28,7 @@ QUEST_DEFINITIONS = {
             'description': 'Complete lessons to earn experience points',
             'target': 50,
             'xp_reward': 10,
+            'gems_reward': 5,  # Bonus gems for completing quest
             'icon': 'xp',
             'metric': 'xp_earned'
         },
@@ -37,6 +38,7 @@ QUEST_DEFINITIONS = {
             'description': 'Finish any 3 lessons today',
             'target': 3,
             'xp_reward': 15,
+            'gems_reward': 10,  # Bonus gems for completing quest
             'icon': 'lesson',
             'metric': 'lessons_completed'
         },
@@ -46,6 +48,7 @@ QUEST_DEFINITIONS = {
             'description': 'Get 100% on any lesson',
             'target': 1,
             'xp_reward': 25,
+            'gems_reward': 15,  # Bonus gems for completing quest
             'icon': 'perfect',
             'metric': 'perfect_lessons'
         },
@@ -55,6 +58,7 @@ QUEST_DEFINITIONS = {
             'description': 'Get 10 correct answers',
             'target': 10,
             'xp_reward': 10,
+            'gems_reward': 5,  # Bonus gems for completing quest
             'icon': 'lesson',
             'metric': 'correct_answers'
         },
@@ -66,6 +70,7 @@ QUEST_DEFINITIONS = {
             'description': 'Practice for 7 days in a row',
             'target': 7,
             'xp_reward': 100,
+            'gems_reward': 50,  # Bonus gems for completing quest
             'icon': 'streak',
             'metric': 'streak_days'
         },
@@ -75,6 +80,7 @@ QUEST_DEFINITIONS = {
             'description': 'Accumulate 500 XP over the week',
             'target': 500,
             'xp_reward': 75,
+            'gems_reward': 30,  # Bonus gems for completing quest
             'icon': 'xp',
             'metric': 'weekly_xp'
         },
@@ -84,6 +90,7 @@ QUEST_DEFINITIONS = {
             'description': 'Finish 10 lessons this week',
             'target': 10,
             'xp_reward': 50,
+            'gems_reward': 25,  # Bonus gems for completing quest
             'icon': 'lesson',
             'metric': 'weekly_lessons'
         },
@@ -95,6 +102,7 @@ QUEST_DEFINITIONS = {
             'description': 'Finish all lessons in the Banking module',
             'target': 10,
             'xp_reward': 200,
+            'gems_reward': 100,  # Bonus gems for completing quest
             'icon': 'lesson',
             'metric': 'banking_lessons',
             'domain': 'banking'
@@ -105,6 +113,7 @@ QUEST_DEFINITIONS = {
             'description': 'Finish all lessons in the Credit module',
             'target': 8,
             'xp_reward': 200,
+            'gems_reward': 100,  # Bonus gems for completing quest
             'icon': 'lesson',
             'metric': 'credit_lessons',
             'domain': 'credit'
@@ -285,6 +294,7 @@ def get_quests(learner_id):
                 'progress': min(progress, quest_def['target']),
                 'target': quest_def['target'],
                 'xp_reward': quest_def['xp_reward'],
+                'gems_reward': quest_def.get('gems_reward', 0),
                 'icon': quest_def['icon'],
                 'completed': completed,
                 'can_claim': progress >= quest_def['target'] and not completed
@@ -366,10 +376,16 @@ def claim_quest(learner_id, quest_id):
             'claimed_at': datetime.utcnow()
         })
 
-        # Award XP
+        # Award XP and Gems
+        gems_reward = quest_def.get('gems_reward', 0)  # Default to 0 if not specified
         db.collections.learners.update_one(
             {'_id': learner_oid},
-            {'$inc': {'total_xp': quest_def['xp_reward']}}
+            {
+                '$inc': {
+                    'total_xp': quest_def['xp_reward'],
+                    'gems': gems_reward
+                }
+            }
         )
 
         # Update daily progress for leaderboard tracking
@@ -381,14 +397,17 @@ def claim_quest(learner_id, quest_id):
             xp_earned=quest_def['xp_reward']
         )
 
-        # Get updated total
+        # Get updated totals
         learner = db.collections.learners.find_one({'_id': learner_oid})
         total_xp = learner.get('total_xp', 0) if learner else 0
+        total_gems = learner.get('gems', 0) if learner else 0
 
         return jsonify({
             'success': True,
             'xp_earned': quest_def['xp_reward'],
-            'total_xp': total_xp
+            'gems_earned': gems_reward,
+            'total_xp': total_xp,
+            'total_gems': total_gems
         }), 200
 
     except Exception as e:

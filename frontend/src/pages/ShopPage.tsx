@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui';
 import { Button } from '../components/ui';
 import { GemDisplay } from '../components/gamification/GemDisplay';
 import { useUserStore } from '../stores/userStore';
+import { learnerApi } from '../services/api';
 import { ShoppingBag, Zap, Heart, Flame, Crown, Star, Shield, Filter, Search, Plus } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { TranslatedText } from '../components/TranslatedText';
@@ -73,14 +75,90 @@ const CATEGORIES = [
 ];
 
 export const ShopPage: React.FC = () => {
-  const { user } = useUserStore();
-  const gems = user?.gems || 350;
+  const navigate = useNavigate();
+  const { user, learnerId, setUser } = useUserStore();
+  const gems = user?.gems || 0;
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const filteredItems = selectedCategory === 'all'
     ? shopItems
     : shopItems.filter(item => item.category === selectedCategory);
+
+  // Sync gems from backend on mount
+  useEffect(() => {
+    const syncGems = async () => {
+      if (learnerId) {
+        try {
+          const gemsData = await learnerApi.getGems(learnerId);
+          if (gemsData && user) {
+            setUser({
+              ...user,
+              gems: gemsData.gems
+            });
+          }
+        } catch (err) {
+          console.error('Failed to sync gems:', err);
+        }
+      }
+    };
+    syncGems();
+  }, [learnerId]); // Only sync when learnerId changes
+
+  const handlePurchase = async (item: ShopItem) => {
+    if (!learnerId || !user) {
+      setError('Please log in to make purchases');
+      return;
+    }
+
+    if (gems < item.price) {
+      setError(`Not enough gems! You need ${item.price} gems.`);
+      return;
+    }
+
+    setPurchasing(item.id);
+    setError(null);
+
+    try {
+      const result = await learnerApi.purchaseItem(
+        learnerId,
+        item.id,
+        item.name,
+        item.price,
+        item.currency
+      );
+
+      if (result.success) {
+        // Update user store with new gems and apply effects
+        const updatedUser = {
+          ...user,
+          gems: result.gems_remaining
+        };
+
+        // Apply item effects
+        if (result.effect.type === 'refill_hearts') {
+          updatedUser.hearts = result.effect.hearts;
+        }
+
+        setUser(updatedUser);
+
+        // Show success message
+        alert(`Successfully purchased ${item.name}!`);
+        
+        // Clear any previous errors
+        setError(null);
+      } else {
+        setError('Purchase failed. Please try again.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to purchase item');
+      console.error('Purchase error:', err);
+    } finally {
+      setPurchasing(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -129,7 +207,14 @@ export const ShopPage: React.FC = () => {
           <div className="mt-auto p-4 bg-orange-50 rounded-2xl border border-orange-100">
             <h3 className="font-extrabold text-[#FF9600] mb-1">Need more Gems?</h3>
             <p className="text-xs text-orange-600/80 mb-3">Complete daily quests to earn bonus gems!</p>
-            <Button size="sm" fullWidth variant="primary">View Quests</Button>
+            <Button 
+              size="sm" 
+              fullWidth 
+              variant="primary"
+              onClick={() => navigate('/quests')}
+            >
+              View Quests
+            </Button>
           </div>
         </div>
 
@@ -228,11 +313,22 @@ export const ShopPage: React.FC = () => {
 
                   <div className="mt-4">
                     <button
-                      className="w-full py-3 rounded-xl font-extrabold text-[#FF9600] text-sm uppercase tracking-wide hover:bg-orange-50 transition-colors"
-                      onClick={() => console.log('Buy', item.id)}
+                      className={cn(
+                        "w-full py-3 rounded-xl font-extrabold text-sm uppercase tracking-wide transition-colors",
+                        gems < item.price
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : purchasing === item.id
+                          ? "bg-orange-200 text-orange-600 cursor-wait"
+                          : "text-[#FF9600] hover:bg-orange-50"
+                      )}
+                      onClick={() => handlePurchase(item)}
+                      disabled={gems < item.price || purchasing === item.id}
                     >
-                      PURCHASE
+                      {purchasing === item.id ? 'PURCHASING...' : gems < item.price ? 'INSUFFICIENT GEMS' : 'PURCHASE'}
                     </button>
+                    {error && (
+                      <p className="text-xs text-red-500 mt-2 text-center">{error}</p>
+                    )}
                   </div>
                 </motion.div>
               ))}

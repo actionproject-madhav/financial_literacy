@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Heart, Check, Flag, Volume2, Mic, MicOff, Loader2 } from 'lucide-react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useUserStore } from '../stores/userStore'
-import { curriculumApi, adaptiveApi, voiceApi, Question } from '../services/api'
+import { curriculumApi, adaptiveApi, voiceApi, learnerApi, Question } from '../services/api'
 import confetti from 'canvas-confetti'
 import { CelebrationOverlay } from '../components/CelebrationOverlay'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -75,6 +75,8 @@ export const LessonPage = () => {
   const [streak, setStreak] = useState(0)
   const [showStreakMilestone, setShowStreakMilestone] = useState(false)
   const [hasShownStreak, setHasShownStreak] = useState(false) // Track if streak was already shown
+  const [gemsEarned, setGemsEarned] = useState(5) // Store actual gems earned from backend
+  const [xpEarned, setXpEarned] = useState(20) // Store actual XP earned from backend
 
   // Audio recording refs
   const mediaRecorder = useRef<MediaRecorder | null>(null)
@@ -755,25 +757,41 @@ export const LessonPage = () => {
             xp_earned: 20,
             accuracy: accuracy,
             time_spent_minutes: timeSpentMinutes
-          }).then((result) => {
-            if (result) {
-              // Update user XP from backend response
-              if (user) {
-                setUser({
-                  ...user,
-                  gems: user.gems + 5,
-                  totalXp: result.total_xp || user.totalXp + 20
-                })
+          }).then(async (result) => {
+            if (result && user) {
+              // Store actual earned values from backend
+              const actualGemsEarned = result.gems_earned || 5
+              const actualXpEarned = result.xp_earned || 20
+              setGemsEarned(actualGemsEarned)
+              setXpEarned(actualXpEarned)
+              
+              // Update user data from backend response (includes XP and gems)
+              setUser({
+                ...user,
+                totalXp: result.total_xp || user.totalXp,
+                gems: result.gems || user.gems,
+              })
+              
+              // Also sync hearts from backend
+              try {
+                const heartsData = await learnerApi.getHearts(learnerId!)
+                if (heartsData) {
+                  setUser({
+                    ...user,
+                    totalXp: result.total_xp || user.totalXp,
+                    gems: result.gems || user.gems,
+                    hearts: heartsData.hearts
+                  })
+                }
+              } catch (err) {
+                console.error('Failed to sync hearts:', err)
               }
-              addXP(20)
             }
           }).catch((error) => {
             console.error('Failed to save lesson completion:', error)
-            // Still show celebration even if save fails
-            addXP(20)
-            if (user) {
-              setUser({ ...user, gems: user.gems + 5 })
-            }
+            // Use default values if backend call fails
+            setGemsEarned(5)
+            setXpEarned(20)
           })
         } else {
           // Fallback if no lessonId or learnerId
@@ -891,8 +909,8 @@ export const LessonPage = () => {
       <CelebrationOverlay
         isVisible={showCelebration}
         onComplete={handleCelebrationComplete}
-        xpEarned={20}
-        gemsEarned={5}
+        xpEarned={xpEarned}
+        gemsEarned={gemsEarned}
         accuracy={totalQuizQuestions > 0 ? Math.round((correctAnswers / totalQuizQuestions) * 100) : 100}
         title="Lesson Complete!"
       />

@@ -995,6 +995,128 @@ def get_referrals(learner_id):
         return jsonify({'error': str(e)}), 500
 
 
+@social_bp.route('/suggestions/<learner_id>', methods=['GET'])
+def get_friend_suggestions(learner_id):
+    """
+    Get friend suggestions for a learner.
+    Suggests users from the same league who are not already friends/following.
+
+    Query params:
+    - limit: Max suggestions (default 5)
+
+    Response:
+    {
+        "suggestions": [
+            {
+                "user_id": "...",
+                "display_name": "...",
+                "total_xp": 1000,
+                "streak_count": 5,
+                "reason": "From your league"
+            }
+        ],
+        "count": 5
+    }
+    """
+    try:
+        limit = int(request.args.get('limit', 5))
+        db = get_db()
+
+        # Get current user
+        learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
+        if not learner:
+            return jsonify({'error': 'Learner not found'}), 404
+
+        learner_xp = learner.get('total_xp', 0)
+
+        # Determine learner's league (same logic as leaderboard)
+        LEAGUES = [
+            {'id': 'bronze', 'name': 'Bronze', 'min_xp': 0},
+            {'id': 'silver', 'name': 'Silver', 'min_xp': 500},
+            {'id': 'gold', 'name': 'Gold', 'min_xp': 1500},
+            {'id': 'emerald', 'name': 'Emerald', 'min_xp': 3000},
+            {'id': 'diamond', 'name': 'Diamond', 'min_xp': 5000},
+            {'id': 'master', 'name': 'Master', 'min_xp': 10000},
+        ]
+        learner_league = LEAGUES[0]
+        for league in LEAGUES:
+            if learner_xp >= league['min_xp']:
+                learner_league = league
+
+        # Get users already following or friends
+        following_ids = set()
+        following_docs = db.collections.follows.find({'follower_id': ObjectId(learner_id)})
+        for doc in following_docs:
+            following_ids.add(str(doc['following_id']))
+
+        friend_ids = set()
+        friendships = db.collections.friendships.find({
+            '$or': [
+                {'user1_id': ObjectId(learner_id)},
+                {'user2_id': ObjectId(learner_id)}
+            ]
+        })
+        for friendship in friendships:
+            user1 = str(friendship['user1_id'])
+            user2 = str(friendship['user2_id'])
+            if user1 != learner_id:
+                friend_ids.add(user1)
+            if user2 != learner_id:
+                friend_ids.add(user2)
+
+        # Get all excluded IDs
+        excluded_ids = following_ids | friend_ids | {learner_id}
+
+        # Find users in the same league who are not already connected
+        suggestions = []
+        all_learners = list(db.collections.learners.find({
+            '_id': {'$nin': [ObjectId(uid) for uid in excluded_ids]}
+        }))
+
+        for user in all_learners:
+            user_xp = user.get('total_xp', 0)
+            user_league = LEAGUES[0]
+            for league in LEAGUES:
+                if user_xp >= league['min_xp']:
+                    user_league = league
+
+            # Suggest users from same league
+            if user_league['id'] == learner_league['id']:
+                suggestions.append({
+                    'user_id': str(user['_id']),
+                    'display_name': user.get('display_name', 'User'),
+                    'total_xp': user_xp,
+                    'streak_count': user.get('streak_count', 0),
+                    'reason': 'From your league'
+                })
+
+                if len(suggestions) >= limit:
+                    break
+
+        # If not enough from same league, add others
+        if len(suggestions) < limit:
+            for user in all_learners:
+                if str(user['_id']) not in [s['user_id'] for s in suggestions]:
+                    suggestions.append({
+                        'user_id': str(user['_id']),
+                        'display_name': user.get('display_name', 'User'),
+                        'total_xp': user.get('total_xp', 0),
+                        'streak_count': user.get('streak_count', 0),
+                        'reason': 'Active learner'
+                    })
+
+                    if len(suggestions) >= limit:
+                        break
+
+        return jsonify({
+            'suggestions': suggestions[:limit],
+            'count': len(suggestions)
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # Health check
 @social_bp.route('/health', methods=['GET'])
 def health_check():
