@@ -75,6 +75,9 @@ class FinLitCollections:
         self.friend_requests = db.friend_requests  # Pending friend requests
         self.follows = db.follows  # Unidirectional follows
         self.referrals = db.referrals  # Referral tracking
+        
+        # Payment collections
+        self.payments = db.payments  # Payment transactions
     
     def _to_object_id(self, id_value):
         """Convert string ID to ObjectId, or return as-is if already ObjectId"""
@@ -263,6 +266,12 @@ class FinLitCollections:
         self.referrals.create_index([("referred_id", ASCENDING)], unique=True)
         self.referrals.create_index([("referral_code", ASCENDING)], unique=True)
         self.referrals.create_index([("created_at", DESCENDING)])
+
+        # Payments indexes
+        self.payments.create_index([("learner_id", ASCENDING)])
+        self.payments.create_index([("payment_intent_id", ASCENDING)], unique=True)
+        self.payments.create_index([("status", ASCENDING)])
+        self.payments.create_index([("created_at", DESCENDING)])
 
         print("All indexes created successfully!")
 

@@ -10,6 +10,8 @@ import { ShoppingBag, Zap, Heart, Flame, Crown, Star, Shield, Filter, Search, Pl
 import { cn } from '../utils/cn';
 import { TranslatedText } from '../components/TranslatedText';
 import { useToast } from '../components/ui/Toast';
+import { PaymentModal } from '../components/payment/PaymentModal';
+import { paymentApi } from '../services/api';
 
 // --- Types & Data ---
 
@@ -19,10 +21,12 @@ interface ShopItem {
   description: string;
   icon: React.ReactNode;
   price: number;
-  currency: 'gems' | 'hearts' | 'xp';
-  category: 'powerups' | 'appearance' | 'streak';
+  currency: 'gems' | 'hearts' | 'xp' | 'usd';
+  category: 'powerups' | 'appearance' | 'streak' | 'coins';
   bgColor?: string;
   image?: string;
+  priceCents?: number; // For USD purchases
+  packageType?: 'coins' | 'powerup';
 }
 
 const shopItems: ShopItem[] = [
@@ -70,6 +74,7 @@ const shopItems: ShopItem[] = [
 
 const CATEGORIES = [
   { id: 'all', label: 'All Items', icon: Star },
+  { id: 'coins', label: 'Buy Coins', icon: Star },
   { id: 'powerups', label: 'Power-ups', icon: Zap },
   { id: 'appearance', label: 'Appearance', icon: Crown },
   { id: 'streak', label: 'Streak', icon: Flame },
@@ -85,10 +90,36 @@ export const ShopPage: React.FC = () => {
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [purchasedItems, setPurchasedItems] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const [paymentModal, setPaymentModal] = useState<{
+    isOpen: boolean;
+    packageId: string;
+    packageName: string;
+    coins: number;
+    priceCents: number;
+    type: 'coins' | 'powerup';
+  } | null>(null);
+  const [coinPackages, setCoinPackages] = useState<any[]>([]);
+
+  // Combine shop items with coin packages
+  const allItems: ShopItem[] = [
+    ...shopItems,
+    ...coinPackages.map((pkg): ShopItem => ({
+      id: pkg.id,
+      name: pkg.name,
+      description: `Get ${pkg.coins} coins instantly`,
+      icon: <img src="/coin.svg" className="w-16 h-16 object-contain" alt="Coins" />,
+      price: pkg.coins,
+      currency: 'usd',
+      category: 'coins',
+      bgColor: 'bg-[#FFF9C4]',
+      priceCents: pkg.price_cents,
+      packageType: 'coins',
+    })),
+  ];
 
   const filteredItems = selectedCategory === 'all'
-    ? shopItems
-    : shopItems.filter(item => item.category === selectedCategory);
+    ? allItems
+    : allItems.filter(item => item.category === selectedCategory);
 
   // Sync gems from backend on mount
   useEffect(() => {
@@ -110,14 +141,53 @@ export const ShopPage: React.FC = () => {
     syncGems();
   }, [learnerId]); // Only sync when learnerId changes
 
+  // Load payment packages
+  useEffect(() => {
+    const loadPackages = async () => {
+      try {
+        const packages = await paymentApi.getPackages();
+        setCoinPackages(packages.coin_packages || []);
+      } catch (err) {
+        console.error('Failed to load packages:', err);
+      }
+    };
+    loadPackages();
+  }, []);
+
   const handlePurchase = async (item: ShopItem) => {
     if (!learnerId || !user) {
       toast.error('Please log in to make purchases');
       return;
     }
 
+    // Handle USD purchases (coin packages)
+    if (item.currency === 'usd' && item.priceCents) {
+      setPaymentModal({
+        isOpen: true,
+        packageId: item.id,
+        packageName: item.name,
+        coins: item.price,
+        priceCents: item.priceCents,
+        type: item.packageType || 'coins'
+      });
+      return;
+    }
+
     if (gems < item.price) {
-      toast.error(`Not enough gems! You need ${item.price} gems.`);
+      // Show coin purchase option instead of error
+      if (coinPackages.length > 0) {
+        const smallestPackage = coinPackages[0];
+        setPaymentModal({
+          isOpen: true,
+          packageId: smallestPackage.id,
+          packageName: smallestPackage.name,
+          coins: smallestPackage.coins,
+          priceCents: smallestPackage.price_cents,
+          type: 'coins'
+        });
+      } else {
+        toast.error(`Not enough gems! You need ${item.price} gems.`);
+      }
       return;
     }
 
@@ -209,7 +279,19 @@ export const ShopPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      {paymentModal && (
+        <PaymentModal
+          isOpen={paymentModal.isOpen}
+          onClose={() => setPaymentModal(null)}
+          packageId={paymentModal.packageId}
+          packageName={paymentModal.packageName}
+          coins={paymentModal.coins}
+          priceCents={paymentModal.priceCents}
+          packageType={paymentModal.type}
+        />
+      )}
+      <div className="min-h-screen bg-white">
       <div className="max-w-[1400px] mx-auto flex items-start min-h-screen">
 
         {/* === Left Sidebar: Filters === */}
@@ -252,9 +334,9 @@ export const ShopPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-auto p-4 bg-orange-50 rounded-2xl border border-orange-100">
-            <h3 className="font-extrabold text-[#FF9600] mb-1">Need more Gems?</h3>
-            <p className="text-xs text-orange-600/80 mb-3">Complete daily quests to earn bonus gems!</p>
+          <div className="mt-auto p-4 bg-blue-50 rounded-2xl border border-blue-100">
+            <h3 className="font-extrabold text-[#1CB0F6] mb-1">Earn Free Gems</h3>
+            <p className="text-xs text-blue-600/80 mb-3">Complete daily quests!</p>
             <Button 
               size="sm" 
               fullWidth 
@@ -354,8 +436,16 @@ export const ShopPage: React.FC = () => {
                   <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
                     <span className="text-gray-400 font-bold text-xs tracking-wider">PRICE</span>
                     <div className="flex items-center gap-1.5">
-                      <img src="/coin.svg" className="w-5 h-5 object-contain" alt="Coins" />
-                      <span className="text-lg font-extrabold text-gray-800">{item.price}</span>
+                      {item.currency === 'usd' ? (
+                        <span className="text-lg font-extrabold text-gray-800">
+                          ${((item.priceCents || 0) / 100).toFixed(2)}
+                        </span>
+                      ) : (
+                        <>
+                          <img src="/coin.svg" className="w-5 h-5 object-contain" alt="Coins" />
+                          <span className="text-lg font-extrabold text-gray-800">{item.price}</span>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -363,8 +453,10 @@ export const ShopPage: React.FC = () => {
                     <button
                       className={cn(
                         "w-full py-3 rounded-xl font-extrabold text-sm uppercase tracking-wide transition-all relative",
-                        gems < item.price
-                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        item.currency === 'usd'
+                          ? "bg-[#1cb0f6] hover:bg-[#1899d6] text-white border-2 border-transparent"
+                          : gems < item.price
+                          ? "bg-[#1cb0f6] hover:bg-[#1899d6] text-white border-2 border-transparent"
                           : purchasing === item.id
                           ? "bg-orange-200 text-orange-600 cursor-wait"
                           : purchasedItems.has(item.id)
@@ -372,7 +464,7 @@ export const ShopPage: React.FC = () => {
                           : "text-[#FF9600] hover:bg-orange-50 border-2 border-transparent hover:border-orange-200"
                       )}
                       onClick={() => handlePurchase(item)}
-                      disabled={gems < item.price || purchasing === item.id || purchasedItems.has(item.id)}
+                      disabled={purchasing === item.id || purchasedItems.has(item.id)}
                     >
                       {purchasing === item.id ? (
                         <span className="flex items-center justify-center gap-2">
@@ -384,8 +476,10 @@ export const ShopPage: React.FC = () => {
                           <CheckCircle2 className="w-5 h-5" />
                           PURCHASED
                         </span>
+                      ) : item.currency === 'usd' ? (
+                        'BUY NOW'
                       ) : gems < item.price ? (
-                        'INSUFFICIENT GEMS'
+                        'BUY COINS'
                       ) : (
                         'PURCHASE'
                       )}
@@ -399,5 +493,6 @@ export const ShopPage: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };

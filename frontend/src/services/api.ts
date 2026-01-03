@@ -1065,3 +1065,49 @@ export const socialApi = {
   healthCheck: () =>
     fetchApi<{ status: string }>('/api/social/health').catch(() => null),
 };
+
+// Payment API
+export const paymentApi = {
+  createPaymentIntent: (learnerId: string, packageId: string, type: 'coins' | 'powerup') =>
+    fetchApi<{
+      client_secret: string;
+      amount: number;
+      currency: string;
+      package_name: string;
+      coins: number;
+    }>('/api/payments/create-intent', {
+      method: 'POST',
+      body: JSON.stringify({ learner_id: learnerId, package_id: packageId, type }),
+    }),
+
+  handlePaymentSuccess: (learnerId: string, paymentIntentId: string) =>
+    fetchApi<{
+      success: boolean;
+      message: string;
+      coins_awarded: number;
+      total_gems: number;
+      package_type: string;
+      package_id: string;
+    }>('/api/payments/success', {
+      method: 'POST',
+      body: JSON.stringify({ learner_id: learnerId, payment_intent_id: paymentIntentId }),
+    }),
+
+  getPackages: () =>
+    fetchApi<{
+      coin_packages: Array<{
+        id: string;
+        name: string;
+        coins: number;
+        price_cents: number;
+        price_dollars: number;
+      }>;
+      powerup_packages: Array<{
+        id: string;
+        name: string;
+        coins: number;
+        price_cents: number;
+        price_dollars: number;
+      }>;
+    }>('/api/payments/packages'),
+};
