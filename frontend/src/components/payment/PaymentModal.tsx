@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { X, Loader2, CheckCircle2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Modal } from '../social/Modal';
 import { paymentApi, learnerApi } from '../../services/api';
 import { useUserStore } from '../../stores/userStore';
 import { useToast } from '../ui/Toast';
+import { CelebrationOverlay } from '../CelebrationOverlay';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
 
@@ -92,9 +93,8 @@ const PaymentForm: React.FC<{
             });
           }
 
-          toast.success(`Success! ${coins} coins added to your account.`);
+          // Show celebration overlay instead of toast
           onSuccess();
-          onClose();
         } else {
           throw new Error('Failed to process payment');
         }
@@ -169,7 +169,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   priceCents,
   packageType,
 }) => {
-  const [success, setSuccess] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   const options: StripeElementsOptions = {
     appearance: {
@@ -178,27 +179,37 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   };
 
   const handleSuccess = () => {
-    setSuccess(true);
-    setTimeout(() => {
-      setSuccess(false);
-      onClose();
-    }, 2000);
+    setPaymentSuccess(true);
+    setShowCelebration(true);
   };
 
-  if (success) {
+  const handleCelebrationComplete = () => {
+    setShowCelebration(false);
+    setPaymentSuccess(false);
+    onClose();
+  };
+
+  // Show celebration overlay when payment is successful
+  if (showCelebration) {
     return (
-      <Modal isOpen={isOpen} onClose={onClose} title="Payment Successful" maxWidth="md">
-        <div className="p-6 text-center">
-          <CheckCircle2 className="w-16 h-16 text-[#58cc02] mx-auto mb-4" />
-          <div className="text-xl font-bold text-[#3c3c3c] mb-2">Payment Successful!</div>
-          <div className="text-[#afafaf]">{coins} coins have been added to your account.</div>
-        </div>
-      </Modal>
+      <CelebrationOverlay
+        isVisible={showCelebration}
+        onComplete={handleCelebrationComplete}
+        xpEarned={0}
+        gemsEarned={coins}
+        accuracy={100}
+        title="Payment Successful!"
+      />
     );
   }
 
+  // Don't show modal if celebration is showing
+  if (showCelebration) {
+    return null;
+  }
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Purchase Coins" maxWidth="md">
+    <Modal isOpen={isOpen && !showCelebration} onClose={onClose} title="Purchase Coins" maxWidth="md">
       <div className="p-4">
         {import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ? (
           <Elements stripe={stripePromise} options={options}>
