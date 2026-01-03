@@ -94,6 +94,14 @@ class FinLitCollections:
         # Learners indexes
         self.learners.create_index([("email", ASCENDING)], unique=True)
         self.learners.create_index([("created_at", DESCENDING)])
+        # Text index for search optimization (display_name and email)
+        try:
+            self.learners.create_index([("display_name", "text"), ("email", "text")])
+        except Exception as e:
+            # Text index might already exist or require different syntax
+            print(f"  Note: Text index creation: {e}")
+        # Regular index on display_name for regex searches
+        self.learners.create_index([("display_name", ASCENDING)])
 
         # Knowledge Components indexes
         self.knowledge_components.create_index([("slug", ASCENDING)], unique=True)
