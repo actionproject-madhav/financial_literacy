@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { chatApi, ChatMessage } from '../services/api';
 import { useUserStore } from '../stores/userStore';
 import { useLanguage } from '../contexts/LanguageContext';
+import { LottieAnimation } from './LottieAnimation';
 
 interface FinAICoachPanelProps {
   isOpen: boolean;
@@ -166,8 +167,12 @@ export function FinAICoachPanel({ isOpen, onClose }: FinAICoachPanelProps) {
                         className="bg-[#E8F5E9] rounded-xl p-4 cursor-pointer hover:brightness-95 transition-all"
                         onClick={() => handleQuickQuestion('How do I open a bank account?')}
                       >
-                        <div className="w-8 h-8 mb-2 flex items-center justify-center bg-white/60 rounded-lg">
-                          <span className="text-lg">🏦</span>
+                        <div className="w-12 h-12 mb-2 flex items-center justify-center bg-white/60 rounded-lg overflow-hidden">
+                          <LottieAnimation 
+                            src="document.json" 
+                            className="w-full h-full"
+                            loop={true}
+                          />
                         </div>
                         <p className="text-sm font-bold text-gray-700">Open a bank account</p>
                         <p className="text-xs text-gray-500 mt-1">Without an SSN...</p>
@@ -176,8 +181,12 @@ export function FinAICoachPanel({ isOpen, onClose }: FinAICoachPanelProps) {
                         className="bg-[#F3E5F5] rounded-xl p-4 cursor-pointer hover:brightness-95 transition-all"
                         onClick={() => handleQuickQuestion('How do I build credit as a new immigrant?')}
                       >
-                        <div className="w-8 h-8 mb-2 flex items-center justify-center bg-white/60 rounded-lg">
-                          <span className="text-lg">💳</span>
+                        <div className="w-12 h-12 mb-2 flex items-center justify-center bg-white/60 rounded-lg overflow-hidden">
+                          <LottieAnimation 
+                            src="card.json" 
+                            className="w-full h-full"
+                            loop={true}
+                          />
                         </div>
                         <p className="text-sm font-bold text-gray-700">Build credit score</p>
                         <p className="text-xs text-gray-500 mt-1">As a new immigrant...</p>

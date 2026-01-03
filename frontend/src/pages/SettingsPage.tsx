@@ -5,6 +5,7 @@ import { useUserStore } from '../stores/userStore';
 import { useNavigate } from 'react-router-dom';
 import { authApi, learnerApi } from '../services/api';
 import { LanguageSelector } from '../components/LanguageSelector';
+import { useToast } from '../components/ui/Toast';
 
 interface SettingsSection {
   id: string;
@@ -26,6 +27,7 @@ interface SettingsItem {
 export const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { logout, learnerId, user } = useUserStore();
+  const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -75,9 +77,10 @@ export const SettingsPage: React.FC = () => {
     try {
       setSaving(true);
       await learnerApi.updatePreferences(learnerId, updates);
+      toast.success('Preferences saved successfully!');
     } catch (error) {
       console.error('Failed to save preferences:', error);
-      alert('Failed to save preferences. Please try again.');
+      toast.error('Failed to save preferences. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -112,10 +115,10 @@ export const SettingsPage: React.FC = () => {
     
     try {
       await learnerApi.exportData(learnerId);
-      alert('Your data has been exported successfully!');
+      toast.success('Your data has been exported successfully!');
     } catch (error) {
       console.error('Export failed:', error);
-      alert('Failed to export data. Please try again.');
+      toast.error('Failed to export data. Please try again.');
     }
   };
 
@@ -136,12 +139,14 @@ export const SettingsPage: React.FC = () => {
     
     try {
       await learnerApi.deleteAccount(learnerId);
-      alert('Your account has been deleted. You will be logged out.');
-      logout();
-      navigate('/auth');
+      toast.success('Your account has been deleted. You will be logged out.');
+      setTimeout(() => {
+        logout();
+        navigate('/auth');
+      }, 2000);
     } catch (error) {
       console.error('Delete account failed:', error);
-      alert('Failed to delete account. Please try again.');
+      toast.error('Failed to delete account. Please try again.');
     }
   };
 
@@ -161,7 +166,7 @@ export const SettingsPage: React.FC = () => {
           label: 'Change Password',
           type: 'button',
           onClick: () => {
-            alert('Password changes are managed through your Google account. Please visit your Google Account settings to change your password.');
+            toast.info('Password changes are managed through your Google account. Please visit your Google Account settings to change your password.');
           },
         },
       ],

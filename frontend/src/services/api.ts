@@ -694,6 +694,7 @@ export interface Quest {
   progress: number;
   target: number;
   xp_reward: number;
+  gems_reward?: number;
   icon: string;
   completed: boolean;
   can_claim: boolean;
@@ -715,7 +716,9 @@ export const questsApi = {
     fetchApi<{
       success: boolean;
       xp_earned: number;
+      gems_earned?: number;
       total_xp: number;
+      total_gems?: number;
     }>(`/api/quests/${learnerId}/claim/${questId}`, {
       method: 'POST',
     }),
@@ -734,6 +737,9 @@ export interface League {
 }
 
 export interface LeaderboardEntry {
+  profile_image?: string;
+  profile_picture_url?: string;
+  avatar_url?: string;
   rank: number;
   learner_id: string;
   display_name: string;
@@ -873,6 +879,7 @@ export interface FriendRequest {
     total_xp: number;
     streak_count: number;
     profile_picture_url?: string;
+    avatar_url?: string;
   };
   to_user: {
     user_id: string;
@@ -880,6 +887,7 @@ export interface FriendRequest {
     total_xp: number;
     streak_count: number;
     profile_picture_url?: string;
+    avatar_url?: string;
   };
   created_at: string;
   status: string;
@@ -891,6 +899,7 @@ export interface Friend {
   total_xp: number;
   streak_count: number;
   profile_picture_url?: string;
+  avatar_url?: string;
   friendship_since?: string;
   following_since?: string;
 }
@@ -901,6 +910,7 @@ export interface UserProfile {
   total_xp: number;
   streak_count: number;
   profile_picture_url?: string;
+  avatar_url?: string;
   level: number;
   lessons_completed: number;
   skills_mastered: number;
@@ -951,6 +961,18 @@ export const socialApi = {
     fetchApi<{ friends: Friend[]; count: number }>(
       `/api/social/friends/${learnerId}`
     ),
+
+  getFriendStreaks: (learnerId: string) =>
+    fetchApi<{
+      active_streaks: Array<{
+        user_id: string;
+        display_name: string;
+        streak_count: number;
+        profile_picture_url?: string;
+        avatar_url?: string;
+      }>;
+      count: number;
+    }>(`/api/social/friends/${learnerId}/streaks`),
 
   removeFriend: (userId: string, friendId: string) =>
     fetchApi<{ success: boolean; message: string }>(
@@ -1042,4 +1064,50 @@ export const socialApi = {
 
   healthCheck: () =>
     fetchApi<{ status: string }>('/api/social/health').catch(() => null),
+};
+
+// Payment API
+export const paymentApi = {
+  createPaymentIntent: (learnerId: string, packageId: string, type: 'coins' | 'powerup') =>
+    fetchApi<{
+      client_secret: string;
+      amount: number;
+      currency: string;
+      package_name: string;
+      coins: number;
+    }>('/api/payments/create-intent', {
+      method: 'POST',
+      body: JSON.stringify({ learner_id: learnerId, package_id: packageId, type }),
+    }),
+
+  handlePaymentSuccess: (learnerId: string, paymentIntentId: string) =>
+    fetchApi<{
+      success: boolean;
+      message: string;
+      coins_awarded: number;
+      total_gems: number;
+      package_type: string;
+      package_id: string;
+    }>('/api/payments/success', {
+      method: 'POST',
+      body: JSON.stringify({ learner_id: learnerId, payment_intent_id: paymentIntentId }),
+    }),
+
+  getPackages: () =>
+    fetchApi<{
+      coin_packages: Array<{
+        id: string;
+        name: string;
+        coins: number;
+        price_cents: number;
+        price_dollars: number;
+      }>;
+      powerup_packages: Array<{
+        id: string;
+        name: string;
+        coins: number;
+        price_cents: number;
+        price_dollars: number;
+      }>;
+    }>('/api/payments/packages'),
 };

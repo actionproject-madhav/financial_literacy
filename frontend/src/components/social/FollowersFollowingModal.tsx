@@ -3,6 +3,7 @@ import { Users, Loader2, UserMinus } from 'lucide-react';
 import { Modal } from './Modal';
 import { socialApi, Friend } from '../../services/api';
 import { useUserStore } from '../../stores/userStore';
+import { ProfileAvatar } from './ProfileAvatar';
 
 interface FollowersFollowingModalProps {
   isOpen: boolean;
@@ -52,7 +53,14 @@ export const FollowersFollowingModal: React.FC<FollowersFollowingModalProps> = (
     setProcessing(userId);
     try {
       await socialApi.unfollowUser(learnerId, userId);
-      setUsers(prev => prev.filter(user => user.user_id !== userId));
+      // Refresh the list from database
+      if (type === 'following' && targetUserId) {
+        const response = await socialApi.getFollowing(targetUserId);
+        setUsers(response.following);
+      } else if (targetUserId) {
+        const response = await socialApi.getFollowers(targetUserId);
+        setUsers(response.followers);
+      }
     } catch (error) {
       console.error('Failed to unfollow user:', error);
     } finally {
@@ -108,9 +116,11 @@ export const FollowersFollowingModal: React.FC<FollowersFollowingModalProps> = (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {/* Avatar */}
-                    <div className="w-12 h-12 rounded-full bg-[#1cb0f6] flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                      {user.display_name.charAt(0).toUpperCase()}
-                    </div>
+                    <ProfileAvatar
+                      profilePictureUrl={user.profile_picture_url}
+                      avatarUrl={user.avatar_url}
+                      displayName={user.display_name}
+                    />
 
                     {/* User Info */}
                     <div className="flex-1 min-w-0">

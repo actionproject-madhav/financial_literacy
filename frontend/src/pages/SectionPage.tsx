@@ -190,7 +190,8 @@ export const SectionPage = () => {
                             const isNext = lesson.status === 'available' || lesson.status === 'in_progress'
                             const isLocked = lesson.status === 'locked'
 
-                            const points = 500 + (index * 150)
+                            // Actual gems earned per lesson (matches backend)
+                            const gemsEarned = 5
                             const progress = lesson.p_mastery * 100
 
                             return (
@@ -236,8 +237,8 @@ export const SectionPage = () => {
                                                 </div>
 
                                                 <div className="flex items-center gap-1.5 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">
-                                                    <span className="font-extrabold text-amber-500 text-sm">{points}+</span>
-                                                    <img src="/coin.svg" className="w-5 h-5 object-contain" alt="Coins" />
+                                                    <span className="font-extrabold text-amber-500 text-sm">{gemsEarned}</span>
+                                                    <img src="/coin.svg" className="w-5 h-5 object-contain" alt="Gems" />
                                                 </div>
                                             </div>
 

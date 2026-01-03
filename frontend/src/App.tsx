@@ -19,6 +19,7 @@ import { AuthPage } from './pages/AuthPage';
 import { OnboardingPage } from './pages/OnboardingPage';
 import { DiagnosticPage } from './pages/DiagnosticPage';
 import { ReviewPage } from './pages/ReviewPage';
+import { ToastProvider } from './components/ui/Toast';
 
 // Backend warm-up: Ping health endpoint on app load to wake up Render free tier
 const warmUpBackend = () => {
@@ -50,6 +51,7 @@ function App() {
       <LanguageProvider>
       <UserProvider>
           <CoachProvider>
+            <ToastProvider>
         <HashRouter
           future={{
             v7_startTransition: true,
@@ -85,6 +87,7 @@ function App() {
             <Route path="*" element={<Navigate to="/learn" replace />} />
           </Routes>
         </HashRouter>
+            </ToastProvider>
           </CoachProvider>
       </UserProvider>
       </LanguageProvider>

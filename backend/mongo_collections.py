@@ -75,6 +75,9 @@ class FinLitCollections:
         self.friend_requests = db.friend_requests  # Pending friend requests
         self.follows = db.follows  # Unidirectional follows
         self.referrals = db.referrals  # Referral tracking
+        
+        # Payment collections
+        self.payments = db.payments  # Payment transactions
     
     def _to_object_id(self, id_value):
         """Convert string ID to ObjectId, or return as-is if already ObjectId"""
@@ -94,6 +97,14 @@ class FinLitCollections:
         # Learners indexes
         self.learners.create_index([("email", ASCENDING)], unique=True)
         self.learners.create_index([("created_at", DESCENDING)])
+        # Text index for search optimization (display_name and email)
+        try:
+            self.learners.create_index([("display_name", "text"), ("email", "text")])
+        except Exception as e:
+            # Text index might already exist or require different syntax
+            print(f"  Note: Text index creation: {e}")
+        # Regular index on display_name for regex searches
+        self.learners.create_index([("display_name", ASCENDING)])
 
         # Knowledge Components indexes
         self.knowledge_components.create_index([("slug", ASCENDING)], unique=True)
@@ -256,6 +267,12 @@ class FinLitCollections:
         self.referrals.create_index([("referral_code", ASCENDING)], unique=True)
         self.referrals.create_index([("created_at", DESCENDING)])
 
+        # Payments indexes
+        self.payments.create_index([("learner_id", ASCENDING)])
+        self.payments.create_index([("payment_intent_id", ASCENDING)], unique=True)
+        self.payments.create_index([("status", ASCENDING)])
+        self.payments.create_index([("created_at", DESCENDING)])
+
         print("All indexes created successfully!")
 
     # ========== LEARNER METHODS ==========
@@ -282,6 +299,8 @@ class FinLitCollections:
             'has_ssn': kwargs.get('has_ssn'),
             'sends_remittances': kwargs.get('sends_remittances'),
             'financial_goals': kwargs.get('financial_goals', []),
+            'profile_picture_url': kwargs.get('profile_picture_url', ''),  # Google profile picture
+            'avatar_url': kwargs.get('avatar_url', ''),  # Built-in character avatar or uploaded
             'created_at': datetime.utcnow(),
             'last_active_at': None
         }

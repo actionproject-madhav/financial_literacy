@@ -274,14 +274,16 @@ def get_friend_requests(learner_id):
                     'display_name': from_user.get('display_name', 'User'),
                     'total_xp': from_user.get('total_xp', 0),
                     'streak_count': from_user.get('streak_count', 0),
-                    'profile_picture_url': from_user.get('profile_picture_url')
+                    'profile_picture_url': from_user.get('profile_picture_url', ''),
+                    'avatar_url': from_user.get('avatar_url', '')
                 } if from_user else None,
                 'to_user': {
                     'user_id': str(to_user['_id']),
                     'display_name': to_user.get('display_name', 'User'),
                     'total_xp': to_user.get('total_xp', 0),
                     'streak_count': to_user.get('streak_count', 0),
-                    'profile_picture_url': to_user.get('profile_picture_url')
+                    'profile_picture_url': to_user.get('profile_picture_url', ''),
+                    'avatar_url': to_user.get('avatar_url', '')
                 } if to_user else None,
                 'created_at': req['created_at'].isoformat() if req.get('created_at') else None,
                 'status': req.get('status', 'pending')
@@ -345,7 +347,8 @@ def get_friends(learner_id):
                     'display_name': friend.get('display_name', 'User'),
                     'total_xp': friend.get('total_xp', 0),
                     'streak_count': friend.get('streak_count', 0),
-                    'profile_picture_url': friend.get('profile_picture_url'),
+                    'profile_picture_url': friend.get('profile_picture_url', ''),
+                    'avatar_url': friend.get('avatar_url', ''),
                     'friendship_since': friendship['created_at'].isoformat() if friendship.get('created_at') else None
                 })
 
@@ -354,6 +357,69 @@ def get_friends(learner_id):
             'count': len(friends)
         }), 200
 
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@social_bp.route('/friends/<learner_id>/streaks', methods=['GET'])
+def get_friend_streaks(learner_id):
+    """
+    Get active friend streaks (friends with streak > 0).
+    
+    Response:
+    {
+        "active_streaks": [
+            {
+                "user_id": "...",
+                "display_name": "...",
+                "streak_count": 5,
+                "profile_picture_url": "...",
+                "avatar_url": "..."
+            }
+        ],
+        "count": 3
+    }
+    """
+    try:
+        db = get_db()
+        learner_oid = ObjectId(learner_id)
+        
+        # Get all friendships
+        friendships = list(db.collections.friendships.find({
+            '$or': [
+                {'user1_id': learner_oid},
+                {'user2_id': learner_oid}
+            ]
+        }))
+        
+        active_streaks = []
+        for friendship in friendships:
+            # Get the friend's ID
+            friend_id = friendship['user2_id'] if friendship['user1_id'] == learner_oid else friendship['user1_id']
+            
+            # Get friend details
+            friend = db.collections.learners.find_one({'_id': friend_id})
+            
+            if friend:
+                streak_count = friend.get('streak_count', 0)
+                # Only include friends with active streaks (> 0)
+                if streak_count > 0:
+                    active_streaks.append({
+                        'user_id': str(friend['_id']),
+                        'display_name': friend.get('display_name', 'User'),
+                        'streak_count': streak_count,
+                        'profile_picture_url': friend.get('profile_picture_url', ''),
+                        'avatar_url': friend.get('avatar_url', '')
+                    })
+        
+        # Sort by streak count (highest first)
+        active_streaks.sort(key=lambda x: x['streak_count'], reverse=True)
+        
+        return jsonify({
+            'active_streaks': active_streaks,
+            'count': len(active_streaks)
+        }), 200
+        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -555,7 +621,8 @@ def get_followers(learner_id):
                     'display_name': follower.get('display_name', 'User'),
                     'total_xp': follower.get('total_xp', 0),
                     'streak_count': follower.get('streak_count', 0),
-                    'profile_picture_url': follower.get('profile_picture_url'),
+                    'profile_picture_url': follower.get('profile_picture_url', ''),
+                    'avatar_url': follower.get('avatar_url', ''),
                     'following_since': follow['created_at'].isoformat() if follow.get('created_at') else None
                 })
 
@@ -609,7 +676,8 @@ def get_following(learner_id):
                     'display_name': user.get('display_name', 'User'),
                     'total_xp': user.get('total_xp', 0),
                     'streak_count': user.get('streak_count', 0),
-                    'profile_picture_url': user.get('profile_picture_url'),
+                    'profile_picture_url': user.get('profile_picture_url', ''),
+                    'avatar_url': user.get('avatar_url', ''),
                     'following_since': follow['created_at'].isoformat() if follow.get('created_at') else None
                 })
 
@@ -670,7 +738,8 @@ def search_users():
                 'email': user.get('email', ''),
                 'total_xp': user.get('total_xp', 0),
                 'streak_count': user.get('streak_count', 0),
-                'profile_picture_url': user.get('profile_picture_url')
+                'profile_picture_url': user.get('profile_picture_url', ''),
+                'avatar_url': user.get('avatar_url', '')
             })
 
         return jsonify({
@@ -763,7 +832,8 @@ def get_user_profile(learner_id):
             'display_name': user.get('display_name', 'User'),
             'total_xp': total_xp,
             'streak_count': streak_count,
-            'profile_picture_url': user.get('profile_picture_url'),
+            'profile_picture_url': user.get('profile_picture_url', ''),
+            'avatar_url': user.get('avatar_url', ''),
             'level': level_info['level'],
             'lessons_completed': lessons_completed,
             'skills_mastered': lessons_completed,  # Same as lessons_completed
