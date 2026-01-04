@@ -80,13 +80,19 @@ def pre_generate_all():
     collection = db.collections.learning_items
     
     print("🚀 Pre-generating cache for all learning items...\n")
-    if has_elevenlabs:
-        print("   TTS: ElevenLabs (primary) → Google TTS → OpenAI TTS (fallbacks)")
+    if has_openai:
+        print("   TTS: OpenAI TTS (tts-1) - $0.015 per 1K chars")
+        if has_google_tts:
+            print("        → Google TTS fallback available ($0.004/1K chars, better Nepali)")
+        if has_elevenlabs:
+            print("        → ElevenLabs skipped (blocked)")
     elif has_google_tts:
-        print("   TTS: Google Cloud TTS → OpenAI TTS (fallback)")
+        print("   TTS: Google Cloud TTS - $0.004 per 1K chars")
     else:
-        print("   TTS: OpenAI TTS")
+        print("   TTS: No TTS service available!")
     print("   Translation: OpenAI\n")
+    print("   💡 Cost estimate: ~50K characters per run ≈ $0.75 with OpenAI TTS")
+    print()
     
     # Initialize services - allow it even if ElevenLabs is blocked (fallbacks will work)
     try:
