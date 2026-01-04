@@ -114,12 +114,11 @@ export const LessonPage = () => {
         return
       }
 
-      // Check if IDs are valid MongoDB ObjectIds (24-char hex string)
-      const isValidLessonId = /^[0-9a-fA-F]{24}$/.test(lessonId)
+      // Check if learner ID is valid (lesson ID can now be a string slug like "us-currency")
       const isValidLearnerId = learnerId && /^[0-9a-fA-F]{24}$/.test(learnerId)
 
-      // For UI testing: use mock data when not logged in or invalid IDs
-      if (!isValidLessonId || !isValidLearnerId) {
+      // For UI testing: use mock data when not logged in
+      if (!isValidLearnerId) {
         // Mock lesson data for testing UI
         setLesson({
           id: lessonId,
@@ -298,6 +297,8 @@ export const LessonPage = () => {
         setError(null)
       } catch (err) {
         console.error('Failed to fetch questions:', err)
+        console.error('Error details:', JSON.stringify(err, null, 2))
+        console.error('Lesson ID that failed:', lessonId)
         // Fallback to mock data on error for UI testing
         setLesson({
           id: lessonId,
