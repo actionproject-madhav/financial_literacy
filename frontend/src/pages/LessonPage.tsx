@@ -1021,12 +1021,69 @@ export const LessonPage = () => {
           </div>
         )
 
+      case 'definitions':
+        return (
+          <div className="space-y-3">
+            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">📖 {title}</h3>}
+            <div className="space-y-3">
+              {content.terms && content.terms.map((item: any, idx: number) => (
+                <div key={idx} className="bg-gray-50 border-l-4 border-blue-400 p-3 rounded">
+                  <p className="font-semibold text-gray-800 mb-1">{item.term}</p>
+                  <p className="text-sm text-gray-600">{item.definition}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+
+      case 'reference_list':
+      case 'procedure':
+      case 'comparison':
+      case 'calculation':
+      case 'timeline':
+        return (
+          <div className="space-y-3">
+            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">📋 {title}</h3>}
+            {content.text && <p className="text-gray-700 leading-relaxed mb-3">{content.text}</p>}
+            {content.definition && <p className="text-gray-700 leading-relaxed mb-3">{content.definition}</p>}
+            {content.items && (
+              <ul className="space-y-2">
+                {content.items.map((item: string, idx: number) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-blue-500 mt-1">•</span>
+                    <span className="text-gray-700">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {content.steps && (
+              <ol className="space-y-2">
+                {content.steps.map((step: string, idx: number) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="font-semibold text-blue-600">{idx + 1}.</span>
+                    <span className="text-gray-700">{step}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        )
+
       default:
         // Fallback for unknown types
         if (content.text) {
           return <p className="text-gray-700 leading-relaxed">{content.text}</p>
         }
-        return <p className="text-gray-700 leading-relaxed">{JSON.stringify(content)}</p>
+        if (content.definition) {
+          return <p className="text-gray-700 leading-relaxed">{content.definition}</p>
+        }
+        // Last resort: try to render as JSON but make it readable
+        return (
+          <div className="bg-gray-50 p-4 rounded">
+            <p className="text-xs text-gray-500 mb-2">Content type: {blockType || 'unknown'}</p>
+            <pre className="text-xs text-gray-700 whitespace-pre-wrap">{JSON.stringify(content, null, 2)}</pre>
+          </div>
+        )
     }
   }
 

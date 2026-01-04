@@ -793,9 +793,10 @@ def get_lesson_steps(lesson_id):
             kc_mapping = db.db.item_kc_mappings.find_one({'item_id': q['_id']})
             kc_id = str(kc_mapping['kc_id']) if kc_mapping else None
             
-            # Extract question data properly
-            question_text = q.get('stem', '')
-            choices = q.get('choices', [])
+            # Extract question data from content field
+            content = q.get('content', {})
+            question_text = content.get('stem', '')
+            choices = content.get('choices', [])
             
             # Handle both list and dict formats for choices
             if isinstance(choices, dict):
@@ -807,8 +808,8 @@ def get_lesson_steps(lesson_id):
                 'item_id': str(q['_id']),
                 'question': question_text,
                 'choices': choices,
-                'correct_answer': q.get('correct_answer', 0),
-                'explanation': q.get('explanation', ''),
+                'correct_answer': content.get('correct_answer', 0),
+                'explanation': content.get('explanation', ''),
                 'kc_id': kc_id
             })
         
