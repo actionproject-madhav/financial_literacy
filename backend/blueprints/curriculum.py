@@ -769,58 +769,50 @@ def get_lesson_steps(lesson_id):
         # Interleave content and questions
         steps = []
         
-        # Strategy: content → quiz → content → quiz
-        # If we have more content than questions, group content blocks
         num_content = len(content_blocks)
         num_questions = len(questions)
         
         if num_content == 0 and num_questions == 0:
             return jsonify({'error': 'Lesson has no content or questions'}), 404
         
-        # Simple interleaving: alternate between content and quiz
-        content_idx = 0
-        question_idx = 0
+        # DETERMINISTIC INTERLEAVING STRATEGY:
+        # 1. Present ALL content blocks first (in curriculum order)
+        # 2. Then present ALL quiz questions (in database order)
+        # This ensures learners see all teaching material before being tested
         
-        # Start with content if available
-        while content_idx < num_content or question_idx < num_questions:
-            # Add content block(s)
-            if content_idx < num_content:
-                block = content_blocks[content_idx]
-                steps.append({
-                    'type': 'content',
-                    'block_type': block.get('type', 'concept'),
-                    'title': block.get('title', ''),
-                    'content': block.get('content', {})
-                })
-                content_idx += 1
+        # Add all content blocks first (preserves curriculum.json order)
+        for block in content_blocks:
+            steps.append({
+                'type': 'content',
+                'block_type': block.get('type', 'concept'),
+                'title': block.get('title', ''),
+                'content': block.get('content', {})
+            })
+        
+        # Then add all quiz questions (preserves database order)
+        for q in questions:
+            # Get KC mapping for this question
+            kc_mapping = db.db.item_kc_mappings.find_one({'item_id': q['_id']})
+            kc_id = str(kc_mapping['kc_id']) if kc_mapping else None
             
-            # Add quiz question
-            if question_idx < num_questions:
-                q = questions[question_idx]
-                
-                # Get KC mapping for this question
-                kc_mapping = db.db.item_kc_mappings.find_one({'item_id': q['_id']})
-                kc_id = str(kc_mapping['kc_id']) if kc_mapping else None
-                
-                # Extract question data properly
-                question_text = q.get('stem', '')
-                choices = q.get('choices', [])
-                
-                # Handle both list and dict formats for choices
-                if isinstance(choices, dict):
-                    # Convert dict to list (sorted by key)
-                    choices = [choices.get(str(i), '') for i in range(len(choices))]
-                
-                steps.append({
-                    'type': 'quiz',
-                    'item_id': str(q['_id']),
-                    'question': question_text,
-                    'choices': choices,
-                    'correct_answer': q.get('correct_answer', 0),
-                    'explanation': q.get('explanation', ''),
-                    'kc_id': kc_id
-                })
-                question_idx += 1
+            # Extract question data properly
+            question_text = q.get('stem', '')
+            choices = q.get('choices', [])
+            
+            # Handle both list and dict formats for choices
+            if isinstance(choices, dict):
+                # Convert dict to list (sorted by key)
+                choices = [choices.get(str(i), '') for i in range(len(choices))]
+            
+            steps.append({
+                'type': 'quiz',
+                'item_id': str(q['_id']),
+                'question': question_text,
+                'choices': choices,
+                'correct_answer': q.get('correct_answer', 0),
+                'explanation': q.get('explanation', ''),
+                'kc_id': kc_id
+            })
         
         # Calculate XP reward
         xp_reward = lesson.get('xp_reward', len(questions) * 2)  # 2 XP per question

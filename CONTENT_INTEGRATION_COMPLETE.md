@@ -68,49 +68,100 @@ Simply add these fields to content blocks in the database, and they'll automatic
 ### User Experience Flow
 
 1. **User clicks "Start" on a lesson**
-2. **Content page appears** (same UI as explanation)
-   - Shows educational content (concept, table, tip, etc.)
-   - Has "Next" button
-3. **User clicks "Next"**
-4. **Quiz question appears**
-   - Shows multiple choice question
-   - Has "Check" button
-5. **User answers and clicks "Check"**
-6. **If wrong**: Explanation page (content format)
-7. **If correct**: Next content or question
-8. **Pattern repeats**: content → quiz → content → quiz
-9. **Lesson complete**: Celebration with XP and gems
+2. **TEACHING PHASE**: Content pages appear (same UI as explanation)
+   - Shows ALL educational content first (concepts, tables, tips, etc.)
+   - Each has "Next" button
+   - Example: "US Dollar Overview" → "Paper Currency" → "Coins" → "Sales Tax"
+3. **ASSESSMENT PHASE**: Quiz questions appear
+   - Shows multiple choice questions
+   - Each has "Check" button
+   - Tests understanding of concepts just learned
+4. **User answers and clicks "Check"**
+5. **If wrong**: Explanation page (content format)
+6. **If correct**: Next question
+7. **All questions complete**: Celebration with XP and gems
+
+**Pedagogical Flow**: Teach first, then test (not interleaved)
 
 ### Example Lesson Flow
 
 **Lesson: US Currency and Money Basics**
 
 ```
-Step 1: Content (concept)
-  📚 US Dollar Overview
-  "The United States dollar (USD) is..."
-  💡 Key Fact: 1 dollar = 100 cents
-  [Next] button
+TEACHING PHASE (Content First):
+  Step 1: Content (concept)
+    📚 US Dollar Overview
+    "The United States dollar (USD) is..."
+    💡 Key Fact: 1 dollar = 100 cents
+    [Next] button
 
-Step 2: Quiz
-  "What is the smallest paper bill?"
-  - $1  ← correct
-  - $5
-  - $10
-  - $20
-  [Check] button
+  Step 2: Content (reference_table)
+    📊 Paper Currency (Bills)
+    [Table showing denominations]
+    [Next] button
 
-Step 3: Content (reference_table)
-  📊 Paper Currency (Bills)
-  [Table showing denominations]
-  [Next] button
+  Step 3: Content (reference_table)
+    📊 Coins
+    [Table showing penny, nickel, dime, quarter]
+    [Next] button
 
-Step 4: Quiz
-  "Which bill is most common at ATMs?"
-  [Check] button
+  Step 4: Content (concept)
+    📚 Sales Tax
+    "Prices in US stores don't include tax..."
+    [Next] button
 
-... and so on
+ASSESSMENT PHASE (Quiz After):
+  Step 5: Quiz
+    "What is the smallest paper bill?"
+    - $1  ← correct
+    - $5
+    - $10
+    - $20
+    [Check] button
+
+  Step 6: Quiz
+    "Which coin is worth 25 cents?"
+    [Check] button
+
+  ... 10 more quiz questions testing all concepts
+
+COMPLETION:
+  🎉 Lesson Complete! +12 XP, +5 gems
 ```
+
+---
+
+## 🎯 Content Ordering (Deterministic)
+
+### Is the order random? NO! ✅
+
+**Content blocks**:
+- Source: `curriculum.json` (hand-crafted, reviewed)
+- Order: Fixed array order (0, 1, 2, 3...)
+- Deterministic: Same lesson always shows same content in same order
+
+**Quiz questions**:
+- Source: `learning_items` collection
+- Linking: Via KC (Knowledge Component) slugs
+- Order: Fixed array order (preserved from database)
+- Deterministic: Same lesson always shows same questions in same order
+
+**Interleaving strategy**:
+- Phase 1: ALL content blocks (teach first)
+- Phase 2: ALL quiz questions (test after)
+- Pedagogically sound: Learners see teaching material before being tested
+
+### Example: US Currency Lesson
+Every time a user starts this lesson, they see:
+1. Content: US Dollar Overview
+2. Content: Paper Currency (Bills)
+3. Content: Coins
+4. Content: Sales Tax
+5-16. Quiz: 12 questions testing all concepts
+
+**No randomization. 100% deterministic. 100% appropriate.**
+
+See `CONTENT_ORDERING_EXPLAINED.md` for full technical details.
 
 ---
 
