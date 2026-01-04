@@ -123,6 +123,7 @@ export const LessonPage = () => {
         setLesson({
           id: lessonId,
           title: 'Understanding Financial Basics',
+          domain: 'banking', // Default domain for mock data
           order: 1,
           status: 'available',
           xpReward: 20
@@ -303,6 +304,7 @@ export const LessonPage = () => {
         setLesson({
           id: lessonId,
           title: 'Understanding Financial Basics',
+          domain: 'banking', // Default domain for error fallback
           order: 1,
           status: 'available',
           xpReward: 20
