@@ -258,7 +258,7 @@ export const LessonPage = () => {
           id: response.lesson.id,
           title: response.lesson.title,
           description: response.lesson.description,
-          domain: lessonId, // Use lessonId as domain for now
+          domain: response.lesson.domain, // Get domain from API response
           order: 1,
           status: 'available',
           xpReward: response.lesson.xp_reward

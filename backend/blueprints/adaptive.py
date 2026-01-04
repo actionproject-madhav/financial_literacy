@@ -235,8 +235,10 @@ def log_interaction():
                         kc_id = None
         
         # If we have a valid kc_id, use learning engine
+        engine = get_learning_engine()
+        new_achievements = []
+        
         if kc_id:
-            engine = get_learning_engine()
             result = engine.submit_answer(
                 learner_id=learner_id,
                 item_id=item_id,
@@ -247,6 +249,8 @@ def log_interaction():
                 hint_used=hint_used,
                 session_id=session_id
             )
+            # Check for new achievements
+            new_achievements = engine.check_achievements(learner_id)
         else:
             # No KC tracking, just log the interaction
             result = {
@@ -258,14 +262,11 @@ def log_interaction():
                 'next_review_date': datetime.utcnow()
             }
 
-        # Check for new achievements
-        new_achievements = engine.check_achievements(learner_id)
-
         return jsonify({
             'success': True,
             'interaction_id': result['interaction_id'],
             'skill_state': {
-                'kc_id': kc_id,
+                'kc_id': str(kc_id) if kc_id else None,  # Convert ObjectId to string
                 'p_mastery': result['p_mastery_after'],
                 'p_mastery_before': result['p_mastery_before'],
                 'mastery_change': result['mastery_change'],

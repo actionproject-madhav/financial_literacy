@@ -326,18 +326,18 @@ def get_course_lessons(domain):
         if not lessons_docs:
             return jsonify({'error': 'Course not found'}), 404
 
-        # Get learner skill states if learner_id provided
+        # Get learner lesson completions from separate collection (scalable)
         learner_progress = {}
         if learner_id:
-            states = list(db.collections.learner_skill_states.find({
+            completions = db.db.lesson_completions.find({
                 'learner_id': ObjectId(learner_id)
-            }))
-            for state in states:
-                learner_progress[str(state['kc_id'])] = {
-                    'p_mastery': state.get('p_mastery', 0),
-                    'status': state.get('status', 'available'),
-                    'total_attempts': state.get('total_attempts', 0),
-                    'correct_count': state.get('correct_count', 0)
+            })
+            for completion in completions:
+                learner_progress[completion['lesson_id']] = {
+                    'p_mastery': completion.get('p_mastery', 0),
+                    'status': completion.get('status', 'locked'),
+                    'total_attempts': completion.get('completion_count', 0),
+                    'correct_count': completion.get('completion_count', 0)  # Simplified
                 }
 
         # Build lessons response using curriculum_lessons
@@ -457,11 +457,7 @@ def complete_lesson(lesson_id):
         if not lesson:
             return jsonify({'error': 'Lesson not found'}), 404
         
-        # For now, skip KC tracking and just award XP/gems
-        # TODO: Implement lesson completion tracking in a new collection
-        new_mastery = accuracy
-        
-        # Check for active XP multiplier
+        # Check for active XP multiplier FIRST (before using actual_xp_earned)
         xp_multiplier = 1.0
         if learner.get('xp_multiplier_active', False):
             activation_time = learner.get('xp_multiplier_activated_at')
@@ -469,7 +465,6 @@ def complete_lesson(lesson_id):
             if activation_time:
                 try:
                     if isinstance(activation_time, str):
-                        # Parse ISO format string
                         if 'T' in activation_time:
                             activation_time = datetime.fromisoformat(activation_time.replace('Z', '+00:00'))
                         else:
@@ -477,26 +472,50 @@ def complete_lesson(lesson_id):
                     elif not isinstance(activation_time, datetime):
                         activation_time = datetime.utcnow()
                     
-                    # Remove timezone if present for comparison
                     if hasattr(activation_time, 'tzinfo') and activation_time.tzinfo:
                         activation_time = activation_time.replace(tzinfo=None)
                     
                     elapsed = (datetime.utcnow() - activation_time).total_seconds() / 60
                     if elapsed < duration_minutes:
-                        xp_multiplier = 2.0  # Double XP
+                        xp_multiplier = 2.0
                     else:
-                        # Expired - deactivate
                         db.collections.learners.update_one(
                             {'_id': learner_oid},
                             {'$set': {'xp_multiplier_active': False}}
                         )
                 except Exception as e:
-                    # If parsing fails, just use normal XP
                     print(f"Error parsing XP multiplier activation time: {e}")
                     xp_multiplier = 1.0
         
-        # Apply XP multiplier
+        # Calculate actual XP earned
         actual_xp_earned = int(xp_earned * xp_multiplier)
+        new_mastery = accuracy
+        
+        # Track lesson completion in a separate collection (scalable)
+        db.db.lesson_completions.update_one(
+            {
+                'learner_id': learner_oid,
+                'lesson_id': lesson['lesson_id']
+            },
+            {
+                '$set': {
+                    'module_id': lesson['module_id'],
+                    'completed_at': datetime.utcnow(),
+                    'accuracy': accuracy,
+                    'p_mastery': accuracy,
+                    'status': 'mastered',
+                    'xp_earned': actual_xp_earned,
+                    'time_spent_minutes': time_spent_minutes
+                },
+                '$setOnInsert': {
+                    'first_completed_at': datetime.utcnow()
+                },
+                '$inc': {
+                    'completion_count': 1
+                }
+            },
+            upsert=True
+        )
         
         # Award gems based on lesson completion (5 gems per lesson)
         gems_earned = 5
