@@ -944,7 +944,53 @@ export const LessonPage = () => {
         return (
           <div className="space-y-3">
             {title && <h3 className="text-lg font-bold text-gray-800 mb-2">📚 {title}</h3>}
-            {content.text && <p className="text-gray-700 leading-relaxed">{content.text}</p>}
+            {content.definition && <p className="text-gray-700 leading-relaxed mb-3">{content.definition}</p>}
+            {content.text && <p className="text-gray-700 leading-relaxed mb-3">{content.text}</p>}
+            {content.primary_uses && (
+              <div className="mb-3">
+                <p className="font-semibold text-gray-800 mb-2">Primary Uses:</p>
+                <ul className="space-y-1">
+                  {content.primary_uses.map((use: string, idx: number) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-green-500 mt-1">✓</span>
+                      <span className="text-gray-700">{use}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {content.required_documents && (
+              <div className="mb-3">
+                <p className="font-semibold text-gray-800 mb-2">Required Documents:</p>
+                <ul className="space-y-1">
+                  {content.required_documents.map((doc: string, idx: number) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-blue-500 mt-1">📄</span>
+                      <span className="text-gray-700">{doc}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {content.where_to_open && (
+              <div className="mb-3">
+                <p className="font-semibold text-gray-800 mb-2">Where to Open:</p>
+                <ul className="space-y-1">
+                  {content.where_to_open.map((place: string, idx: number) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-purple-500 mt-1">🏦</span>
+                      <span className="text-gray-700">{place}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {content.key_characteristic && (
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                <p className="text-sm font-semibold text-blue-900">💡 Key Characteristic</p>
+                <p className="text-blue-800 mt-1">{content.key_characteristic}</p>
+              </div>
+            )}
             {content.key_fact && (
               <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
                 <p className="text-sm font-semibold text-blue-900">💡 Key Fact</p>
@@ -1036,9 +1082,48 @@ export const LessonPage = () => {
           </div>
         )
 
+      case 'comparison':
+        return (
+          <div className="space-y-3">
+            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">⚖️ {title}</h3>}
+            {content.text && <p className="text-gray-700 leading-relaxed mb-3">{content.text}</p>}
+            {content.columns && content.rows && (
+              <div className="overflow-x-auto">
+                <table className="min-w-full border-collapse border border-gray-300">
+                  <thead className="bg-blue-50">
+                    <tr>
+                      {content.columns.map((col: string, i: number) => (
+                        <th key={i} className="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-700 text-sm">
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {content.rows.map((row: string[], rowIdx: number) => (
+                      <tr key={rowIdx} className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                        {row.map((cell: string, cellIdx: number) => (
+                          <td key={cellIdx} className="border border-gray-300 px-3 py-2 text-sm text-gray-700">
+                            {cell}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {content.recommendation && (
+              <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded mt-2">
+                <p className="text-sm font-semibold text-green-900">💡 Recommendation</p>
+                <p className="text-green-800 mt-1">{content.recommendation}</p>
+              </div>
+            )}
+          </div>
+        )
+
       case 'reference_list':
       case 'procedure':
-      case 'comparison':
       case 'calculation':
       case 'timeline':
         return (
