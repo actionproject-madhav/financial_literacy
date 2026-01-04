@@ -32,27 +32,27 @@ async function testGeminiAPI() {
       })
     });
 
-    console.log('📡 Response Status:', response.status);
+    console.log(' Response Status:', response.status);
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.log('❌ Error Response:', errorText);
+      console.log(' Error Response:', errorText);
       return;
     }
 
     const data = await response.json();
-    console.log('✅ Success! Full Response:', JSON.stringify(data, null, 2));
+    console.log(' Success! Full Response:', JSON.stringify(data, null, 2));
     
     if (data.candidates && data.candidates[0] && data.candidates[0].content) {
       const aiResponse = data.candidates[0].content.parts[0].text;
-      console.log('🤖 AI Response:', aiResponse);
-      console.log('🎉 Gemini API is working perfectly!');
+      console.log(' AI Response:', aiResponse);
+      console.log(' Gemini API is working perfectly!');
     } else {
-      console.log('⚠️ Unexpected response format');
+      console.log(' Unexpected response format');
     }
 
   } catch (error) {
-    console.log('💥 Error:', error.message);
+    console.log(' Error:', error.message);
   }
 }
 

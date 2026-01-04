@@ -41,17 +41,20 @@ class VoiceService:
     SUPPORTED_LANGUAGES = ['en', 'es', 'zh', 'hi', 'ne', 'ko', 'ja', 'ar', 'fr', 'pt']
 
     def __init__(self):
-        """Initialize ElevenLabs client"""
+        """Initialize ElevenLabs client (optional - fallbacks available)"""
         from config.services import config
         
-        if not config.ELEVENLABS_API_KEY:
-            raise ValueError("ELEVENLABS_API_KEY not set in environment")
-        
-        try:
-            from elevenlabs.client import ElevenLabs
-            self.client = ElevenLabs(api_key=config.ELEVENLABS_API_KEY)
-        except ImportError:
-            raise ImportError("elevenlabs package not installed. Run: pip install elevenlabs")
+        self.client = None
+        if config.ELEVENLABS_API_KEY:
+            try:
+                from elevenlabs.client import ElevenLabs
+                self.client = ElevenLabs(api_key=config.ELEVENLABS_API_KEY)
+            except ImportError:
+                print("⚠️  elevenlabs package not installed. Will use fallback TTS services.")
+            except Exception as e:
+                print(f"⚠️  ElevenLabs initialization failed: {e}. Will use fallback TTS services.")
+        else:
+            print("⚠️  ELEVENLABS_API_KEY not set. Will use fallback TTS services.")
 
     def _decode_base64_audio(self, audio_base64: str) -> bytes:
         """
@@ -144,7 +147,7 @@ class VoiceService:
         voice: Optional[str] = None
     ) -> Optional[str]:
         """
-        Generate text-to-speech audio using ElevenLabs
+        Generate text-to-speech audio using ElevenLabs with fallbacks to Google TTS or OpenAI TTS
 
         Args:
             text: Text to convert to speech
@@ -154,39 +157,83 @@ class VoiceService:
         Returns:
             Base64 encoded audio or None on error
         """
-        try:
-            from services.elevenlabs_client import VOICE_MAP, generate_speech
-            
-            # Select voice based on language
-            if not voice:
-                voice_key = language
-                voice_id = VOICE_MAP.get(voice_key, VOICE_MAP['en'])
-            else:
-                voice_id = voice
+        # Try ElevenLabs first (if available)
+        if self.client is not None:
+            try:
+                from services.elevenlabs_client import VOICE_MAP, generate_speech
+                
+                # Select voice based on language
+                if not voice:
+                    voice_key = language
+                    voice_id = VOICE_MAP.get(voice_key, VOICE_MAP['en'])
+                else:
+                    voice_id = voice
 
-            # Generate speech using ElevenLabs
-            audio_bytes = generate_speech(
-                text=text,
-                language=language,
-                voice_gender='female'  # Default, can be made configurable
-            )
+                # Generate speech using ElevenLabs
+                audio_bytes = generate_speech(
+                    text=text,
+                    language=language,
+                    voice_gender='female'  # Default, can be made configurable
+                )
 
-            # Convert to base64
-            audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
+                # Convert to base64
+                audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
 
-            return f"data:audio/mp3;base64,{audio_base64}"
+                return f"data:audio/mp3;base64,{audio_base64}"
 
         except Exception as e:
             error_msg = str(e)
             print(f"Error generating TTS with ElevenLabs: {error_msg}")
             
             # Check for specific error types
-            if '401' in error_msg or 'unauthorized' in error_msg.lower() or 'unusual_activity' in error_msg.lower():
-                print("⚠️  ElevenLabs API blocked or unauthorized. Check API key and account status.")
+            is_blocked = '401' in error_msg or 'unauthorized' in error_msg.lower() or 'unusual_activity' in error_msg.lower() or 'blocked' in error_msg.lower()
+            if is_blocked:
+                print("⚠️  ElevenLabs API blocked. Using fallback TTS service...")
             elif 'quota' in error_msg.lower() or 'limit' in error_msg.lower():
-                print("⚠️  ElevenLabs quota exceeded. Consider upgrading plan or using fallback TTS.")
+                print("⚠️  ElevenLabs quota exceeded. Using fallback TTS service...")
             
-            # Return None to allow fallback handling
+            # Fallback to Google TTS
+            try:
+                from services import google_tts_client
+                if google_tts_client.tts_client:
+                    print(f"  🔄 Trying Google TTS for {language}...")
+                    audio_bytes = google_tts_client.generate_speech(text, language)
+                    audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
+                    print(f"  ✅ Google TTS success for {language}")
+                    return f"data:audio/mp3;base64,{audio_base64}"
+            except Exception as e2:
+                print(f"  ⚠️  Google TTS failed: {e2}")
+            
+            # Fallback to OpenAI TTS
+            try:
+                from config.services import config
+                from openai import OpenAI
+                if config.OPENAI_API_KEY:
+                    print(f"  🔄 Trying OpenAI TTS for {language}...")
+                    client = OpenAI(api_key=config.OPENAI_API_KEY)
+                    
+                    # Map language to OpenAI voice (OpenAI has limited voices)
+                    # OpenAI supports: alloy, echo, fable, onyx, nova, shimmer
+                    # For non-English, we'll use a multilingual voice
+                    voice_map = {
+                        'en': 'alloy',
+                        'es': 'nova',  # Good for Spanish
+                        'ne': 'nova',  # Try nova for Nepali
+                    }
+                    openai_voice = voice_map.get(language, 'alloy')
+                    
+                    response = client.audio.speech.create(
+                        model="tts-1",  # tts-1 (cheapest) - note: limited language support
+                        voice=voice or openai_voice,
+                        input=text
+                    )
+                    audio_base64 = base64.b64encode(response.content).decode('utf-8')
+                    print(f"  ✅ OpenAI TTS success for {language}")
+                    return f"data:audio/mp3;base64,{audio_base64}"
+            except Exception as e3:
+                print(f"  ⚠️  OpenAI TTS failed: {e3}")
+            
+            print(f"  ❌ All TTS services failed for {language}")
             return None
 
     def analyze_audio_confidence(self, audio_base64: str) -> Dict:
