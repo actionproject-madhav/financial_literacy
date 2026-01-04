@@ -697,6 +697,152 @@ def get_lesson_questions(kc_id):
         return jsonify({'error': str(e)}), 500
 
 
+@curriculum_bp.route('/lessons/<lesson_id>/steps', methods=['GET'])
+def get_lesson_steps(lesson_id):
+    """
+    Get interleaved content and quiz steps for a lesson
+    
+    Returns content blocks and questions in an optimal learning sequence:
+    content → quiz → content → quiz
+    
+    Query params:
+    - learner_id: optional, for personalized question selection
+    
+    Response:
+    {
+        "lesson": {
+            "id": "us-currency",
+            "title": "US Currency and Money Basics",
+            "description": "...",
+            "xp_reward": 12,
+            "estimated_minutes": 10
+        },
+        "steps": [
+            {
+                "type": "content",
+                "block_type": "concept",
+                "title": "...",
+                "content": {...}
+            },
+            {
+                "type": "quiz",
+                "item_id": "...",
+                "question": "...",
+                "choices": [...],
+                "correct_answer": 0,
+                "explanation": "...",
+                "kc_id": "..."
+            }
+        ],
+        "total_steps": 10,
+        "total_xp": 12
+    }
+    """
+    try:
+        db = get_db()
+        learner_id = request.args.get('learner_id')
+        
+        # Find lesson by lesson_id (skill_slug)
+        lesson = db.collections.curriculum_lessons.find_one({'lesson_id': lesson_id})
+        
+        if not lesson:
+            return jsonify({'error': 'Lesson not found'}), 404
+        
+        # Get content blocks
+        content_blocks = lesson.get('content_blocks', [])
+        
+        # Get questions
+        question_ids = lesson.get('questions', [])
+        questions = []
+        
+        if question_ids:
+            # Convert string IDs to ObjectIds
+            question_oids = [ObjectId(qid) for qid in question_ids if ObjectId.is_valid(qid)]
+            
+            # Fetch questions from database
+            questions_cursor = db.collections.learning_items.find({
+                '_id': {'$in': question_oids},
+                'is_active': True
+            })
+            questions = list(questions_cursor)
+        
+        # Interleave content and questions
+        steps = []
+        
+        # Strategy: content → quiz → content → quiz
+        # If we have more content than questions, group content blocks
+        num_content = len(content_blocks)
+        num_questions = len(questions)
+        
+        if num_content == 0 and num_questions == 0:
+            return jsonify({'error': 'Lesson has no content or questions'}), 404
+        
+        # Simple interleaving: alternate between content and quiz
+        content_idx = 0
+        question_idx = 0
+        
+        # Start with content if available
+        while content_idx < num_content or question_idx < num_questions:
+            # Add content block(s)
+            if content_idx < num_content:
+                block = content_blocks[content_idx]
+                steps.append({
+                    'type': 'content',
+                    'block_type': block.get('type', 'concept'),
+                    'title': block.get('title', ''),
+                    'content': block.get('content', {})
+                })
+                content_idx += 1
+            
+            # Add quiz question
+            if question_idx < num_questions:
+                q = questions[question_idx]
+                
+                # Get KC mapping for this question
+                kc_mapping = db.db.item_kc_mappings.find_one({'item_id': q['_id']})
+                kc_id = str(kc_mapping['kc_id']) if kc_mapping else None
+                
+                # Extract question data properly
+                question_text = q.get('stem', '')
+                choices = q.get('choices', [])
+                
+                # Handle both list and dict formats for choices
+                if isinstance(choices, dict):
+                    # Convert dict to list (sorted by key)
+                    choices = [choices.get(str(i), '') for i in range(len(choices))]
+                
+                steps.append({
+                    'type': 'quiz',
+                    'item_id': str(q['_id']),
+                    'question': question_text,
+                    'choices': choices,
+                    'correct_answer': q.get('correct_answer', 0),
+                    'explanation': q.get('explanation', ''),
+                    'kc_id': kc_id
+                })
+                question_idx += 1
+        
+        # Calculate XP reward
+        xp_reward = lesson.get('xp_reward', len(questions) * 2)  # 2 XP per question
+        
+        return jsonify({
+            'lesson': {
+                'id': lesson_id,
+                'title': lesson.get('title', ''),
+                'description': lesson.get('description', ''),
+                'xp_reward': xp_reward,
+                'estimated_minutes': lesson.get('estimated_minutes', 10)
+            },
+            'steps': steps,
+            'total_steps': len(steps),
+            'total_xp': xp_reward
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error getting lesson steps: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
 @curriculum_bp.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""

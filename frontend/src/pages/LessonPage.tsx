@@ -16,7 +16,21 @@ interface StepBase {
 
 interface ContentStep extends StepBase {
   type: 'content';
-  content: string;
+  content: string | {
+    // For rich content blocks
+    text?: string;
+    key_fact?: string;
+    // For tables
+    columns?: string[];
+    rows?: string[][];
+    note?: string;
+    // For media (future)
+    image_url?: string;
+    video_url?: string;
+    animation_url?: string;
+  };
+  block_type?: string; // 'concept', 'reference_table', 'example', 'tip', 'warning'
+  title?: string;
 }
 
 interface QuizStep extends StepBase {
@@ -238,33 +252,38 @@ export const LessonPage = () => {
 
       try {
         setLoading(true)
-        const response = await curriculumApi.getLessonQuestions(lessonId, learnerId || undefined)
+        const response = await curriculumApi.getLessonSteps(lessonId, learnerId || undefined)
 
-        setLesson(response.lesson)
+        setLesson({
+          id: response.lesson.id,
+          title: response.lesson.title,
+          description: response.lesson.description,
+          domain: lessonId, // Use lessonId as domain for now
+          order: 1,
+          status: 'available',
+          xpReward: response.lesson.xp_reward
+        } as any)
 
-        // Convert database items to steps (both content and quiz)
-        const steps: Step[] = response.questions.map((q: any) => {
-          // Handle content items
-          if (q.item_type === 'content') {
-            // Content items can have content as string or object
-            const contentText = typeof q.content === 'string'
-              ? q.content
-              : (q.content?.text || q.content?.content || '')
+        // Convert API steps to component steps
+        const steps: Step[] = response.steps.map((step: any) => {
+          if (step.type === 'content') {
             return {
               type: 'content' as const,
-              content: contentText
+              content: step.content,
+              block_type: step.block_type,
+              title: step.title
             }
           }
 
-          // Handle quiz/multiple_choice items
+          // Quiz step
           return {
             type: 'quiz' as const,
-            question: q.content.stem,
-            options: q.content.choices || [],
-            correct: q.content.correct_answer,
-            explanation: q.content.explanation || '',
-            itemId: q.id,
-            kcId: lessonId
+            question: step.question,
+            options: step.choices || [],
+            correct: step.correct_answer,
+            explanation: step.explanation || '',
+            itemId: step.item_id,
+            kcId: step.kc_id || lessonId
           }
         })
 
@@ -901,14 +920,111 @@ export const LessonPage = () => {
     }
   }
 
-  const renderContent = (text: string) => {
-    return text.split('\n').map((line, i) => {
-      if (line.startsWith('# ')) return <h1 key={i} className="text-xl font-bold mb-2">{line.replace('# ', '')}</h1>
-      if (line.startsWith('## ')) return <h2 key={i} className="text-lg font-bold mb-2 mt-2">{line.replace('## ', '')}</h2>
-      if (line.startsWith('- ')) return <li key={i} className="ml-4 mb-1">{line.replace('- ', '')}</li>
-      if (line.trim() === '') return <br key={i} />
-      return <p key={i} className="mb-2 text-gray-700 leading-relaxed">{line}</p>
-    })
+  const renderContent = (contentData: string | any, blockType?: string, title?: string) => {
+    // If it's a string (old format or explanation), render as markdown
+    if (typeof contentData === 'string') {
+      return contentData.split('\n').map((line, i) => {
+        if (line.startsWith('# ')) return <h1 key={i} className="text-xl font-bold mb-2">{line.replace('# ', '')}</h1>
+        if (line.startsWith('## ')) return <h2 key={i} className="text-lg font-bold mb-2 mt-2">{line.replace('## ', '')}</h2>
+        if (line.startsWith('- ')) return <li key={i} className="ml-4 mb-1">{line.replace('- ', '')}</li>
+        if (line.trim() === '') return <br key={i} />
+        return <p key={i} className="mb-2 text-gray-700 leading-relaxed">{line}</p>
+      })
+    }
+
+    // Rich content block rendering
+    const content = contentData
+
+    // Render based on block type
+    switch (blockType) {
+      case 'concept':
+        return (
+          <div className="space-y-3">
+            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">📚 {title}</h3>}
+            {content.text && <p className="text-gray-700 leading-relaxed">{content.text}</p>}
+            {content.key_fact && (
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                <p className="text-sm font-semibold text-blue-900">💡 Key Fact</p>
+                <p className="text-blue-800 mt-1">{content.key_fact}</p>
+              </div>
+            )}
+            {content.image_url && <img src={content.image_url} alt={title} className="rounded-lg mt-3 max-w-full" />}
+          </div>
+        )
+
+      case 'reference_table':
+        return (
+          <div className="space-y-3">
+            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">📊 {title}</h3>}
+            {content.columns && content.rows && (
+              <div className="overflow-x-auto">
+                <table className="min-w-full border-collapse border border-gray-300">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      {content.columns.map((col: string, i: number) => (
+                        <th key={i} className="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-700 text-sm">
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {content.rows.map((row: string[], rowIdx: number) => (
+                      <tr key={rowIdx} className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                        {row.map((cell: string, cellIdx: number) => (
+                          <td key={cellIdx} className="border border-gray-300 px-3 py-2 text-sm text-gray-700">
+                            {cell}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {content.note && (
+              <p className="text-xs text-gray-500 italic mt-2">Note: {content.note}</p>
+            )}
+          </div>
+        )
+
+      case 'example':
+        return (
+          <div className="space-y-3">
+            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">💼 {title}</h3>}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              {content.text && <p className="text-gray-700 leading-relaxed">{content.text}</p>}
+            </div>
+          </div>
+        )
+
+      case 'tip':
+        return (
+          <div className="space-y-3">
+            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">💡 {title}</h3>}
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+              {content.text && <p className="text-gray-700 leading-relaxed">{content.text}</p>}
+            </div>
+          </div>
+        )
+
+      case 'warning':
+        return (
+          <div className="space-y-3">
+            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">⚠️ {title}</h3>}
+            <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded">
+              {content.text && <p className="text-gray-700 leading-relaxed font-medium">{content.text}</p>}
+            </div>
+          </div>
+        )
+
+      default:
+        // Fallback for unknown types
+        if (content.text) {
+          return <p className="text-gray-700 leading-relaxed">{content.text}</p>
+        }
+        return <p className="text-gray-700 leading-relaxed">{JSON.stringify(content)}</p>
+    }
   }
 
   const handleCelebrationComplete = () => {
@@ -997,7 +1113,7 @@ export const LessonPage = () => {
                       <div className="absolute top-[-14px] left-1/2 -translate-x-1/2 sm:top-8 sm:left-[-14px] sm:translate-x-0 w-6 h-6 bg-white border-t-2 border-l-2 border-gray-200 transform rotate-45 sm:-rotate-45"></div>
                       {currentStepData.type === 'content' ? (
                         <div className="prose max-w-none text-base">
-                          {renderContent(currentStepData.content || '')}
+                          {renderContent(currentStepData.content || '', currentStepData.block_type, currentStepData.title)}
                         </div>
                       ) : (
                         <div className="flex items-start justify-between gap-3">
