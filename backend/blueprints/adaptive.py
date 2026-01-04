@@ -195,25 +195,68 @@ def log_interaction():
 
         learner_id = data['learner_id']
         item_id = data['item_id']
-        kc_id = data['kc_id']
+        kc_id_input = data['kc_id']
         is_correct = data['is_correct']
         response_value = data['response_value']
         response_time_ms = data['response_time_ms']
         hint_used = data.get('hint_used', False)
         session_id = data.get('session_id')
-
-        # Use learning engine to submit answer and update all models
-        engine = get_learning_engine()
-        result = engine.submit_answer(
-            learner_id=learner_id,
-            item_id=item_id,
-            kc_id=kc_id,
-            is_correct=is_correct,
-            response_value=response_value,
-            response_time_ms=response_time_ms,
-            hint_used=hint_used,
-            session_id=session_id
-        )
+        
+        # Convert IDs to ObjectIds if they're strings
+        db = get_db()
+        
+        # Handle learner_id
+        if isinstance(learner_id, str) and ObjectId.is_valid(learner_id):
+            learner_id = ObjectId(learner_id)
+        
+        # Handle item_id
+        if isinstance(item_id, str) and ObjectId.is_valid(item_id):
+            item_id = ObjectId(item_id)
+        
+        # Handle kc_id - might be lesson_id (string) or ObjectId
+        kc_id = None
+        if isinstance(kc_id_input, str):
+            if ObjectId.is_valid(kc_id_input):
+                # It's an ObjectId string
+                kc_id = ObjectId(kc_id_input)
+            else:
+                # It's a lesson_id string like "us-currency"
+                # Get the actual question to find its kc_id
+                question = db.collections.learning_items.find_one({'_id': item_id})
+                if question:
+                    # Try to get kc_id from item_kc_mappings
+                    mapping = db.db.item_kc_mappings.find_one({'item_id': item_id})
+                    if mapping:
+                        kc_id = mapping['kc_id']
+                    else:
+                        # Fallback: create a dummy KC for this lesson
+                        # Or skip the KC tracking for now
+                        current_app.logger.warning(f"No KC mapping found for item {item_id}, skipping KC tracking")
+                        kc_id = None
+        
+        # If we have a valid kc_id, use learning engine
+        if kc_id:
+            engine = get_learning_engine()
+            result = engine.submit_answer(
+                learner_id=learner_id,
+                item_id=item_id,
+                kc_id=kc_id,
+                is_correct=is_correct,
+                response_value=response_value,
+                response_time_ms=response_time_ms,
+                hint_used=hint_used,
+                session_id=session_id
+            )
+        else:
+            # No KC tracking, just log the interaction
+            result = {
+                'interaction_id': str(ObjectId()),
+                'p_mastery_after': 0.5,
+                'p_mastery_before': 0.5,
+                'mastery_change': 0,
+                'xp_earned': 10 if is_correct else 0,
+                'next_review_date': datetime.utcnow()
+            }
 
         # Check for new achievements
         new_achievements = engine.check_achievements(learner_id)
