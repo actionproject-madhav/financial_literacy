@@ -927,12 +927,12 @@ export const LessonPage = () => {
     // If it's a string (old format or explanation), render as markdown
     if (typeof contentData === 'string') {
       return contentData.split('\n').map((line, i) => {
-        if (line.startsWith('# ')) return <h1 key={i} className="text-xl font-bold mb-2">{line.replace('# ', '')}</h1>
-        if (line.startsWith('## ')) return <h2 key={i} className="text-lg font-bold mb-2 mt-2">{line.replace('## ', '')}</h2>
-        if (line.startsWith('- ')) return <li key={i} className="ml-4 mb-1">{line.replace('- ', '')}</li>
-        if (line.trim() === '') return <br key={i} />
-        return <p key={i} className="mb-2 text-gray-700 leading-relaxed">{line}</p>
-      })
+      if (line.startsWith('# ')) return <h1 key={i} className="text-xl font-bold mb-2">{line.replace('# ', '')}</h1>
+      if (line.startsWith('## ')) return <h2 key={i} className="text-lg font-bold mb-2 mt-2">{line.replace('## ', '')}</h2>
+      if (line.startsWith('- ')) return <li key={i} className="ml-4 mb-1">{line.replace('- ', '')}</li>
+      if (line.trim() === '') return <br key={i} />
+      return <p key={i} className="mb-2 text-gray-700 leading-relaxed">{line}</p>
+    })
     }
 
     // Rich content block rendering
@@ -943,58 +943,53 @@ export const LessonPage = () => {
       case 'concept':
         return (
           <div className="space-y-3">
-            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">📚 {title}</h3>}
+            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>}
             {content.definition && <p className="text-gray-700 leading-relaxed mb-3">{content.definition}</p>}
             {content.text && <p className="text-gray-700 leading-relaxed mb-3">{content.text}</p>}
-            {content.primary_uses && (
-              <div className="mb-3">
-                <p className="font-semibold text-gray-800 mb-2">Primary Uses:</p>
-                <ul className="space-y-1">
-                  {content.primary_uses.map((use: string, idx: number) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <span className="text-green-500 mt-1">✓</span>
-                      <span className="text-gray-700">{use}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {content.required_documents && (
-              <div className="mb-3">
-                <p className="font-semibold text-gray-800 mb-2">Required Documents:</p>
-                <ul className="space-y-1">
-                  {content.required_documents.map((doc: string, idx: number) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <span className="text-blue-500 mt-1">📄</span>
-                      <span className="text-gray-700">{doc}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {content.where_to_open && (
-              <div className="mb-3">
-                <p className="font-semibold text-gray-800 mb-2">Where to Open:</p>
-                <ul className="space-y-1">
-                  {content.where_to_open.map((place: string, idx: number) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <span className="text-purple-500 mt-1">🏦</span>
-                      <span className="text-gray-700">{place}</span>
-                    </li>
-                  ))}
-                </ul>
+            {content.explanation && <p className="text-gray-700 leading-relaxed mb-3">{content.explanation}</p>}
+            
+            {/* Render all array fields dynamically */}
+            {Object.entries(content).map(([key, value]) => {
+              if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
+                const label = key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+                return (
+                  <div key={key} className="mb-3">
+                    <p className="font-semibold text-gray-800 mb-2">{label}:</p>
+                    <ul className="space-y-1 list-disc list-inside">
+                      {value.map((item: string, idx: number) => (
+                        <li key={idx} className="text-gray-700">
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              }
+              return null
+            })}
+            
+            {content.key_distinction && (
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                <p className="text-sm font-semibold text-blue-900">Key Distinction</p>
+                <p className="text-blue-800 mt-1">{content.key_distinction}</p>
               </div>
             )}
             {content.key_characteristic && (
               <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
-                <p className="text-sm font-semibold text-blue-900">💡 Key Characteristic</p>
+                <p className="text-sm font-semibold text-blue-900">Key Characteristic</p>
                 <p className="text-blue-800 mt-1">{content.key_characteristic}</p>
               </div>
             )}
             {content.key_fact && (
               <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
-                <p className="text-sm font-semibold text-blue-900">💡 Key Fact</p>
+                <p className="text-sm font-semibold text-blue-900">Key Fact</p>
                 <p className="text-blue-800 mt-1">{content.key_fact}</p>
+              </div>
+            )}
+            {content.clarification && (
+              <div className="bg-gray-50 border-l-4 border-gray-400 p-3 rounded">
+                <p className="text-sm font-semibold text-gray-900">Note</p>
+                <p className="text-gray-800 mt-1">{content.clarification}</p>
               </div>
             )}
             {content.image_url && <img src={content.image_url} alt={title} className="rounded-lg mt-3 max-w-full" />}
@@ -1004,7 +999,7 @@ export const LessonPage = () => {
       case 'reference_table':
         return (
           <div className="space-y-3">
-            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">📊 {title}</h3>}
+            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>}
             {content.columns && content.rows && (
               <div className="overflow-x-auto">
                 <table className="min-w-full border-collapse border border-gray-300">
@@ -1040,7 +1035,7 @@ export const LessonPage = () => {
       case 'example':
         return (
           <div className="space-y-3">
-            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">💼 {title}</h3>}
+            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>}
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               {content.text && <p className="text-gray-700 leading-relaxed">{content.text}</p>}
             </div>
@@ -1050,7 +1045,7 @@ export const LessonPage = () => {
       case 'tip':
         return (
           <div className="space-y-3">
-            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">💡 {title}</h3>}
+            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>}
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
               {content.text && <p className="text-gray-700 leading-relaxed">{content.text}</p>}
             </div>
@@ -1060,7 +1055,7 @@ export const LessonPage = () => {
       case 'warning':
         return (
           <div className="space-y-3">
-            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">⚠️ {title}</h3>}
+            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>}
             <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded">
               {content.text && <p className="text-gray-700 leading-relaxed font-medium">{content.text}</p>}
             </div>
@@ -1070,7 +1065,7 @@ export const LessonPage = () => {
       case 'definitions':
         return (
           <div className="space-y-3">
-            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">📖 {title}</h3>}
+            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>}
             <div className="space-y-3">
               {content.terms && content.terms.map((item: any, idx: number) => (
                 <div key={idx} className="bg-gray-50 border-l-4 border-blue-400 p-3 rounded">
@@ -1085,7 +1080,7 @@ export const LessonPage = () => {
       case 'comparison':
         return (
           <div className="space-y-3">
-            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">⚖️ {title}</h3>}
+            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>}
             {content.text && <p className="text-gray-700 leading-relaxed mb-3">{content.text}</p>}
             {content.columns && content.rows && (
               <div className="overflow-x-auto">
@@ -1115,7 +1110,7 @@ export const LessonPage = () => {
             )}
             {content.recommendation && (
               <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded mt-2">
-                <p className="text-sm font-semibold text-green-900">💡 Recommendation</p>
+                <p className="text-sm font-semibold text-green-900">Recommendation</p>
                 <p className="text-green-800 mt-1">{content.recommendation}</p>
               </div>
             )}
@@ -1128,28 +1123,42 @@ export const LessonPage = () => {
       case 'timeline':
         return (
           <div className="space-y-3">
-            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">📋 {title}</h3>}
+            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>}
             {content.text && <p className="text-gray-700 leading-relaxed mb-3">{content.text}</p>}
             {content.definition && <p className="text-gray-700 leading-relaxed mb-3">{content.definition}</p>}
-            {content.items && (
-              <ul className="space-y-2">
-                {content.items.map((item: string, idx: number) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="text-blue-500 mt-1">•</span>
-                    <span className="text-gray-700">{item}</span>
-                  </li>
+            
+            {/* Render all array fields dynamically */}
+            {Object.entries(content).map(([key, value]) => {
+              if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
+                const label = key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+                return (
+                  <div key={key} className="mb-3">
+                    {label !== 'Items' && label !== 'Steps' && (
+                      <p className="font-semibold text-gray-800 mb-2">{label}:</p>
+                    )}
+                    <ol className="space-y-2 list-decimal list-inside">
+                      {value.map((item: string, idx: number) => (
+                        <li key={idx} className="text-gray-700">
+                          {item}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )
+              }
+              return null
+            })}
+            
+            {/* Handle liability object */}
+            {content.liability && typeof content.liability === 'object' && (
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded mt-3">
+                <p className="font-semibold text-gray-900 mb-2">Liability Protection:</p>
+                {Object.entries(content.liability).map(([key, value]) => (
+                  <p key={key} className="text-sm text-gray-700 mb-1">
+                    <span className="font-medium">{key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}:</span> {value as string}
+                  </p>
                 ))}
-              </ul>
-            )}
-            {content.steps && (
-              <ol className="space-y-2">
-                {content.steps.map((step: string, idx: number) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="font-semibold text-blue-600">{idx + 1}.</span>
-                    <span className="text-gray-700">{step}</span>
-                  </li>
-                ))}
-              </ol>
+              </div>
             )}
           </div>
         )

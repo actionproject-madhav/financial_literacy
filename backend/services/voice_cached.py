@@ -106,12 +106,12 @@ class CachedVoiceService:
                 else:
                     # Fallback: try get_translation_for_text
                     translated_text = translation_service.get_translation_for_text(
-                        item_id=str(item_id_obj),
-                        text=choice_text,
-                        language=language
-                    )
-                    if translated_text:
-                        choice_text = translated_text
+                    item_id=str(item_id_obj),
+                    text=choice_text,
+                    language=language
+                )
+                if translated_text:
+                    choice_text = translated_text
                         print(f"✅ Translated choice {choice_index} to {language}: {choice_text[:50]}...")
                     else:
                         print(f"⚠️  No translation found for choice {choice_index} in {language}, using English text")
@@ -191,11 +191,11 @@ class CachedVoiceService:
                 
                 if not translated_text:
                     # Fallback: try get_translation_for_text
-                    translated_text = translation_service.get_translation_for_text(
-                        item_id=str(item_id_obj),
-                        text=text,
-                        language=language
-                    )
+                translated_text = translation_service.get_translation_for_text(
+                    item_id=str(item_id_obj),
+                    text=text,
+                    language=language
+                )
                 
                 if translated_text:
                     text = translated_text
@@ -316,11 +316,11 @@ class CachedVoiceService:
                             
                             # If not in cache, try get_translation_for_text as fallback
                             if not translated_text:
-                                translated_text = translation_service.get_translation_for_text(
-                                    item_id=str(item_id_obj),
-                                    text=stem_text,
-                                    language=lang
-                                )
+                            translated_text = translation_service.get_translation_for_text(
+                                item_id=str(item_id_obj),
+                                text=stem_text,
+                                language=lang
+                            )
                             
                             if translated_text:
                                 text_to_speak = translated_text
@@ -333,9 +333,9 @@ class CachedVoiceService:
                                     language=lang,
                                     field='stem'
                                 )
-                                if translated_text:
-                                    text_to_speak = translated_text
-                                    print(f"   ✅ Translated to {lang}: {text_to_speak[:50]}...")
+                            if translated_text:
+                                text_to_speak = translated_text
+                                print(f"   ✅ Translated to {lang}: {text_to_speak[:50]}...")
                         except Exception as e:
                             print(f"   ⚠️  Translation failed for {lang}, using original text: {e}")
                             print(f"   ❌ ERROR: Cannot generate {lang} TTS without translation!")
@@ -377,12 +377,12 @@ class CachedVoiceService:
                             else:
                                 # Fallback: try individual translation
                                 translated_text = translation_service.get_translation_for_text(
-                                    item_id=str(item_id_obj),
-                                    text=choice_text,
-                                    language=lang
-                                )
-                                if translated_text:
-                                    text_to_speak = translated_text
+                                item_id=str(item_id_obj),
+                                text=choice_text,
+                                language=lang
+                            )
+                            if translated_text:
+                                text_to_speak = translated_text
                                     print(f"   ✅ Translated choice {choice_idx} to {lang}: {text_to_speak[:50]}...")
                                 else:
                                     print(f"   ⚠️  No translation found for choice {choice_idx} in {lang}, translating now...")

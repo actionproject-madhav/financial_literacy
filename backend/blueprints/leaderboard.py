@@ -503,6 +503,49 @@ def get_my_league(learner_id):
                 'profile_image': avatar_url,  # Combined field for easy frontend use
                 'is_current_user': lid == learner_id
             })
+        
+        # If there are fewer than 5 users in current league, include nearby leagues
+        if len(league_rankings) < 5:
+            current_league_index = next((i for i, l in enumerate(LEAGUES) if l['id'] == current_league['id']), 0)
+            included_leagues = [current_league['id']]
+            
+            # Include league below (if exists)
+            if current_league_index > 0:
+                included_leagues.append(LEAGUES[current_league_index - 1]['id'])
+            # Include league above (if exists)
+            if current_league_index < len(LEAGUES) - 1:
+                included_leagues.append(LEAGUES[current_league_index + 1]['id'])
+            
+            # Rebuild rankings with nearby leagues
+            league_rankings = []
+            for learner_obj in all_learners:
+                lid = str(learner_obj['_id'])
+                l_xp = learner_obj.get('total_xp', 0)
+                l_league = get_league_for_xp(l_xp)
+
+                if l_league['id'] not in included_leagues:
+                    continue
+
+                learner_info = learner_info_map.get(lid, {})
+                display_name = learner_info.get('display_name', 'Anonymous')
+                weekly_xp = weekly_xp_map.get(lid, 0)
+                
+                # Get profile picture (prefer avatar_url, fallback to profile_picture_url)
+                avatar_url = learner_info.get('avatar_url') or learner_info.get('profile_picture_url') or ''
+
+                league_rankings.append({
+                    'learner_id': lid,
+                    'display_name': display_name,
+                    'initials': get_user_initials(display_name),
+                    'weekly_xp': weekly_xp,
+                    'total_xp': l_xp,
+                    'streak': learner_info.get('streak_count', 0),
+                    'profile_picture_url': learner_info.get('profile_picture_url', ''),
+                    'avatar_url': learner_info.get('avatar_url', ''),
+                    'profile_image': avatar_url,
+                    'league': l_league,  # Include league info for nearby leagues
+                    'is_current_user': lid == learner_id
+                })
 
         # Sort by weekly XP and assign ranks
         league_rankings.sort(key=lambda x: x['weekly_xp'], reverse=True)
@@ -537,7 +580,26 @@ def get_my_league(learner_id):
             }
             league_rankings.append(my_ranking)
 
-        promotion_zone = my_rank <= 10 and len(league_rankings) >= 10
+        # Calculate promotion zone (only for users in current league)
+        # Filter to only current league users for promotion zone calculation
+        current_league_user_rankings = []
+        for r in league_rankings:
+            # If league field exists, check it; otherwise assume current league (from original logic)
+            r_league_id = r.get('league', {}).get('id') if 'league' in r else current_league['id']
+            if r_league_id == current_league['id']:
+                current_league_user_rankings.append(r)
+        
+        # Sort current league users by weekly XP
+        current_league_user_rankings.sort(key=lambda x: x['weekly_xp'], reverse=True)
+        
+        # Find user's rank within current league only
+        my_rank_in_current_league = None
+        for i, r in enumerate(current_league_user_rankings):
+            if r.get('is_current_user') or r.get('learner_id') == learner_id:
+                my_rank_in_current_league = i + 1
+                break
+        
+        promotion_zone = my_rank_in_current_league is not None and my_rank_in_current_league <= 10 and len(current_league_user_rankings) >= 10
 
         # Ensure we always return at least the current user
         if not league_rankings:
@@ -552,7 +614,7 @@ def get_my_league(learner_id):
             'time_remaining': get_time_remaining(),
             'week_start': week_start.isoformat() + 'Z',
             'week_end': week_end.isoformat() + 'Z',
-            'total_participants': max(1, len(league_rankings))
+            'total_participants': max(1, len(current_league_user_rankings))  # Count only current league users
         }), 200
 
     except Exception as e:

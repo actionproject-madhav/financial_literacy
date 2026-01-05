@@ -197,8 +197,11 @@ export const LeaderboardPage: React.FC = () => {
             <h1 className="text-2xl font-extrabold text-gray-800 tracking-tight mb-2">
               {currentLeague.name} League
             </h1>
-            <p className="text-gray-500 font-medium">
-              Top 10 advance to the next league
+            <p className="text-gray-500 font-medium mb-1">
+              Weekly Leaderboard · Top 10 advance to the next league
+            </p>
+            <p className="text-gray-400 text-sm font-medium">
+              XP resets every Monday
             </p>
             <div className="mt-3 px-4 py-1.5 bg-white border border-yellow-400 text-yellow-600 rounded-xl text-sm font-bold uppercase tracking-wider shadow-sm flex items-center gap-2">
               <svg viewBox="0 0 24 24" className="w-4 h-4 text-orange-400" fill="currentColor">
@@ -272,7 +275,7 @@ export const LeaderboardPage: React.FC = () => {
                       {entry.display_name} {isCurrentUser && <span className="text-gray-400 text-sm font-medium ml-2">(You)</span>}
                     </div>
 
-                    {/* XP */}
+                    {/* Weekly XP */}
                     <div className="text-gray-600 font-bold text-sm">
                       {entry.weekly_xp} XP
                     </div>

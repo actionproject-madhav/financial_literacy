@@ -73,7 +73,8 @@ export const Sidebar = ({ onCoachClick }: SidebarProps) => {
               key={item.path}
               to={item.path}
               className={cn(
-                "flex items-center gap-4 px-4 py-2 rounded-xl transition-all duration-200 group uppercase tracking-widest text-sm font-bold border-2",
+                "flex items-center gap-4 px-4 py-2 rounded-xl group uppercase tracking-widest text-sm font-bold border-2",
+                "transition-[background-color,color,border-color] duration-200 ease-out",
                 isActive
                   ? "bg-sky-100 text-sky-500 border-sky-300"
                   : "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-900 border-transparent"

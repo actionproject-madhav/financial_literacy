@@ -102,7 +102,7 @@ def pre_generate_all():
     except ValueError as e:
         # Only fail if no TTS service at all is available
         if not (has_openai or has_google_tts):
-            print(f"❌ Failed to initialize VoiceService: {e}")
+        print(f"❌ Failed to initialize VoiceService: {e}")
             print("   Make sure at least one TTS service is configured")
             return
         else:
@@ -115,7 +115,7 @@ def pre_generate_all():
                 cached_voice = CachedVoiceService(voice_service)
             except Exception:
                 print("❌ Failed to initialize any TTS service")
-                return
+        return
     
     # Simple translation client wrapper
     class SimpleTranslateClient:

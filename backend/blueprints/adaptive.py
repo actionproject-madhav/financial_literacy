@@ -201,7 +201,7 @@ def log_interaction():
         response_time_ms = data['response_time_ms']
         hint_used = data.get('hint_used', False)
         session_id = data.get('session_id')
-        
+
         # Convert IDs to ObjectIds if they're strings
         db = get_db()
         
