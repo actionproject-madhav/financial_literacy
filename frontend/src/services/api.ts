@@ -255,7 +255,7 @@ export const adaptiveApi = {
     fetchApi<any[]>(`/api/adaptive/achievements/${learnerId}`),
 
   getAvailableAchievements: (learnerId: string) =>
-    fetchApi<any[]>(`/api/adaptive/achievements/${learnerId}/avail`),
+    fetchApi<any[]>(`/api/adaptive/achievements/${learnerId}/available`),
 
   checkAchievements: (learnerId: string) =>
     fetchApi<any[]>('/api/adaptive/achievements/check', {
@@ -643,6 +643,9 @@ export const curriculumApi = {
         description: string;
         xp_reward: number;
         estimated_minutes: number;
+        domain: string;
+        module_id?: string;
+        _id?: string;
       };
       steps: Array<{
         type: 'content' | 'quiz';
