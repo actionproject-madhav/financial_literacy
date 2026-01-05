@@ -73,19 +73,35 @@ export const Sidebar = ({ onCoachClick }: SidebarProps) => {
               key={item.path}
               to={item.path}
               className={cn(
-                "flex items-center gap-4 px-4 py-2 rounded-xl group uppercase tracking-widest text-sm font-bold border-2",
-                "transition-[background-color,color,border-color] duration-200 ease-out",
+                "relative flex items-center gap-4 px-4 py-2 rounded-xl group uppercase tracking-widest text-sm font-bold",
+                "outline-none focus:outline-none focus-visible:outline-none no-underline",
+                "transition-colors duration-150 ease-out",
+                "select-none",
                 isActive
-                  ? "bg-sky-100 text-sky-500 border-sky-300"
-                  : "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-900 border-transparent"
+                  ? "bg-sky-100 text-sky-500 border-2 border-sky-300"
+                  : "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-900"
               )}
+              onMouseDown={(e) => {
+                // Prevent focus on mouse down to avoid blinking
+                if (e.button === 0) {
+                  e.preventDefault();
+                }
+              }}
+              style={{ 
+                transform: 'translateZ(0)',
+                WebkitBackfaceVisibility: 'hidden',
+                backfaceVisibility: 'hidden',
+                WebkitTapHighlightColor: 'transparent',
+                touchAction: 'manipulation'
+              }}
             >
               <img
                 src={item.icon}
                 alt={item.label}
-                className="w-8 h-8 object-contain"
+                className="w-8 h-8 object-contain pointer-events-none select-none"
+                draggable="false"
               />
-              <span>{item.label}</span>
+              <span className="select-none">{item.label}</span>
             </Link>
           )
         })}
