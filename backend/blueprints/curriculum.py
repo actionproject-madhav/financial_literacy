@@ -296,41 +296,63 @@ def get_course_lessons(domain):
             'order': 99
         })
 
-        # Get all KCs for this domain
-        kcs = list(db.collections.knowledge_components.find({
-            'domain': domain,
+        # NEW: Use curriculum_modules and curriculum_lessons instead of KCs
+        # Map domain to module_id
+        domain_to_module = {
+            'banking': 'banking-fundamentals',
+            'credit': 'credit-fundamentals',
+            'money-management': 'money-management',
+            'taxes': 'taxes',
+            'investing': 'investing-basics',
+            'retirement': 'retirement-planning',
+            'insurance': 'insurance',
+            'consumer-protection': 'consumer-protection',
+            'major-purchases': 'major-purchases',
+            'crypto': 'crypto-basics',
+            'cryptocurrency': 'crypto-basics',
+            'financial-planning': 'financial-planning'
+        }
+        
+        module_id = domain_to_module.get(domain)
+        if not module_id:
+            return jsonify({'error': 'Course not found'}), 404
+        
+        # Get lessons from curriculum_lessons
+        lessons_docs = list(db.collections.curriculum_lessons.find({
+            'module_id': module_id,
             'is_active': True
-        }).sort('difficulty_tier', 1))
+        }).sort('order', 1))
 
-        if not kcs:
+        if not lessons_docs:
             return jsonify({'error': 'Course not found'}), 404
 
-        # Get learner skill states if learner_id provided
+        # Get learner lesson completions from separate collection (scalable)
         learner_progress = {}
         if learner_id:
-            states = list(db.collections.learner_skill_states.find({
+            completions = db.db.lesson_completions.find({
                 'learner_id': ObjectId(learner_id)
-            }))
-            for state in states:
-                learner_progress[str(state['kc_id'])] = {
-                    'p_mastery': state.get('p_mastery', 0),
-                    'status': state.get('status', 'available'),
-                    'total_attempts': state.get('total_attempts', 0),
-                    'correct_count': state.get('correct_count', 0)
+            })
+            for completion in completions:
+                learner_progress[completion['lesson_id']] = {
+                    'p_mastery': completion.get('p_mastery', 0),
+                    'status': completion.get('status', 'locked'),
+                    'total_attempts': completion.get('completion_count', 0),
+                    'correct_count': completion.get('completion_count', 0)  # Simplified
                 }
 
-        # Build lessons response
+        # Build lessons response using curriculum_lessons
         lessons = []
-        for i, kc in enumerate(kcs):
-            kc_id = str(kc['_id'])
+        for i, lesson_doc in enumerate(lessons_docs):
+            lesson_id = lesson_doc['lesson_id']  # Use lesson_id (string) not ObjectId
 
-            # Count questions for this KC
-            questions_count = db.collections.item_kc_mappings.count_documents({
-                'kc_id': kc['_id']
+            # Count questions for this lesson
+            questions_count = db.collections.learning_items.count_documents({
+                'lesson_id': lesson_id,
+                'item_type': 'multiple_choice'
             })
 
-            # Get learner progress
-            progress = learner_progress.get(kc_id, {
+            # Get learner progress (using lesson_id as key)
+            progress = learner_progress.get(lesson_id, {
                 'p_mastery': 0,
                 'status': 'available' if i == 0 else 'locked',
                 'total_attempts': 0,
@@ -341,8 +363,8 @@ def get_course_lessons(domain):
             if i == 0:
                 status = progress['status'] if progress['status'] != 'locked' else 'available'
             else:
-                prev_kc_id = str(kcs[i-1]['_id'])
-                prev_progress = learner_progress.get(prev_kc_id, {})
+                prev_lesson_id = lessons_docs[i-1]['lesson_id']
+                prev_progress = learner_progress.get(prev_lesson_id, {})
                 prev_status = prev_progress.get('status', 'locked')
                 if prev_status in ['in_progress', 'mastered']:
                     status = progress['status'] if progress['status'] != 'locked' else 'available'
@@ -350,20 +372,20 @@ def get_course_lessons(domain):
                     status = 'locked'
 
             lessons.append({
-                'id': kc_id,
-                'slug': kc['slug'],
-                'title': kc['name'],
-                'description': kc.get('description', ''),
-                'difficulty_tier': kc.get('difficulty_tier', 1),
-                'bloom_level': kc.get('bloom_level', 'remember'),
-                'estimated_minutes': kc.get('estimated_minutes', 10),
-                'icon_url': kc.get('icon_url'),
+                'id': lesson_id,  # Return lesson_id (string) not ObjectId
+                'slug': lesson_doc.get('skill_slug', lesson_id),
+                'title': lesson_doc['title'],
+                'description': lesson_doc.get('description', ''),
+                'difficulty_tier': 1,  # Default for now
+                'estimated_minutes': lesson_doc.get('estimated_minutes', 10),
                 'questions_count': questions_count,
+                'content_count': len(lesson_doc.get('content_blocks', [])),
+                'xp_reward': lesson_doc.get('xp_reward', 12),
                 'status': status,
                 'p_mastery': round(progress['p_mastery'], 2),
                 'total_attempts': progress['total_attempts'],
                 'correct_count': progress['correct_count'],
-                'order': i + 1
+                'order': lesson_doc.get('order', i + 1)
             })
 
         return jsonify({
@@ -380,8 +402,8 @@ def get_course_lessons(domain):
         return jsonify({'error': str(e)}), 500
 
 
-@curriculum_bp.route('/lessons/<kc_id>/complete', methods=['POST'])
-def complete_lesson(kc_id):
+@curriculum_bp.route('/lessons/<lesson_id>/complete', methods=['POST'])
+def complete_lesson(lesson_id):
     """
     Mark a lesson as complete for a learner.
     
@@ -397,9 +419,13 @@ def complete_lesson(kc_id):
     {
         "success": true,
         "lesson": {
-            "id": "507f...",
+            "id": "us-currency",
             "status": "mastered",
             "p_mastery": 0.95
+        },
+        "learner": {
+            "total_xp": 120,
+            "gems": 50
         },
         "next_lesson_unlocked": true
     }
@@ -417,73 +443,21 @@ def complete_lesson(kc_id):
         time_spent_minutes = data.get('time_spent_minutes', 10)
         
         learner_oid = ObjectId(learner_id)
-        kc_oid = ObjectId(kc_id)
         
         # Verify learner exists
         learner = db.collections.learners.find_one({'_id': learner_oid})
         if not learner:
             return jsonify({'error': 'Learner not found'}), 404
         
-        # Verify KC exists
-        kc = db.collections.knowledge_components.find_one({'_id': kc_oid})
-        if not kc:
+        # Find lesson by lesson_id (string) or ObjectId
+        lesson = db.collections.curriculum_lessons.find_one({'lesson_id': lesson_id})
+        if not lesson and ObjectId.is_valid(lesson_id):
+            lesson = db.collections.curriculum_lessons.find_one({'_id': ObjectId(lesson_id)})
+        
+        if not lesson:
             return jsonify({'error': 'Lesson not found'}), 404
         
-        # Get current skill state (mastery should already be updated by adaptive engine from individual question answers)
-        existing_state = db.collections.learner_skill_states.find_one({
-            'learner_id': learner_oid,
-            'kc_id': kc_oid
-        })
-        
-        # Use adaptive engine's mastery value if available, otherwise calculate from accuracy
-        if existing_state:
-            # Mastery is already calculated by BKT from individual question interactions
-            # Use the existing mastery value, but ensure it's at least the accuracy threshold
-            current_mastery = existing_state.get('p_mastery', 0)
-            # If mastery is low but accuracy was high, boost it slightly
-            if accuracy >= 0.8 and current_mastery < accuracy:
-                new_mastery = min(0.95, current_mastery + (accuracy - current_mastery) * 0.3)
-            else:
-                new_mastery = current_mastery
-        else:
-            # No existing state - first time completing, use accuracy
-            new_mastery = accuracy
-        
-        # Update or create skill state with mastered status
-        if existing_state:
-            db.collections.learner_skill_states.update_one(
-                {'_id': existing_state['_id']},
-                {
-                    '$set': {
-                        'status': 'mastered',
-                        'p_mastery': new_mastery,
-                        'updated_at': datetime.utcnow(),
-                        'last_completed_at': datetime.utcnow()
-                    }
-                }
-            )
-        else:
-            # Create new state - mastery should have been created by adaptive engine, but create if missing
-            db.collections.create_learner_skill_state(
-                learner_id=learner_id,
-                kc_id=kc_id,
-                status='mastered',
-                p_mastery=new_mastery
-            )
-            # Set last_completed_at
-            db.collections.learner_skill_states.update_one(
-                {
-                    'learner_id': learner_oid,
-                    'kc_id': kc_oid
-                },
-                {
-                    '$set': {
-                        'last_completed_at': datetime.utcnow()
-                    }
-                }
-            )
-        
-        # Check for active XP multiplier
+        # Check for active XP multiplier FIRST (before using actual_xp_earned)
         xp_multiplier = 1.0
         if learner.get('xp_multiplier_active', False):
             activation_time = learner.get('xp_multiplier_activated_at')
@@ -491,7 +465,6 @@ def complete_lesson(kc_id):
             if activation_time:
                 try:
                     if isinstance(activation_time, str):
-                        # Parse ISO format string
                         if 'T' in activation_time:
                             activation_time = datetime.fromisoformat(activation_time.replace('Z', '+00:00'))
                         else:
@@ -499,26 +472,50 @@ def complete_lesson(kc_id):
                     elif not isinstance(activation_time, datetime):
                         activation_time = datetime.utcnow()
                     
-                    # Remove timezone if present for comparison
                     if hasattr(activation_time, 'tzinfo') and activation_time.tzinfo:
                         activation_time = activation_time.replace(tzinfo=None)
                     
                     elapsed = (datetime.utcnow() - activation_time).total_seconds() / 60
                     if elapsed < duration_minutes:
-                        xp_multiplier = 2.0  # Double XP
+                        xp_multiplier = 2.0
                     else:
-                        # Expired - deactivate
                         db.collections.learners.update_one(
                             {'_id': learner_oid},
                             {'$set': {'xp_multiplier_active': False}}
                         )
                 except Exception as e:
-                    # If parsing fails, just use normal XP
                     print(f"Error parsing XP multiplier activation time: {e}")
                     xp_multiplier = 1.0
         
-        # Apply XP multiplier
+        # Calculate actual XP earned
         actual_xp_earned = int(xp_earned * xp_multiplier)
+        new_mastery = accuracy
+        
+        # Track lesson completion in a separate collection (scalable)
+        db.db.lesson_completions.update_one(
+            {
+                'learner_id': learner_oid,
+                'lesson_id': lesson['lesson_id']
+            },
+            {
+                '$set': {
+                    'module_id': lesson['module_id'],
+                    'completed_at': datetime.utcnow(),
+                    'accuracy': accuracy,
+                    'p_mastery': accuracy,
+                    'status': 'mastered',
+                    'xp_earned': actual_xp_earned,
+                    'time_spent_minutes': time_spent_minutes
+                },
+                '$setOnInsert': {
+                    'first_completed_at': datetime.utcnow()
+                },
+                '$inc': {
+                    'completion_count': 1
+                }
+            },
+            upsert=True
+        )
         
         # Award gems based on lesson completion (5 gems per lesson)
         gems_earned = 5
@@ -545,33 +542,22 @@ def complete_lesson(kc_id):
         )
         
         # Check if next lesson should be unlocked
-        # Get all KCs in the same domain, sorted by difficulty_tier
-        domain = kc['domain']
-        all_kcs = list(db.collections.knowledge_components.find({
-            'domain': domain,
+        # Get all lessons in the same module, sorted by order
+        module_id = lesson['module_id']
+        all_lessons = list(db.collections.curriculum_lessons.find({
+            'module_id': module_id,
             'is_active': True
-        }).sort('difficulty_tier', 1))
+        }).sort('order', 1))
         
-        current_index = next((i for i, k in enumerate(all_kcs) if str(k['_id']) == kc_id), -1)
+        current_index = next((i for i, l in enumerate(all_lessons) if l['lesson_id'] == lesson['lesson_id']), -1)
         next_lesson_unlocked = False
+        next_lesson_id = None
         
-        if current_index >= 0 and current_index < len(all_kcs) - 1:
+        if current_index >= 0 and current_index < len(all_lessons) - 1:
             # There is a next lesson
-            next_kc_id = str(all_kcs[current_index + 1]['_id'])
-            next_state = db.collections.learner_skill_states.find_one({
-                'learner_id': learner_oid,
-                'kc_id': ObjectId(next_kc_id)
-            })
-            
-            if not next_state or next_state.get('status') == 'locked':
-                # Unlock the next lesson
-                db.collections.create_learner_skill_state(
-                    learner_id=learner_id,
-                    kc_id=next_kc_id,
-                    status='available',
-                    p_mastery=0
-                )
-                next_lesson_unlocked = True
+            next_lesson = all_lessons[current_index + 1]
+            next_lesson_id = next_lesson['lesson_id']
+            next_lesson_unlocked = True
         
         # Get updated learner data
         updated_learner = db.collections.learners.find_one({'_id': learner_oid})
@@ -579,11 +565,14 @@ def complete_lesson(kc_id):
         return jsonify({
             'success': True,
             'lesson': {
-                'id': kc_id,
+                'id': lesson['lesson_id'],
                 'status': 'mastered',
                 'p_mastery': round(new_mastery, 2)
             },
-            'next_lesson_unlocked': next_lesson_unlocked,
+            'next_lesson': {
+                'id': next_lesson_id,
+                'unlocked': next_lesson_unlocked
+            } if next_lesson_id else None,
             'xp_earned': actual_xp_earned,
             'xp_multiplier_applied': xp_multiplier > 1.0,
             'total_xp': updated_learner.get('total_xp', 0),
@@ -694,6 +683,175 @@ def get_lesson_questions(kc_id):
         }), 200
 
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@curriculum_bp.route('/lessons/<lesson_id>/steps', methods=['GET'])
+def get_lesson_steps(lesson_id):
+    """
+    Get interleaved content and quiz steps for a lesson
+    
+    Returns content blocks and questions in an optimal learning sequence:
+    content → quiz → content → quiz
+    
+    Query params:
+    - learner_id: optional, for personalized question selection
+    
+    Response:
+    {
+        "lesson": {
+            "id": "us-currency",
+            "title": "US Currency and Money Basics",
+            "description": "...",
+            "xp_reward": 12,
+            "estimated_minutes": 10
+        },
+        "steps": [
+            {
+                "type": "content",
+                "block_type": "concept",
+                "title": "...",
+                "content": {...}
+            },
+            {
+                "type": "quiz",
+                "item_id": "...",
+                "question": "...",
+                "choices": [...],
+                "correct_answer": 0,
+                "explanation": "...",
+                "kc_id": "..."
+            }
+        ],
+        "total_steps": 10,
+        "total_xp": 12
+    }
+    """
+    try:
+        db = get_db()
+        learner_id = request.args.get('learner_id')
+        
+        # Find lesson by lesson_id (string) OR _id (ObjectId)
+        # Frontend might pass either format
+        lesson = None
+        
+        # Try as lesson_id (string like 'us-currency')
+        lesson = db.collections.curriculum_lessons.find_one({'lesson_id': lesson_id})
+        
+        # If not found, try as ObjectId
+        if not lesson and ObjectId.is_valid(lesson_id):
+            lesson = db.collections.curriculum_lessons.find_one({'_id': ObjectId(lesson_id)})
+        
+        if not lesson:
+            current_app.logger.error(f"Lesson not found: {lesson_id}")
+            return jsonify({'error': 'Lesson not found', 'lesson_id': lesson_id}), 404
+        
+        # Get content blocks
+        content_blocks = lesson.get('content_blocks', [])
+        
+        # Get questions
+        question_ids = lesson.get('questions', [])
+        questions = []
+        
+        if question_ids:
+            # Convert string IDs to ObjectIds
+            question_oids = [ObjectId(qid) for qid in question_ids if ObjectId.is_valid(qid)]
+            
+            # Fetch questions from database
+            questions_cursor = db.collections.learning_items.find({
+                '_id': {'$in': question_oids},
+                'is_active': True
+            })
+            questions = list(questions_cursor)
+        
+        # Interleave content and questions
+        steps = []
+        
+        num_content = len(content_blocks)
+        num_questions = len(questions)
+        
+        if num_content == 0 and num_questions == 0:
+            return jsonify({'error': 'Lesson has no content or questions'}), 404
+        
+        # DETERMINISTIC INTERLEAVING STRATEGY:
+        # 1. Present ALL content blocks first (in curriculum order)
+        # 2. Then present ALL quiz questions (in database order)
+        # This ensures learners see all teaching material before being tested
+        
+        # Add all content blocks first (preserves curriculum.json order)
+        for block in content_blocks:
+            steps.append({
+                'type': 'content',
+                'block_type': block.get('type', 'concept'),
+                'title': block.get('title', ''),
+                'content': block.get('content', {})
+            })
+        
+        # Then add all quiz questions (preserves database order)
+        for q in questions:
+            # Get KC mapping for this question
+            kc_mapping = db.db.item_kc_mappings.find_one({'item_id': q['_id']})
+            kc_id = str(kc_mapping['kc_id']) if kc_mapping else None
+            
+            # Extract question data from content field
+            content = q.get('content', {})
+            question_text = content.get('stem', '')
+            choices = content.get('choices', [])
+            
+            # Handle both list and dict formats for choices
+            if isinstance(choices, dict):
+                # Convert dict to list (sorted by key)
+                choices = [choices.get(str(i), '') for i in range(len(choices))]
+            
+            steps.append({
+                'type': 'quiz',
+                'item_id': str(q['_id']),
+                'question': question_text,
+                'choices': choices,
+                'correct_answer': content.get('correct_answer', 0),
+                'explanation': content.get('explanation', ''),
+                'kc_id': kc_id
+            })
+        
+        # Calculate XP reward
+        xp_reward = lesson.get('xp_reward', len(questions) * 2)  # 2 XP per question
+        
+        # Map module_id to domain for frontend compatibility
+        module_to_domain = {
+            'banking-fundamentals': 'banking',
+            'credit-fundamentals': 'credit',
+            'money-management': 'money-management',
+            'taxes': 'taxes',
+            'investing-basics': 'investing',
+            'retirement-planning': 'retirement',
+            'insurance': 'insurance',
+            'consumer-protection': 'consumer-protection',
+            'major-purchases': 'major-purchases',
+            'crypto-basics': 'crypto',
+            'financial-planning': 'financial-planning'
+        }
+        
+        module_id = lesson.get('module_id')
+        domain = module_to_domain.get(module_id, module_id)
+        
+        return jsonify({
+            'lesson': {
+                'id': lesson.get('lesson_id'),  # Return the actual lesson_id from DB
+                '_id': str(lesson['_id']),      # Also include ObjectId for reference
+                'title': lesson.get('title', ''),
+                'description': lesson.get('description', ''),
+                'xp_reward': xp_reward,
+                'estimated_minutes': lesson.get('estimated_minutes', 10),
+                'module_id': module_id,
+                'domain': domain  # Include domain for frontend navigation
+            },
+            'steps': steps,
+            'total_steps': len(steps),
+            'total_xp': xp_reward
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error getting lesson steps: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 

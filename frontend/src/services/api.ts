@@ -630,6 +630,38 @@ export const curriculumApi = {
       total_count: number;
     }>(`/api/curriculum/lessons/${kcId}/questions${queryString}`);
   },
+
+  // NEW: Get lesson steps (interleaved content + quiz)
+  getLessonSteps: (lessonId: string, learnerId?: string) => {
+    const params = new URLSearchParams();
+    if (learnerId) params.append('learner_id', learnerId);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    return fetchApi<{
+      lesson: {
+        id: string;
+        title: string;
+        description: string;
+        xp_reward: number;
+        estimated_minutes: number;
+      };
+      steps: Array<{
+        type: 'content' | 'quiz';
+        // Content step fields
+        block_type?: string;
+        title?: string;
+        content?: any;
+        // Quiz step fields
+        item_id?: string;
+        question?: string;
+        choices?: string[];
+        correct_answer?: number;
+        explanation?: string;
+        kc_id?: string;
+      }>;
+      total_steps: number;
+      total_xp: number;
+    }>(`/api/curriculum/lessons/${lessonId}/steps${queryString}`);
+  },
 };
 
 // Chat API - FinAI Coach

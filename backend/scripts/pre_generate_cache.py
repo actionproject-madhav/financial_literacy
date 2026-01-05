@@ -40,17 +40,37 @@ def pre_generate_all():
     from config.services import config
     
     print(" Checking API keys...")
-    if not config.ELEVENLABS_API_KEY:
-        print("ELEVENLABS_API_KEY not found in .env file")
-        print("   Please add: ELEVENLABS_API_KEY=sk-your-key-here")
-        return
-    print(f"    ElevenLabs API key found: {config.ELEVENLABS_API_KEY[:10]}...{config.ELEVENLABS_API_KEY[-4:]}")
+    has_elevenlabs = bool(config.ELEVENLABS_API_KEY)
+    has_openai = bool(config.OPENAI_API_KEY)
+    has_google_tts = bool(config.GOOGLE_APPLICATION_CREDENTIALS or config.GOOGLE_TTS_API_KEY)
     
-    if not config.OPENAI_API_KEY:
-        print("❌ OPENAI_API_KEY not found in .env file")
+    if has_elevenlabs:
+        print(f"   ✅ ElevenLabs API key found: {config.ELEVENLABS_API_KEY[:10]}...{config.ELEVENLABS_API_KEY[-4:]}")
+        print("      (Will try first, fallback to other services if blocked)")
+    else:
+        print("   ⚠️  ELEVENLABS_API_KEY not found - will use fallback TTS services")
+    
+    if has_openai:
+        print(f"   ✅ OpenAI API key found: {config.OPENAI_API_KEY[:10]}...{config.OPENAI_API_KEY[-4:]}")
+        print("      (For translations and TTS fallback)")
+    else:
+        print("   ❌ OPENAI_API_KEY not found - REQUIRED for translations")
+    
+    if has_google_tts:
+        print("   ✅ Google TTS credentials found (TTS fallback option)")
+    else:
+        print("   ⚠️  Google TTS credentials not found")
+    
+    if not has_openai:
+        print("\n❌ OPENAI_API_KEY is required for translations")
         print("   Please add: OPENAI_API_KEY=sk-your-key-here")
         return
-    print(f"   ✅ OpenAI API key found: {config.OPENAI_API_KEY[:10]}...{config.OPENAI_API_KEY[-4:]}")
+    
+    if not (has_elevenlabs or has_openai or has_google_tts):
+        print("\n❌ Need at least one TTS service configured")
+        print("   Options: ELEVENLABS_API_KEY, OPENAI_API_KEY, or GOOGLE_APPLICATION_CREDENTIALS")
+        return
+    
     print()
     
     db = Database()
@@ -60,16 +80,41 @@ def pre_generate_all():
     collection = db.collections.learning_items
     
     print("🚀 Pre-generating cache for all learning items...\n")
-    print("   Using ElevenLabs for TTS audio generation")
-    print("   Using OpenAI for text translation\n")
+    if has_openai:
+        print("   TTS: OpenAI TTS (tts-1) - $0.015 per 1K chars")
+        if has_google_tts:
+            print("        → Google TTS fallback available ($0.004/1K chars, better Nepali)")
+        if has_elevenlabs:
+            print("        → ElevenLabs skipped (blocked)")
+    elif has_google_tts:
+        print("   TTS: Google Cloud TTS - $0.004 per 1K chars")
+    else:
+        print("   TTS: No TTS service available!")
+    print("   Translation: OpenAI\n")
+    print("   💡 Cost estimate: ~50K characters per run ≈ $0.75 with OpenAI TTS")
+    print()
     
-    # Initialize services
+    # Initialize services - allow it even if ElevenLabs is blocked (fallbacks will work)
     try:
         voice_service = VoiceService()
         cached_voice = CachedVoiceService(voice_service)
+        print("✅ VoiceService initialized (with automatic fallbacks)\n")
     except ValueError as e:
+        # Only fail if no TTS service at all is available
+        if not (has_openai or has_google_tts):
         print(f"❌ Failed to initialize VoiceService: {e}")
-        print("   Make sure ELEVENLABS_API_KEY is set correctly in .env")
+            print("   Make sure at least one TTS service is configured")
+            return
+        else:
+            # Try to create a minimal service that uses fallbacks only
+            print(f"⚠️  ElevenLabs initialization failed: {e}")
+            print("   Will use fallback TTS services only...")
+            # The VoiceService will still be created and use fallbacks when generate_tts is called
+            try:
+                voice_service = VoiceService()
+                cached_voice = CachedVoiceService(voice_service)
+            except Exception:
+                print("❌ Failed to initialize any TTS service")
         return
     
     # Simple translation client wrapper
@@ -150,7 +195,28 @@ def pre_generate_all():
         else:
             print(f"  ✅ All audio already cached - skipping TTS generation")
         
-        # Pre-generate TTS (will skip already cached items internally)
+        # IMPORTANT: Pre-translate FIRST (skip English)
+        # This ensures translations exist before TTS generation
+        translations = item.get('translations', {})
+        for lang in ['es', 'ne']:
+            # Check if already translated
+            lang_translations = translations.get(lang, {})
+            has_stem = lang_translations.get('stem')
+            has_choices = lang_translations.get('choices') and len(lang_translations.get('choices', [])) > 0
+            
+            if has_stem and has_choices:
+                print(f"  ⏭️  Translation ({lang}) already cached - skipping")
+            else:
+                print(f"  🌍 Translating to {lang}...")
+                try:
+                    cached_translation.pre_translate_item(item_id, [lang])
+                    translation_count += 1
+                    print(f"  ✅ Translation ({lang}) complete")
+                except Exception as e:
+                    print(f"  ⚠️  Translation error ({lang}): {e}")
+        
+        # Now pre-generate TTS (translations must exist first for non-English)
+        # This ensures Nepali/Spanish TTS uses proper translated text
         for lang in languages:
             if quota_exceeded:
                 break
@@ -168,21 +234,6 @@ def pre_generate_all():
                     print(f"   The script will skip already cached items and continue")
                     break
                 print(f"  ⚠️  TTS error ({lang}): {e}")
-        
-        # Pre-translate (skip English, and skip if already cached)
-        if not quota_exceeded:
-            translations = item.get('translations', {})
-            for lang in ['es', 'ne']:
-                # Check if already translated
-                if lang in translations and translations[lang].get('stem') and translations[lang].get('choices'):
-                    print(f"  ⏭️  Translation ({lang}) already cached - skipping")
-                    continue
-                
-                try:
-                    cached_translation.pre_translate_item(item_id, [lang])
-                    translation_count += 1
-                except Exception as e:
-                    print(f"  ⚠️  Translation error ({lang}): {e}")
         
         print(f"  ✅ Done\n")
     

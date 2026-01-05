@@ -126,37 +126,32 @@ export const ProfilePage: React.FC = () => {
   const [sendingRequests, setSendingRequests] = useState<Set<string>>(new Set());
   const toast = useToast();
 
-  // Customization State - Load from localStorage for persistence
+  // Customization State - Database is source of truth
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [selectedAvatar, setSelectedAvatar] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('profileAvatar') || '/3d-models/monster-1.png';
-    }
-    return '/3d-models/monster-1.png';
-  });
+  const [selectedAvatar, setSelectedAvatar] = useState('/3d-models/monster-1.png'); // Default, will be loaded from DB
   const [selectedBgColor, setSelectedBgColor] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('profileBgColor') || '#89e219';
     }
     return '#89e219';
   });
-  // Country and visa status from database (not localStorage)
-  const [selectedCountry, setSelectedCountry] = useState('us');
-  const [selectedVisaStatus, setSelectedVisaStatus] = useState('Other');
+  // Country and visa status - Database is source of truth
+  const [selectedCountry, setSelectedCountry] = useState('us'); // Default, will be loaded from DB
+  const [selectedVisaStatus, setSelectedVisaStatus] = useState('Other'); // Default, will be loaded from DB
 
-  // Save to database and localStorage when user saves changes
+  // Save to database (database is source of truth)
   const handleSaveProfile = async () => {
     if (!learnerId) return;
     
     try {
-      // Save to database
+      // Save to database first (source of truth)
       await learnerApi.updateProfile(learnerId, {
         avatar_url: selectedAvatar,
         country_of_origin: selectedCountry.toUpperCase(),
         visa_type: selectedVisaStatus,
       });
       
-      // Also save to localStorage for quick access
+      // Also save to localStorage for quick access (cache only)
       localStorage.setItem('profileAvatar', selectedAvatar);
       localStorage.setItem('profileBgColor', selectedBgColor);
       localStorage.setItem('profileCountry', selectedCountry);
@@ -164,6 +159,8 @@ export const ProfilePage: React.FC = () => {
       
       setIsEditingProfile(false);
       toast.success('Profile updated successfully!');
+      
+      // Note: No need to refetch - state is already updated, and database is saved
     } catch (error) {
       console.error('Failed to save profile:', error);
       toast.error('Failed to save profile. Please try again.');
@@ -195,26 +192,35 @@ export const ProfilePage: React.FC = () => {
         followers: profileStats.followers || 0
       } as ProfileStats);
 
-      // Load avatar from database if available
+      // Load avatar from database if available (database is source of truth)
       try {
         const profile = await learnerApi.getProfile(learnerId);
         if (profile?.avatar_url) {
           setSelectedAvatar(profile.avatar_url);
+          // Sync to localStorage for quick access
+          localStorage.setItem('profileAvatar', profile.avatar_url);
         } else if (profile?.profile_picture_url) {
           setSelectedAvatar(profile.profile_picture_url);
+          localStorage.setItem('profileAvatar', profile.profile_picture_url);
+        } else {
+          // No avatar in DB, use default
+          setSelectedAvatar('/3d-models/monster-1.png');
         }
       } catch (err) {
         console.error('Failed to load profile avatar:', err);
       }
 
-      // Update country and visa status from database
+      // Update country and visa status from database (database is source of truth)
       if (profileStats.country_of_origin) {
         // Convert country code to lowercase for flag display
         const countryCode = profileStats.country_of_origin.toLowerCase();
         setSelectedCountry(countryCode);
+        // Sync to localStorage for quick access (cache only)
+        localStorage.setItem('profileCountry', countryCode);
       }
       if (profileStats.visa_type) {
         setSelectedVisaStatus(profileStats.visa_type);
+        localStorage.setItem('profileVisaStatus', profileStats.visa_type);
       }
 
     } catch (err) {
@@ -421,7 +427,17 @@ export const ProfilePage: React.FC = () => {
 
             {/* Flag Icon */}
             <div className="mt-2 flex flex-col items-end gap-2">
-              <img src={`https://flagcdn.com/w80/${selectedCountry}.png`} alt="Country" className="w-8 rounded-md shadow-sm opacity-80" />
+              {selectedCountry && (
+                <img 
+                  src={`https://flagcdn.com/w80/${selectedCountry}.png`} 
+                  alt="Country" 
+                  className="w-8 rounded-md shadow-sm opacity-80"
+                  onError={(e) => {
+                    // Hide flag if image fails to load
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              )}
               <Badge variant="xp" size="sm" className="whitespace-nowrap">{selectedVisaStatus}</Badge>
             </div>
           </div>

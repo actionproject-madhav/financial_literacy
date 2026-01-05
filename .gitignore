@@ -102,3 +102,6 @@ temp/
 .cache/
 .npm/
 .yarn/
+
+
+.md

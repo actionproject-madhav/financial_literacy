@@ -16,7 +16,7 @@ class ServiceConfig:
     # ========== VOICE SERVICES ==========
 
     # ElevenLabs TTS - High-quality, natural voices (Primary TTS)
-    ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY_4')
+    ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
 
     # Google Cloud TTS - Alternative TTS option
     GOOGLE_TTS_API_KEY = os.getenv('GOOGLE_TTS_API_KEY')
