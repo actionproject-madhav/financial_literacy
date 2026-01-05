@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, BookOpen, Flame, Heart, Gem, Zap, Clock, Target } from 'lucide-react'
+import { ArrowLeft, BookOpen, Flame, Heart, Gem, Zap, Clock, Target, Star } from 'lucide-react'
 import { useUserStore } from '../stores/userStore'
-import { curriculumApi, Lesson } from '../services/api'
+import { curriculumApi, adaptiveApi, Lesson } from '../services/api'
 import { cn } from '../utils/cn'
 
 interface CourseInfo {
@@ -21,6 +21,15 @@ export const SectionPage = () => {
     const [lessons, setLessons] = useState<Lesson[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [recommendedLessonId, setRecommendedLessonId] = useState<string | null>(null)
+    const lessonRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+    const scrolledRef = useRef(false)
+
+    // Reset scroll flag when section changes
+    useEffect(() => {
+        scrolledRef.current = false
+        console.log('🔄 Section changed, reset scroll flag')
+    }, [sectionId])
 
     useEffect(() => {
         const fetchLessons = async () => {
@@ -54,6 +63,23 @@ export const SectionPage = () => {
                 const response = await curriculumApi.getCourseLessons(sectionId, learnerId || undefined)
                 setCourse(response.course)
                 setLessons(response.lessons)
+
+                // Fetch recommendations to find recommended lesson in this section
+                try {
+                    const recommendationResponse = await adaptiveApi.getRecommendedNext(learnerId)
+                    if (recommendationResponse.recommended_lessons?.length > 0) {
+                        // Find the first recommended lesson that belongs to this domain
+                        const recommendedInThisDomain = recommendationResponse.recommended_lessons.find(
+                            rec => rec.domain === sectionId
+                        )
+                        if (recommendedInThisDomain) {
+                            setRecommendedLessonId(recommendedInThisDomain.kc_id)
+                        }
+                    }
+                } catch (err) {
+                    console.log('Recommendations not available:', err)
+                }
+
                 setError(null)
             } catch (err: any) {
                 console.error('Failed to fetch lessons:', err)
@@ -66,6 +92,56 @@ export const SectionPage = () => {
 
         fetchLessons()
     }, [sectionId, learnerId])
+
+    // Auto-scroll to next lesson after data loads
+    useEffect(() => {
+        console.log('🔍 Scroll check:', { loading, lessonsCount: lessons.length, scrolled: scrolledRef.current })
+
+        if (!loading && lessons.length > 0 && !scrolledRef.current) {
+            let targetLessonId: string | null = null
+
+            // Debug: Log all lesson statuses
+            console.log('📚 Lesson statuses:', lessons.map(l => ({
+                title: l.title,
+                id: l.id,
+                status: l.status,
+                p_mastery: l.p_mastery
+            })))
+
+            // Scroll to first incomplete lesson (available or in_progress)
+            // Note: Skipping kc_id recommendation matching because lesson IDs are slugs, not ObjectIds
+            const firstIncomplete = lessons.find(
+                lesson => lesson.status === 'available' || lesson.status === 'in_progress'
+            )
+            if (firstIncomplete) {
+                targetLessonId = firstIncomplete.id
+                console.log('📍 Scrolling to first incomplete lesson:', firstIncomplete.title, 'ID:', firstIncomplete.id)
+            } else {
+                console.log('⚠️ No incomplete lessons found - all lessons completed!')
+            }
+
+            // Perform scroll
+            if (targetLessonId) {
+                const targetRef = lessonRefs.current[targetLessonId]
+                console.log('🎯 Target ref exists:', !!targetRef, 'for ID:', targetLessonId)
+
+                if (targetRef) {
+                    setTimeout(() => {
+                        console.log('⬇️ Executing scroll to:', targetLessonId)
+                        lessonRefs.current[targetLessonId]?.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        })
+                    }, 300)
+                    scrolledRef.current = true
+                } else {
+                    console.error('❌ Ref not found for target lesson:', targetLessonId)
+                }
+            } else {
+                console.log('⚠️ No target lesson to scroll to')
+            }
+        }
+    }, [loading, lessons, recommendedLessonId])
 
     // Refresh lessons when page becomes visible (user returns from lesson)
     useEffect(() => {
@@ -189,13 +265,18 @@ export const SectionPage = () => {
                             const isCompleted = lesson.status === 'mastered'
                             const isNext = lesson.status === 'available' || lesson.status === 'in_progress'
                             const isLocked = lesson.status === 'locked'
+                            const isRecommended = lesson.id === recommendedLessonId
 
                             // Actual gems earned per lesson (matches backend)
                             const gemsEarned = 5
                             const progress = lesson.p_mastery * 100
 
                             return (
-                                <div key={lesson.id} className="flex gap-4 sm:gap-6 relative">
+                                <div
+                                    key={lesson.id}
+                                    ref={(el) => { lessonRefs.current[lesson.id] = el }}
+                                    className="flex gap-4 sm:gap-6 relative"
+                                >
                                     {/* Connecting Line */}
                                     {index !== lessons.length - 1 && (
                                         <div className="absolute left-[20px] sm:left-[24px] top-[60px] bottom-[-24px] w-[3px] bg-[#58cc02]/20 z-0 rounded-full" />
@@ -216,8 +297,20 @@ export const SectionPage = () => {
                                     {/* Card */}
                                     <div className={cn(
                                         "flex-1 bg-white border-2 rounded-3xl p-5 mb-8 transition-all duration-200 relative overflow-hidden group",
-                                        isLocked ? "border-gray-100" : "border-gray-100 shadow-sm hover:shadow-md hover:border-[#58cc02]/30"
+                                        isLocked ? "border-gray-100" :
+                                        isRecommended && !isLocked ? "border-orange-400 shadow-lg shadow-orange-100" :
+                                        "border-gray-100 shadow-sm hover:shadow-md hover:border-[#58cc02]/30"
                                     )}>
+                                        {/* Recommended Badge */}
+                                        {isRecommended && !isLocked && (
+                                            <div className="absolute top-0 right-0 z-20">
+                                                <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1.5 rounded-bl-2xl rounded-tr-3xl flex items-center gap-1 shadow-md">
+                                                    <Star className="w-3 h-3 fill-white" />
+                                                    <span className="font-extrabold text-[10px] uppercase tracking-wider">Next Up</span>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {/* Locked overlay */}
                                         {isLocked && <div className="absolute inset-0 bg-white/50 z-10" />}
 

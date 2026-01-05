@@ -48,67 +48,54 @@ export const Sidebar = ({ onCoachClick }: SidebarProps) => {
             (item.path === '/learn' && location.pathname.startsWith('/section'))
           )
 
-          if (false) { // Removed coach button logic
-            return (
-              <button
-                key={item.path}
-                onClick={onCoachClick}
-                className={cn(
-                  "w-full flex items-center gap-4 px-4 py-2 rounded-xl transition-all duration-200 group uppercase tracking-widest text-sm font-bold border-2",
-                  "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-900 border-transparent"
-                )}
-              >
-                <img
-                  src={item.icon}
-                  alt={item.label}
-                  className="w-8 h-8 object-contain"
-                />
-                <span>{item.label}</span>
-              </button>
-            )
-          }
-
           return (
             <Link
               key={item.path}
               to={item.path}
               className={cn(
-                "relative flex items-center gap-4 px-4 py-2 rounded-xl group uppercase tracking-widest text-sm font-bold",
+                "flex items-center gap-4 px-4 py-2 rounded-xl uppercase tracking-widest text-sm font-bold",
                 "outline-none focus:outline-none focus-visible:outline-none no-underline",
-                "transition-colors duration-150 ease-out",
-                "select-none",
+                "select-none relative",
+                // Specific transitions to avoid conflicts
+                "transition-[transform,background-color,color] duration-200 ease-out",
+                // Hover effects - smooth scale and background
+                "hover:scale-[1.02]",
+                // Active/click effect - satisfying press down
+                "active:scale-95 active:transition-transform active:duration-75",
                 isActive
-                  ? "bg-sky-100 text-sky-500 border-2 border-sky-300"
-                  : "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                  ? "bg-sky-100 text-sky-500"
+                  : "bg-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-700"
               )}
-              onMouseDown={(e) => {
-                // Prevent focus on mouse down to avoid blinking
-                if (e.button === 0) {
-                  e.preventDefault();
-                }
-              }}
-              style={{ 
-                transform: 'translateZ(0)',
-                WebkitBackfaceVisibility: 'hidden',
-                backfaceVisibility: 'hidden',
+              style={{
                 WebkitTapHighlightColor: 'transparent',
-                touchAction: 'manipulation'
+                border: 'none',
+                transformOrigin: 'left center',
+                backfaceVisibility: 'hidden',
+                transform: 'translateZ(0)'
               }}
             >
               <img
                 src={item.icon}
                 alt={item.label}
-                className="w-8 h-8 object-contain pointer-events-none select-none"
+                className="w-8 h-8 object-contain pointer-events-none"
                 draggable="false"
               />
-              <span className="select-none">{item.label}</span>
+              <span>{item.label}</span>
             </Link>
           )
         })}
       </nav>
 
       <div className="p-4 border-t border-gray-100">
-        <Link to="/help" className="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-gray-900 font-bold text-sm uppercase tracking-widest transition-colors rounded-xl hover:bg-gray-100">
+        <Link
+          to="/help"
+          className="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-gray-700 font-bold text-sm uppercase tracking-widest transition-[transform,background-color,color] duration-200 ease-out rounded-xl hover:bg-gray-50 hover:scale-[1.02] active:scale-95 active:transition-transform active:duration-75"
+          style={{
+            transformOrigin: 'left center',
+            backfaceVisibility: 'hidden',
+            transform: 'translateZ(0)'
+          }}
+        >
           <HelpCircle className="w-5 h-5" strokeWidth={2.5} />
           <span>Help</span>
         </Link>
@@ -127,7 +114,12 @@ export const Sidebar = ({ onCoachClick }: SidebarProps) => {
             // Navigate to auth page (HashRouter will add # automatically)
             navigate('/auth');
           }}
-          className="w-full flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-red-500 font-bold text-sm uppercase tracking-widest transition-colors rounded-xl hover:bg-red-50"
+          className="w-full flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-red-500 font-bold text-sm uppercase tracking-widest transition-[transform,background-color,color] duration-200 ease-out rounded-xl hover:bg-red-50 hover:scale-[1.02] active:scale-95 active:transition-transform active:duration-75"
+          style={{
+            transformOrigin: 'left center',
+            backfaceVisibility: 'hidden',
+            transform: 'translateZ(0)'
+          }}
         >
           <LogOut className="w-5 h-5" strokeWidth={2.5} />
           <span>Logout</span>

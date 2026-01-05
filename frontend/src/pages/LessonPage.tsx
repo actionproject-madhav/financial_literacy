@@ -91,6 +91,11 @@ export const LessonPage = () => {
   const [hasShownStreak, setHasShownStreak] = useState(false) // Track if streak was already shown
   const [gemsEarned, setGemsEarned] = useState(5) // Store actual gems earned from backend
   const [xpEarned, setXpEarned] = useState(20) // Store actual XP earned from backend
+  const [nextRecommendation, setNextRecommendation] = useState<{
+    kc_name: string
+    domain: string
+    reason: string
+  } | null>(null)
 
   // Audio recording refs
   const mediaRecorder = useRef<MediaRecorder | null>(null)
@@ -850,6 +855,23 @@ export const LessonPage = () => {
           origin: { y: 0.5 }
         })
 
+        // Fetch next recommendation before showing celebration
+        if (learnerId) {
+          try {
+            const recommendationResponse = await adaptiveApi.getRecommendedNext(learnerId)
+            if (recommendationResponse.recommended_lessons?.length > 0) {
+              const topRec = recommendationResponse.recommended_lessons[0]
+              setNextRecommendation({
+                kc_name: topRec.kc_name,
+                domain: topRec.domain,
+                reason: topRec.reason
+              })
+            }
+          } catch (err) {
+            console.log('Could not fetch next recommendation:', err)
+          }
+        }
+
         setShowCelebration(true)
       }
       return
@@ -1183,8 +1205,9 @@ export const LessonPage = () => {
 
   const handleCelebrationComplete = () => {
     setShowCelebration(false)
-    // Navigate back to section page - it will automatically refresh lessons
-    navigate(`/section/${lesson.domain}`, { replace: true })
+    // Navigate to learn page to show next recommendations
+    // The timestamp ensures fresh recommendations are fetched
+    navigate('/learn', { replace: true, state: { refreshRecommendations: Date.now() } })
   }
 
   // For content steps, always allow next (no check needed)
@@ -1204,6 +1227,7 @@ export const LessonPage = () => {
         gemsEarned={gemsEarned}
         accuracy={totalQuizQuestions > 0 ? Math.round((correctAnswers / totalQuizQuestions) * 100) : 100}
         title="Lesson Complete!"
+        nextRecommendation={nextRecommendation}
       />
 
       <div className="min-h-screen flex flex-col bg-white">

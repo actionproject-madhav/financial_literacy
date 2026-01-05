@@ -9,6 +9,11 @@ interface CelebrationOverlayProps {
     gemsEarned?: number
     accuracy?: number
     title?: string
+    nextRecommendation?: {
+        kc_name: string
+        domain: string
+        reason: string
+    } | null
 }
 
 export const CelebrationOverlay = ({
@@ -18,6 +23,7 @@ export const CelebrationOverlay = ({
     gemsEarned = 5,
     accuracy = 100,
     title = "Lesson Complete!",
+    nextRecommendation = null,
 }: CelebrationOverlayProps) => {
     const [showStats, setShowStats] = useState(false)
     const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -137,6 +143,31 @@ export const CelebrationOverlay = ({
                             )}
                         </AnimatePresence>
                     </div>
+
+                    {/* Next Recommendation */}
+                    {nextRecommendation && showStats && (
+                        <motion.div
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 1.2 }}
+                            className="mt-8 px-6 max-w-md"
+                        >
+                            <div className="bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-2xl p-4">
+                                <div className="flex items-start gap-3">
+                                    <div className="flex-shrink-0 mt-1">
+                                        <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                                            <span className="text-white text-lg">✨</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-xs font-bold text-orange-600 uppercase tracking-wider mb-1">Up Next</p>
+                                        <p className="text-sm font-extrabold text-gray-800 mb-1">{nextRecommendation.kc_name}</p>
+                                        <p className="text-xs text-gray-600">{nextRecommendation.reason}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
 
                     {/* Footer with Buttons */}
                     <motion.div

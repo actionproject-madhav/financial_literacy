@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Heart, Lock, ArrowLeft } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Heart, Lock, ArrowLeft, Star, Sparkles } from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useUserStore } from '../stores/userStore'
 import { curriculumApi, adaptiveApi, Course } from '../services/api'
 import { LanguageSelector } from '../components/LanguageSelector'
@@ -34,6 +34,7 @@ interface PersonalizationSummary {
 export const LearnPage = () => {
     const { user, learnerId } = useUserStore()
     const navigate = useNavigate()
+    const location = useLocation()
     const { t } = useLanguage()
     const { hearts, countdown } = useHeartRecharge()
     const [courses, setCourses] = useState<PersonalizedCourse[]>([])
@@ -41,6 +42,20 @@ export const LearnPage = () => {
     const [error, setError] = useState<string | null>(null)
     const [personalization, setPersonalization] = useState<PersonalizationSummary | null>(null)
     const [reviewStats, setReviewStats] = useState<{ due: number; mistakes: number; total: number } | null>(null)
+    const [topRecommendation, setTopRecommendation] = useState<{
+        kc_name: string;
+        domain: string;
+        reason: string;
+    } | null>(null)
+    const courseRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+    const scrolledRef = useRef(false)
+
+    // Reset scroll flag when coming from lesson completion
+    useEffect(() => {
+        if (location.state?.refreshRecommendations) {
+            scrolledRef.current = false
+        }
+    }, [location.state])
 
     useEffect(() => {
         const fetchData = async () => {
@@ -53,6 +68,32 @@ export const LearnPage = () => {
                 // Fetch courses with personalization data from API
                 const response = await curriculumApi.getCourses(isValidObjectId ? learnerId : undefined)
 
+                // Debug: Log what we're getting from the backend
+                console.log('📚 Courses response:', response)
+                console.log('📊 Course recommendation types:', response.courses.map(c => ({
+                    title: c.title,
+                    recommendation_type: c.recommendation_type,
+                    priority_score: c.priority_score,
+                    unlocked: c.unlocked
+                })))
+
+                // Smart recommendation logic:
+                // If no course is marked as "priority", treat the highest-scoring unlocked course as priority
+                const hasPriorityCourse = response.courses.some(c => c.recommendation_type === 'priority' && c.unlocked)
+
+                if (!hasPriorityCourse && response.courses.length > 0) {
+                    // Find the highest-scoring unlocked course
+                    const unlockedCourses = response.courses.filter(c => c.unlocked)
+                    if (unlockedCourses.length > 0) {
+                        const highestScoring = unlockedCourses.reduce((prev, current) =>
+                            (current.priority_score || 0) > (prev.priority_score || 0) ? current : prev
+                        )
+                        // Override its recommendation type to priority
+                        highestScoring.recommendation_type = 'priority'
+                        console.log('🎯 Auto-promoted to priority:', highestScoring.title, 'Score:', highestScoring.priority_score)
+                    }
+                }
+
                 // Courses are already sorted by priority from the API
                 setCourses(response.courses)
 
@@ -61,8 +102,29 @@ export const LearnPage = () => {
                     setPersonalization(response.personalization)
                 }
 
-                // Fetch review queue stats (only for valid logged-in users)
+                // Fetch recommendations (only for valid logged-in users)
                 if (isValidObjectId) {
+                    try {
+                        console.log('🎯 Fetching recommendations for learnerId:', learnerId)
+                        const recommendationResponse = await adaptiveApi.getRecommendedNext(learnerId)
+                        console.log('✨ Recommendations response:', recommendationResponse)
+                        if (recommendationResponse.recommended_lessons?.length > 0) {
+                            const topRec = recommendationResponse.recommended_lessons[0]
+                            console.log('🎯 Top recommendation:', topRec)
+                            setTopRecommendation({
+                                kc_name: topRec.kc_name,
+                                domain: topRec.domain,
+                                reason: topRec.reason
+                            })
+                        } else {
+                            console.log('⚠️ No recommendations returned')
+                        }
+                    } catch (err) {
+                        console.error('❌ Recommendations error:', err)
+                        // Silently fail - recommendations are optional
+                    }
+
+                    // Fetch review queue stats
                     try {
                         const reviewResponse = await adaptiveApi.getReviewQueue(learnerId, 10)
                         setReviewStats({
@@ -86,6 +148,25 @@ export const LearnPage = () => {
 
         fetchData()
     }, [learnerId])
+
+    // Auto-scroll to priority course after data loads
+    useEffect(() => {
+        if (!loading && courses.length > 0 && !scrolledRef.current) {
+            // Find the first priority course
+            const priorityCourse = courses.find(c => c.recommendation_type === 'priority' && c.unlocked)
+
+            if (priorityCourse && courseRefs.current[priorityCourse.id]) {
+                // Wait a bit for DOM to settle, then scroll
+                setTimeout(() => {
+                    courseRefs.current[priorityCourse.id]?.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    })
+                }, 300)
+                scrolledRef.current = true
+            }
+        }
+    }, [loading, courses])
 
     if (!user) return null
 
@@ -162,6 +243,10 @@ export const LearnPage = () => {
                         {courses.map((course, index) => {
                             const isUnlocked = course.unlocked
                             const progress = course.progress * 100
+                            // Only show priority badge for the FIRST priority course
+                            const isPriority = course.recommendation_type === 'priority' && index === courses.findIndex(c => c.recommendation_type === 'priority')
+                            const isOptional = course.recommendation_type === 'optional'
+                            const isMastered = course.recommendation_type === 'mastered'
 
                             // Color palette for each course (bg, border, button, button-border, label)
                             const courseColors = [
@@ -179,12 +264,26 @@ export const LearnPage = () => {
                             return (
                                 <div
                                     key={course.id}
+                                    ref={(el) => { courseRefs.current[course.id] = el }}
                                     className="rounded-2xl relative overflow-hidden transition-all hover:translate-y-[-2px]"
                                     style={{
                                         backgroundColor: isUnlocked ? colors.bg : '#f9fafb',
-                                        border: `2px solid ${isUnlocked ? colors.bg : '#e5e7eb'}`
+                                        border: `2px solid ${isPriority && isUnlocked ? '#10B981' : (isUnlocked ? colors.bg : '#e5e7eb')}`,
+                                        boxShadow: isPriority && isUnlocked ? '0 4px 12px rgba(16, 185, 129, 0.2)' : undefined,
+                                        opacity: (isOptional || isMastered) ? 0.6 : 1,
+                                        filter: (isOptional || isMastered) ? `blur(${(course.blur_level || 0) * 2}px)` : undefined
                                     }}
                                 >
+                                    {/* Priority Badge */}
+                                    {isPriority && isUnlocked && (
+                                        <div className="absolute top-0 right-0 z-10">
+                                            <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1.5 rounded-bl-2xl rounded-tr-2xl flex items-center gap-1.5 shadow-lg">
+                                                <Star className="w-3 h-3 fill-white" />
+                                                <span className="font-bold text-[8px] uppercase tracking-wider">Recommended For You</span>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Card Content */}
                                     <div className="p-6 pb-4">
                                         <div className="flex">
@@ -204,6 +303,16 @@ export const LearnPage = () => {
                                                 <h3 className="text-2xl font-extrabold text-gray-800 tracking-tight leading-tight mb-1">
                                                     <TranslatedText context="course title">{course.title}</TranslatedText>
                                                 </h3>
+
+                                                {/* Recommendation Reason - Only for Priority */}
+                                                {course.recommendation_reason && isUnlocked && isPriority && (
+                                                    <div className="flex items-start gap-2 mb-2 bg-white/50 rounded-lg p-2 border border-gray-200">
+                                                        <Sparkles className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                                        <p className="text-xs font-medium text-gray-700 leading-relaxed">
+                                                            {course.recommendation_reason}
+                                                        </p>
+                                                    </div>
+                                                )}
 
                                                 {/* Subtitle */}
                                                 <p className="text-gray-700 text-sm mb-4">
