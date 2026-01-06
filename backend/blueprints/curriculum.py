@@ -780,12 +780,41 @@ def get_lesson_steps(lesson_id):
         
         # Add all content blocks first (preserves curriculum.json order)
         for block in content_blocks:
-            steps.append({
+            content_step = {
                 'type': 'content',
                 'block_type': block.get('type', 'concept'),
                 'title': block.get('title', ''),
                 'content': block.get('content', {})
-            })
+            }
+
+            # Populate media assets if referenced
+            media_refs = block.get('media', [])
+            if media_refs:
+                media_assets = []
+                for media_ref in media_refs:
+                    asset_id = media_ref.get('asset_id')
+                    if asset_id:
+                        # Fetch full media asset from database
+                        media_asset = db.get_media_asset(asset_id)
+                        if media_asset:
+                            # Include asset with placement/order metadata
+                            media_assets.append({
+                                'asset_id': asset_id,
+                                'type': media_asset.get('type'),
+                                'urls': media_asset.get('urls', {}),
+                                'alt_text': media_asset.get('alt_text', ''),
+                                'caption': media_asset.get('caption'),
+                                'dimensions': media_asset.get('dimensions'),
+                                'component_name': media_asset.get('component_name'),
+                                'component_props': media_asset.get('component_props'),
+                                'placement': media_ref.get('placement', 'inline'),
+                                'order': media_ref.get('order', 1)
+                            })
+
+                if media_assets:
+                    content_step['media'] = media_assets
+
+            steps.append(content_step)
         
         # Then add all quiz questions (preserves database order)
         for q in questions:
