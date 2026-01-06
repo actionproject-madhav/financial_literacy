@@ -296,11 +296,23 @@ export const LessonPage = () => {
         // Convert API steps to component steps
         const steps: Step[] = response.steps.map((step: any) => {
           if (step.type === 'content') {
+            // Parse content if it's a string (might be JSON)
+            let parsedContent = step.content
+            if (typeof step.content === 'string') {
+              try {
+                parsedContent = JSON.parse(step.content)
+              } catch {
+                // Keep as string if not JSON
+                parsedContent = step.content
+              }
+            }
+            
             return {
               type: 'content' as const,
-              content: step.content,
-              block_type: step.block_type,
-              title: step.title
+              content: parsedContent,
+              block_type: step.block_type || 'concept',
+              title: step.title,
+              media: step.media || []
             }
           }
 
@@ -1155,19 +1167,27 @@ export const LessonPage = () => {
   }
 
   const renderContent = (contentData: string | any, blockType?: string, title?: string, media?: MediaAsset[]) => {
-    // If it's a string (old format or explanation), render as markdown
+    // Parse content if it's a JSON string
+    let parsedContent: any = contentData
     if (typeof contentData === 'string') {
-      return contentData.split('\n').map((line, i) => {
-      if (line.startsWith('# ')) return <h1 key={i} className="text-xl font-bold mb-2">{line.replace('# ', '')}</h1>
-      if (line.startsWith('## ')) return <h2 key={i} className="text-lg font-bold mb-2 mt-2">{line.replace('## ', '')}</h2>
-      if (line.startsWith('- ')) return <li key={i} className="ml-4 mb-1">{line.replace('- ', '')}</li>
-      if (line.trim() === '') return <br key={i} />
-      return <p key={i} className="mb-2 text-gray-700 leading-relaxed">{line}</p>
-    })
+      // Try to parse as JSON first
+      try {
+        parsedContent = JSON.parse(contentData)
+        // If successful, treat as object
+      } catch {
+        // If not JSON, render as markdown
+        return contentData.split('\n').map((line, i) => {
+          if (line.startsWith('# ')) return <h1 key={i} className="text-xl font-bold mb-2">{line.replace('# ', '')}</h1>
+          if (line.startsWith('## ')) return <h2 key={i} className="text-lg font-bold mb-2 mt-2">{line.replace('## ', '')}</h2>
+          if (line.startsWith('- ')) return <li key={i} className="ml-4 mb-1">{line.replace('- ', '')}</li>
+          if (line.trim() === '') return <br key={i} />
+          return <p key={i} className="mb-2 text-gray-700 leading-relaxed">{line}</p>
+        })
+      }
     }
 
     // Rich content block rendering
-    const content = contentData
+    const content = parsedContent
 
     // Render based on block type
     switch (blockType) {
@@ -1353,6 +1373,61 @@ export const LessonPage = () => {
           </div>
         )
 
+      case 'checklist':
+        return (
+          <div className="space-y-3">
+            {title && <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>}
+            {content.text && <p className="text-gray-700 leading-relaxed mb-3">{content.text}</p>}
+            
+            {/* Render prerequisites or other checklist items */}
+            {content.prerequisites && Array.isArray(content.prerequisites) && (
+              <div className="mb-4">
+                <p className="font-semibold text-gray-800 mb-3">Prerequisites:</p>
+                <ul className="space-y-2">
+                  {content.prerequisites.map((item: any, idx: number) => (
+                    <li key={idx} className="flex items-start gap-2 text-gray-700">
+                      <span className="text-green-500 font-bold mt-0.5">✓</span>
+                      <div className="flex-1">
+                        <span className="font-medium">{item.item || item}</span>
+                        {item.target && (
+                          <span className="text-sm text-gray-500 ml-2">({item.target})</span>
+                        )}
+                        {item.exception && (
+                          <div className="text-xs text-orange-600 mt-1 italic">Note: {item.exception}</div>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {/* Render any other array fields */}
+            {Object.entries(content).map(([key, value]) => {
+              if (key === 'prerequisites') return null // Already handled above
+              if (Array.isArray(value) && value.length > 0) {
+                const label = key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+                return (
+                  <div key={key} className="mb-3">
+                    <p className="font-semibold text-gray-800 mb-2">{label}:</p>
+                    <ul className="space-y-2">
+                      {value.map((item: any, idx: number) => (
+                        <li key={idx} className="flex items-start gap-2 text-gray-700">
+                          <span className="text-green-500 font-bold mt-0.5">✓</span>
+                          <span>{typeof item === 'object' ? item.item || JSON.stringify(item) : item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              }
+              return null
+            })}
+            
+            {media && renderMedia(media)}
+          </div>
+        )
+
       case 'reference_list':
       case 'procedure':
       case 'calculation':
@@ -1365,20 +1440,33 @@ export const LessonPage = () => {
             
             {/* Render all array fields dynamically */}
             {Object.entries(content).map(([key, value]) => {
-              if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
+              if (Array.isArray(value) && value.length > 0) {
                 const label = key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+                // Check if array contains objects or strings
+                const isObjectArray = typeof value[0] === 'object'
                 return (
                   <div key={key} className="mb-3">
                     {label !== 'Items' && label !== 'Steps' && (
                       <p className="font-semibold text-gray-800 mb-2">{label}:</p>
                     )}
-                    <ol className="space-y-2 list-decimal list-inside">
-                      {value.map((item: string, idx: number) => (
-                        <li key={idx} className="text-gray-700">
-                          {item}
-                        </li>
-                      ))}
-                    </ol>
+                    {isObjectArray ? (
+                      <ul className="space-y-2">
+                        {value.map((item: any, idx: number) => (
+                          <li key={idx} className="text-gray-700">
+                            {item.item || item.text || item.label || JSON.stringify(item)}
+                            {item.target && <span className="text-sm text-gray-500 ml-2">({item.target})</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <ol className="space-y-2 list-decimal list-inside">
+                        {value.map((item: string, idx: number) => (
+                          <li key={idx} className="text-gray-700">
+                            {item}
+                          </li>
+                        ))}
+                      </ol>
+                    )}
                   </div>
                 )
               }
@@ -1396,6 +1484,8 @@ export const LessonPage = () => {
                 ))}
               </div>
             )}
+            
+            {media && renderMedia(media)}
           </div>
         )
 
