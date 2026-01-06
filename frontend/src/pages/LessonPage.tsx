@@ -9,7 +9,15 @@ import { CelebrationOverlay } from '../components/CelebrationOverlay'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useTranslateContent } from '../hooks/useTranslateContent'
 import { useHeartRecharge } from '../hooks/useHeartRecharge'
-import { BudgetCalculator, TaxBracketVisualizer, CompoundGrowthChart, RiskReturnSpectrum } from '../components/interactive'
+import { 
+  BudgetCalculator, 
+  TaxBracketVisualizer, 
+  CompoundGrowthChart, 
+  RiskReturnSpectrum,
+  SalesTaxCalculator,
+  CompoundInterestCalculator,
+  RetirementCalculator
+} from '../components/interactive'
 import { LottieAnimation } from '../components/LottieAnimation'
 
 interface StepBase {
@@ -1123,11 +1131,15 @@ export const LessonPage = () => {
             case 'calculator':
             case 'chart':
               // Render interactive components
+              // Component names must match exactly what's stored in database
               const componentMap: Record<string, React.FC<any>> = {
                 'BudgetCalculator': BudgetCalculator,
                 'TaxBracketVisualizer': TaxBracketVisualizer,
                 'CompoundGrowthChart': CompoundGrowthChart,
                 'RiskReturnSpectrum': RiskReturnSpectrum,
+                'SalesTaxCalculator': SalesTaxCalculator,
+                'CompoundInterestCalculator': CompoundInterestCalculator,
+                'RetirementCalculator': RetirementCalculator,
               };
 
               const Component = asset.component_name ? componentMap[asset.component_name] : null;
