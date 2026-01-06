@@ -921,11 +921,68 @@ export const LessonPage = () => {
           if (voiceResult.matchedChoice !== null) {
             setSelectedOption(voiceResult.matchedChoice)
           }
+          
+          // Show result immediately
+          if (isCorrect) {
+            setStatus('correct')
+            setCorrectAnswers(prev => prev + 1)
+            setStreak(prev => prev + 1)
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3')
+            audio.play().catch(() => { })
+          } else {
+            setStatus('wrong')
+            setStreak(0)
+            loseHeart()
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3')
+            audio.play().catch(() => { })
+
+            // Insert explanation step
+            const explanationStep: ContentStep = {
+              type: 'content',
+              content: currentStepData.explanation
+            }
+
+            const newSteps = [...steps]
+            newSteps.splice(currentStep + 1, 0, explanationStep)
+            setSteps(newSteps)
+          }
+          
+          // Log interaction in background (non-blocking)
+          logInteraction(currentStepData, isCorrect).catch(() => {})
+          return
         } else {
           // Voice submission failed, fall back to multiple choice if selected
           if (selectedOption !== null) {
             isCorrect = selectedOption === currentStepData.correct
-            await logInteraction(currentStepData, isCorrect)
+            
+            // Show result immediately
+            if (isCorrect) {
+              setStatus('correct')
+              setCorrectAnswers(prev => prev + 1)
+              setStreak(prev => prev + 1)
+              const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3')
+              audio.play().catch(() => { })
+            } else {
+              setStatus('wrong')
+              setStreak(0)
+              loseHeart()
+              const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3')
+              audio.play().catch(() => { })
+
+              // Insert explanation step
+              const explanationStep: ContentStep = {
+                type: 'content',
+                content: currentStepData.explanation
+              }
+
+              const newSteps = [...steps]
+              newSteps.splice(currentStep + 1, 0, explanationStep)
+              setSteps(newSteps)
+            }
+            
+            // Log interaction in background (non-blocking)
+            logInteraction(currentStepData, isCorrect).catch(() => {})
+            return
           } else {
             // No valid answer
             setStatus('wrong')
@@ -935,36 +992,39 @@ export const LessonPage = () => {
           }
         }
       } else if (selectedOption !== null) {
-        // Regular multiple choice answer
+        // Regular multiple choice answer - check immediately (instant feedback)
         isCorrect = selectedOption === currentStepData.correct
-        await logInteraction(currentStepData, isCorrect)
+        
+        // Show result immediately
+        if (isCorrect) {
+          setStatus('correct')
+          setCorrectAnswers(prev => prev + 1)
+          setStreak(prev => prev + 1)
+          const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3')
+          audio.play().catch(() => { })
+        } else {
+          setStatus('wrong')
+          setStreak(0)
+          loseHeart()
+          const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3')
+          audio.play().catch(() => { })
+
+          // Insert explanation step
+          const explanationStep: ContentStep = {
+            type: 'content',
+            content: currentStepData.explanation
+          }
+
+          const newSteps = [...steps]
+          newSteps.splice(currentStep + 1, 0, explanationStep)
+          setSteps(newSteps)
+        }
+        
+        // Log interaction in background (non-blocking)
+        logInteraction(currentStepData, isCorrect).catch(() => {})
       } else {
         // No answer selected
         return
-      }
-
-      if (isCorrect) {
-        setStatus('correct')
-        setCorrectAnswers(prev => prev + 1)
-        setStreak(prev => prev + 1)
-        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3')
-        audio.play().catch(() => { })
-      } else {
-        setStatus('wrong')
-        setStreak(0)
-        loseHeart()
-        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3')
-        audio.play().catch(() => { })
-
-        // Insert explanation step
-        const explanationStep: ContentStep = {
-          type: 'content',
-          content: currentStepData.explanation
-        }
-
-        const newSteps = [...steps]
-        newSteps.splice(currentStep + 1, 0, explanationStep)
-        setSteps(newSteps)
       }
     }
   }
