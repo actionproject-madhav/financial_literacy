@@ -738,9 +738,14 @@
                 },
                 "media": [
                   {
-                    "asset_id": "img-credit-impact",
+                    "asset_id": "anim-credit-journey",
                     "placement": "fullwidth",
                     "order": 1
+                  },
+                  {
+                    "asset_id": "img-credit-impact",
+                    "placement": "fullwidth",
+                    "order": 2
                   }
                 ]
               },
@@ -1406,14 +1411,19 @@
                 },
                 "media": [
                   {
-                    "asset_id": "img-budget-pie-50-30-20",
+                    "asset_id": "anim-budget-pie",
                     "placement": "inline",
                     "order": 1
                   },
                   {
+                    "asset_id": "img-budget-pie-50-30-20",
+                    "placement": "inline",
+                    "order": 2
+                  },
+                  {
                     "asset_id": "calc-budget-50-30-20",
                     "placement": "fullwidth",
-                    "order": 2
+                    "order": 3
                   }
                 ]
               },
@@ -2354,6 +2364,11 @@
                     "asset_id": "interactive-risk-spectrum",
                     "placement": "fullwidth",
                     "order": 1
+                  },
+                  {
+                    "asset_id": "img-investment-risk-pyramid",
+                    "placement": "inline",
+                    "order": 2
                   }
                 ]
               },

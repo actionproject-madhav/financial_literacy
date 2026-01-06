@@ -1,8 +1,8 @@
 {
   "metadata": {
-    "version": "1.2.0",
+    "version": "1.3.0",
     "generated_at": "2026-01-06T00:00:00Z",
-    "total_assets": 27,
+    "total_assets": 30,
     "note": "Media assets for FinLit curriculum hosted on Cloudinary CDN."
   },
   "assets": [
@@ -373,6 +373,45 @@
       "component_props": {},
       "tags": ["taxes", "tax-brackets", "calculator", "interactive"],
       "used_in": ["how-tax-system-works"]
+    },
+    {
+      "asset_id": "img-investment-risk-pyramid",
+      "type": "image",
+      "urls": {
+        "original": "https://res.cloudinary.com/dsxybhdz7/image/upload/v1767731710/investment-risk-pyramid_nlduwz.png"
+      },
+      "alt_text": "Investment risk pyramid showing low risk assets at base and high risk at top",
+      "caption": "Investment risk levels: Low (savings/bonds) to High (stocks/crypto)",
+      "dimensions": {"width": 800, "height": 800},
+      "mime_type": "image/png",
+      "tags": ["investing", "risk", "pyramid"],
+      "used_in": ["introduction-to-investing"]
+    },
+    {
+      "asset_id": "anim-credit-journey",
+      "type": "lottie",
+      "urls": {
+        "original": "https://res.cloudinary.com/dsxybhdz7/raw/upload/v1767732999/credit_stages_v5utvz.json"
+      },
+      "alt_text": "Animated timeline showing 7 life stages where credit is checked",
+      "caption": "Your credit history impacts many major life decisions",
+      "dimensions": {"width": 800, "height": 600},
+      "mime_type": "application/json",
+      "tags": ["credit", "animation", "timeline"],
+      "used_in": ["introduction-to-credit"]
+    },
+    {
+      "asset_id": "anim-budget-pie",
+      "type": "lottie",
+      "urls": {
+        "original": "https://res.cloudinary.com/dsxybhdz7/raw/upload/v1767733178/pie_wkuref.json"
+      },
+      "alt_text": "Animated pie chart showing 50/30/20 budget allocation",
+      "caption": "Watch how your income gets divided using the 50/30/20 rule",
+      "dimensions": {"width": 800, "height": 800},
+      "mime_type": "application/json",
+      "tags": ["budgeting", "animation", "50-30-20"],
+      "used_in": ["creating-budget"]
     }
   ]
 }

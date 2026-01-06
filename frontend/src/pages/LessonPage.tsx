@@ -10,6 +10,7 @@ import { useLanguage } from '../contexts/LanguageContext'
 import { useTranslateContent } from '../hooks/useTranslateContent'
 import { useHeartRecharge } from '../hooks/useHeartRecharge'
 import { BudgetCalculator, TaxBracketVisualizer, CompoundGrowthChart, RiskReturnSpectrum } from '../components/interactive'
+import { LottieAnimation } from '../components/LottieAnimation'
 
 interface StepBase {
   type: 'content' | 'quiz';
@@ -1001,7 +1002,6 @@ export const LessonPage = () => {
               )
 
             case 'animation':
-            case 'lottie':
               return (
                 <div key={asset.asset_id} className={containerClass}>
                   <img
@@ -1009,6 +1009,23 @@ export const LessonPage = () => {
                     alt={asset.alt_text || ''}
                     className="rounded-lg w-full"
                   />
+                  {asset.caption && (
+                    <p className="text-sm text-gray-600 italic mt-2 text-center">{asset.caption}</p>
+                  )}
+                </div>
+              )
+
+            case 'lottie':
+              return (
+                <div key={asset.asset_id} className={containerClass}>
+                  <div className="bg-white border-2 border-[#E5E5E5] rounded-[16px] p-4 overflow-hidden">
+                    <LottieAnimation
+                      src={asset.urls.original || ''}
+                      className="w-full h-auto max-h-96"
+                      loop={true}
+                      autoplay={true}
+                    />
+                  </div>
                   {asset.caption && (
                     <p className="text-sm text-gray-600 italic mt-2 text-center">{asset.caption}</p>
                   )}
