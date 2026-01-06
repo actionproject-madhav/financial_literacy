@@ -89,7 +89,14 @@
                     ]
                   ],
                   "note": "The $2 bill exists but is rarely circulated."
-                }
+                },
+                "media": [
+                  {
+                    "asset_id": "img-us-bills-lineup",
+                    "placement": "inline",
+                    "order": 1
+                  }
+                ]
               },
               {
                 "type": "reference_table",
@@ -129,7 +136,14 @@
                     ]
                   ],
                   "important": "The dime (10 cents) is physically smaller than the nickel (5 cents). Coin values are not proportional to size."
-                }
+                },
+                "media": [
+                  {
+                    "asset_id": "img-us-coins",
+                    "placement": "inline",
+                    "order": 1
+                  }
+                ]
               },
               {
                 "type": "concept",
@@ -150,7 +164,19 @@
                     "total_paid": "$54.00"
                   },
                   "practical_tip": "Budget 5-10% above displayed prices for sales tax."
-                }
+                },
+                "media": [
+                  {
+                    "asset_id": "anim-sales-tax-receipt",
+                    "placement": "fullwidth",
+                    "order": 1
+                  },
+                  {
+                    "asset_id": "calc-sales-tax",
+                    "placement": "fullwidth",
+                    "order": 2
+                  }
+                ]
               }
             ]
           },
@@ -664,7 +690,14 @@
                     "Student loans: Loans for education expenses",
                     "Personal loans: Unsecured loans for various purposes"
                   ]
-                }
+                },
+                "media": [
+                  {
+                    "asset_id": "img-credit-types",
+                    "placement": "inline",
+                    "order": 1
+                  }
+                ]
               },
               {
                 "type": "concept",
@@ -702,7 +735,19 @@
                       "impact": "Credit score is a primary factor in approval and rate"
                     }
                   ]
-                }
+                },
+                "media": [
+                  {
+                    "asset_id": "anim-credit-journey",
+                    "placement": "fullwidth",
+                    "order": 1
+                  },
+                  {
+                    "asset_id": "img-credit-impact",
+                    "placement": "fullwidth",
+                    "order": 2
+                  }
+                ]
               },
               {
                 "type": "concept",
@@ -719,7 +764,14 @@
                     "implication": "Lenders view as high risk. Rebuilding takes time and consistent positive behavior."
                   },
                   "key_point": "Starting with no credit history is not the same as having damaged credit."
-                }
+                },
+                "media": [
+                  {
+                    "asset_id": "img-no-vs-bad-credit",
+                    "placement": "inline",
+                    "order": 1
+                  }
+                ]
               }
             ]
           },
@@ -1356,7 +1408,24 @@
                     }
                   ],
                   "flexibility": "These are guidelines. Adjust based on your situation and cost of living."
-                }
+                },
+                "media": [
+                  {
+                    "asset_id": "anim-budget-pie",
+                    "placement": "inline",
+                    "order": 1
+                  },
+                  {
+                    "asset_id": "img-budget-pie-50-30-20",
+                    "placement": "inline",
+                    "order": 2
+                  },
+                  {
+                    "asset_id": "calc-budget-50-30-20",
+                    "placement": "fullwidth",
+                    "order": 3
+                  }
+                ]
               },
               {
                 "type": "procedure",
@@ -1798,7 +1867,19 @@
                       "rates": "0% to 10%+"
                     }
                   ]
-                }
+                },
+                "media": [
+                  {
+                    "asset_id": "img-tax-types",
+                    "placement": "fullwidth",
+                    "order": 1
+                  },
+                  {
+                    "asset_id": "img-fica-stub",
+                    "placement": "inline",
+                    "order": 2
+                  }
+                ]
               },
               {
                 "type": "concept",
@@ -1839,7 +1920,14 @@
                     ]
                   },
                   "key_point": "Moving into a higher bracket does not mean all income is taxed at the higher rate."
-                }
+                },
+                "media": [
+                  {
+                    "asset_id": "img-tax-bracket-waterfall",
+                    "placement": "fullwidth",
+                    "order": 1
+                  }
+                ]
               },
               {
                 "type": "calculation",
@@ -1863,7 +1951,14 @@
                   ],
                   "total_tax": "$8,253",
                   "effective_rate": "13.8% (not 22%)"
-                }
+                },
+                "media": [
+                  {
+                    "asset_id": "interactive-tax-bracket",
+                    "placement": "fullwidth",
+                    "order": 1
+                  }
+                ]
               },
               {
                 "type": "concept",
@@ -1914,7 +2009,14 @@
                       "Deadline for those who filed extension"
                     ]
                   ]
-                }
+                },
+                "media": [
+                  {
+                    "asset_id": "img-tax-calendar",
+                    "placement": "inline",
+                    "order": 1
+                  }
+                ]
               }
             ]
           },
@@ -2214,7 +2316,14 @@
                       "Retirement, wealth building"
                     ]
                   ]
-                }
+                },
+                "media": [
+                  {
+                    "asset_id": "img-saving-vs-investing",
+                    "placement": "inline",
+                    "order": 1
+                  }
+                ]
               },
               {
                 "type": "concept",
@@ -2249,7 +2358,19 @@
                       "historical_return": "Highly volatile"
                     }
                   ]
-                }
+                },
+                "media": [
+                  {
+                    "asset_id": "interactive-risk-spectrum",
+                    "placement": "fullwidth",
+                    "order": 1
+                  },
+                  {
+                    "asset_id": "img-investment-risk-pyramid",
+                    "placement": "inline",
+                    "order": 2
+                  }
+                ]
               },
               {
                 "type": "calculation",
@@ -2284,7 +2405,14 @@
                     ]
                   },
                   "lesson": "Time in the market matters more than timing the market."
-                }
+                },
+                "media": [
+                  {
+                    "asset_id": "interactive-compound-growth",
+                    "placement": "fullwidth",
+                    "order": 1
+                  }
+                ]
               },
               {
                 "type": "checklist",

@@ -51,10 +51,20 @@ export const LottieAnimation: React.FC<LottieAnimationProps> = ({
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    // Get the actual file path (with fallback mapping)
-    const fileName = src.toLowerCase();
-    const actualFile = FILE_MAPPING[fileName] || FILE_MAPPING['default.json'] || 'shield.json';
-    const filePath = `/lottie/${actualFile}`;
+    // Check if src is a URL (starts with http:// or https://)
+    const isUrl = src.startsWith('http://') || src.startsWith('https://');
+
+    let filePath: string;
+
+    if (isUrl) {
+      // Use the URL directly (e.g., Cloudinary URL)
+      filePath = src;
+    } else {
+      // Get the actual file path from local mapping (with fallback mapping)
+      const fileName = src.toLowerCase();
+      const actualFile = FILE_MAPPING[fileName] || FILE_MAPPING['default.json'] || 'shield.json';
+      filePath = `/lottie/${actualFile}`;
+    }
 
     // Load the Lottie animation
     fetch(filePath)

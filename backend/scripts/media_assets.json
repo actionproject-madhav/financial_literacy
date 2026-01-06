@@ -1,9 +1,9 @@
 {
   "metadata": {
-    "version": "1.0.0",
-    "generated_at": "2025-12-27T00:00:00Z",
-    "total_assets": 15,
-    "note": "Sample media assets for FinLit curriculum. Replace URLs with actual CDN URLs."
+    "version": "1.3.0",
+    "generated_at": "2026-01-06T00:00:00Z",
+    "total_assets": 30,
+    "note": "Media assets for FinLit curriculum hosted on Cloudinary CDN."
   },
   "assets": [
     {
@@ -226,6 +226,192 @@
       "mime_type": "video/mp4",
       "tags": ["taxes", "video", "tutorial"],
       "used_in": ["filing-tax-return"]
+    },
+    {
+      "asset_id": "img-credit-types",
+      "type": "image",
+      "urls": {
+        "original": "https://res.cloudinary.com/dsxybhdz7/image/upload/v1767731709/credit_types_infographic_zsneb8.png"
+      },
+      "alt_text": "Infographic showing 5 types of credit: credit cards, auto loans, mortgages, student loans, personal loans",
+      "caption": "Common types of credit in the US financial system",
+      "dimensions": {"width": 1200, "height": 400},
+      "mime_type": "image/png",
+      "tags": ["credit", "introduction", "credit-types"],
+      "used_in": ["introduction-to-credit"]
+    },
+    {
+      "asset_id": "img-credit-impact",
+      "type": "image",
+      "urls": {
+        "original": "https://res.cloudinary.com/dsxybhdz7/image/upload/v1767731709/credit-impact-comparision_qhda3t.png"
+      },
+      "alt_text": "Side-by-side comparison showing impact of good credit vs poor credit on apartment rental, car loans, credit cards, and insurance",
+      "caption": "How your credit score affects major financial decisions",
+      "dimensions": {"width": 1000, "height": 600},
+      "mime_type": "image/png",
+      "tags": ["credit", "credit-score", "impact"],
+      "used_in": ["introduction-to-credit"]
+    },
+    {
+      "asset_id": "img-no-vs-bad-credit",
+      "type": "image",
+      "urls": {
+        "original": "https://res.cloudinary.com/dsxybhdz7/image/upload/v1767731710/no-credit-bad-credit_k4nhhm.png"
+      },
+      "alt_text": "Comparison showing the difference between having no credit history versus bad credit history",
+      "caption": "No credit is different from bad credit",
+      "dimensions": {"width": 800, "height": 400},
+      "mime_type": "image/png",
+      "tags": ["credit", "credit-history", "newcomers"],
+      "used_in": ["introduction-to-credit"]
+    },
+    {
+      "asset_id": "img-budget-pie-50-30-20",
+      "type": "image",
+      "urls": {
+        "original": "https://res.cloudinary.com/dsxybhdz7/image/upload/v1767731709/budget-pie-chart-50-30-20_iotm1e.png"
+      },
+      "alt_text": "Pie chart showing the 50/30/20 budget rule: 50% needs, 30% wants, 20% savings and debt repayment",
+      "caption": "The 50/30/20 budgeting framework",
+      "dimensions": {"width": 800, "height": 800},
+      "mime_type": "image/png",
+      "tags": ["budgeting", "50-30-20", "money-management"],
+      "used_in": ["creating-budget"]
+    },
+    {
+      "asset_id": "img-tax-types",
+      "type": "image",
+      "urls": {
+        "original": "https://res.cloudinary.com/dsxybhdz7/image/upload/v1767731710/tax-types-breakdown_yajko0.png"
+      },
+      "alt_text": "Breakdown of four US tax types with example amounts from a $50,000 salary: federal income tax, state income tax, FICA taxes, and sales tax",
+      "caption": "Understanding the different taxes you pay in the US",
+      "dimensions": {"width": 1000, "height": 600},
+      "mime_type": "image/png",
+      "tags": ["taxes", "tax-types", "income-tax"],
+      "used_in": ["how-tax-system-works"]
+    },
+    {
+      "asset_id": "img-fica-stub",
+      "type": "image",
+      "urls": {
+        "original": "https://res.cloudinary.com/dsxybhdz7/image/upload/v1767731709/fica-paycheck-stub_ziuaaf.png"
+      },
+      "alt_text": "Sample paycheck stub highlighting Social Security and Medicare deductions that make up FICA taxes",
+      "caption": "FICA taxes: Social Security (6.2%) and Medicare (1.45%)",
+      "dimensions": {"width": 1000, "height": 400},
+      "mime_type": "image/png",
+      "tags": ["taxes", "fica", "paycheck"],
+      "used_in": ["how-tax-system-works"]
+    },
+    {
+      "asset_id": "img-tax-bracket-waterfall",
+      "type": "image",
+      "urls": {
+        "original": "https://res.cloudinary.com/dsxybhdz7/image/upload/v1767731710/tax-bracket-waterfall_dwr671.png"
+      },
+      "alt_text": "Waterfall chart showing how $60,000 income flows through progressive tax brackets at 10%, 12%, and 22%",
+      "caption": "Your income is taxed at different rates in different brackets",
+      "dimensions": {"width": 1200, "height": 600},
+      "mime_type": "image/png",
+      "tags": ["taxes", "tax-brackets", "progressive-tax"],
+      "used_in": ["how-tax-system-works"]
+    },
+    {
+      "asset_id": "img-tax-calendar",
+      "type": "image",
+      "urls": {
+        "original": "https://res.cloudinary.com/dsxybhdz7/image/upload/v1767731710/tax-calendar-deadlines_wqchdm.png"
+      },
+      "alt_text": "Calendar highlighting key tax deadlines: January 31, April 15, and October 15",
+      "caption": "Mark these important tax dates on your calendar",
+      "dimensions": {"width": 1000, "height": 400},
+      "mime_type": "image/png",
+      "tags": ["taxes", "deadlines", "calendar"],
+      "used_in": ["how-tax-system-works"]
+    },
+    {
+      "asset_id": "img-saving-vs-investing",
+      "type": "image",
+      "urls": {
+        "original": "https://res.cloudinary.com/dsxybhdz7/image/upload/v1767731710/saving-vs-investing-table_ejmctk.png"
+      },
+      "alt_text": "Comparison table showing differences between saving and investing across risk, return, time horizon, and best use cases",
+      "caption": "Saving vs Investing: Understanding the key differences",
+      "dimensions": {"width": 1000, "height": 500},
+      "mime_type": "image/png",
+      "tags": ["investing", "saving", "comparison"],
+      "used_in": ["introduction-to-investing"]
+    },
+    {
+      "asset_id": "interactive-compound-growth",
+      "type": "calculator",
+      "urls": {},
+      "alt_text": "Interactive compound growth calculator showing investment growth over time",
+      "component_name": "CompoundGrowthChart",
+      "component_props": {},
+      "tags": ["investing", "compound-interest", "calculator", "interactive"],
+      "used_in": ["introduction-to-investing"]
+    },
+    {
+      "asset_id": "interactive-risk-spectrum",
+      "type": "calculator",
+      "urls": {},
+      "alt_text": "Interactive risk-return spectrum showing different investment types",
+      "component_name": "RiskReturnSpectrum",
+      "component_props": {},
+      "tags": ["investing", "risk", "return", "interactive"],
+      "used_in": ["introduction-to-investing"]
+    },
+    {
+      "asset_id": "interactive-tax-bracket",
+      "type": "calculator",
+      "urls": {},
+      "alt_text": "Interactive tax bracket calculator and visualizer",
+      "component_name": "TaxBracketVisualizer",
+      "component_props": {},
+      "tags": ["taxes", "tax-brackets", "calculator", "interactive"],
+      "used_in": ["how-tax-system-works"]
+    },
+    {
+      "asset_id": "img-investment-risk-pyramid",
+      "type": "image",
+      "urls": {
+        "original": "https://res.cloudinary.com/dsxybhdz7/image/upload/v1767731710/investment-risk-pyramid_nlduwz.png"
+      },
+      "alt_text": "Investment risk pyramid showing low risk assets at base and high risk at top",
+      "caption": "Investment risk levels: Low (savings/bonds) to High (stocks/crypto)",
+      "dimensions": {"width": 800, "height": 800},
+      "mime_type": "image/png",
+      "tags": ["investing", "risk", "pyramid"],
+      "used_in": ["introduction-to-investing"]
+    },
+    {
+      "asset_id": "anim-credit-journey",
+      "type": "lottie",
+      "urls": {
+        "original": "https://res.cloudinary.com/dsxybhdz7/raw/upload/v1767732999/credit_stages_v5utvz.json"
+      },
+      "alt_text": "Animated timeline showing 7 life stages where credit is checked",
+      "caption": "Your credit history impacts many major life decisions",
+      "dimensions": {"width": 800, "height": 600},
+      "mime_type": "application/json",
+      "tags": ["credit", "animation", "timeline"],
+      "used_in": ["introduction-to-credit"]
+    },
+    {
+      "asset_id": "anim-budget-pie",
+      "type": "lottie",
+      "urls": {
+        "original": "https://res.cloudinary.com/dsxybhdz7/raw/upload/v1767733178/pie_wkuref.json"
+      },
+      "alt_text": "Animated pie chart showing 50/30/20 budget allocation",
+      "caption": "Watch how your income gets divided using the 50/30/20 rule",
+      "dimensions": {"width": 800, "height": 800},
+      "mime_type": "application/json",
+      "tags": ["budgeting", "animation", "50-30-20"],
+      "used_in": ["creating-budget"]
     }
   ]
 }

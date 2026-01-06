@@ -9,9 +9,32 @@ import { CelebrationOverlay } from '../components/CelebrationOverlay'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useTranslateContent } from '../hooks/useTranslateContent'
 import { useHeartRecharge } from '../hooks/useHeartRecharge'
+import { BudgetCalculator, TaxBracketVisualizer, CompoundGrowthChart, RiskReturnSpectrum } from '../components/interactive'
+import { LottieAnimation } from '../components/LottieAnimation'
 
 interface StepBase {
   type: 'content' | 'quiz';
+}
+
+interface MediaAsset {
+  asset_id: string;
+  type: 'image' | 'video' | 'animation' | 'lottie' | 'calculator' | 'chart';
+  urls: {
+    original?: string;
+    thumbnail?: string;
+    mobile?: string;
+    [key: string]: string | undefined;
+  };
+  alt_text?: string;
+  caption?: string;
+  dimensions?: {
+    width: number;
+    height: number;
+  };
+  component_name?: string;
+  component_props?: Record<string, any>;
+  placement: 'inline' | 'sidebar' | 'fullwidth';
+  order: number;
 }
 
 interface ContentStep extends StepBase {
@@ -31,6 +54,7 @@ interface ContentStep extends StepBase {
   };
   block_type?: string; // 'concept', 'reference_table', 'example', 'tip', 'warning'
   title?: string;
+  media?: MediaAsset[];
 }
 
 interface QuizStep extends StepBase {
@@ -945,7 +969,132 @@ export const LessonPage = () => {
     }
   }
 
-  const renderContent = (contentData: string | any, blockType?: string, title?: string) => {
+  const renderMedia = (media: MediaAsset[]) => {
+    if (!media || media.length === 0) return null
+
+    // Sort media by order
+    const sortedMedia = [...media].sort((a, b) => a.order - b.order)
+
+    return (
+      <div className="space-y-4 mt-4">
+        {sortedMedia.map((asset) => {
+          const containerClass = asset.placement === 'fullwidth'
+            ? 'w-full'
+            : asset.placement === 'sidebar'
+            ? 'max-w-sm mx-auto'
+            : 'max-w-md'
+
+          // Render based on asset type
+          switch (asset.type) {
+            case 'image':
+              return (
+                <div key={asset.asset_id} className={containerClass}>
+                  <img
+                    src={asset.urls.original || asset.urls.mobile || ''}
+                    alt={asset.alt_text || ''}
+                    className="rounded-lg shadow-md w-full"
+                    loading="lazy"
+                  />
+                  {asset.caption && (
+                    <p className="text-sm text-gray-600 italic mt-2 text-center">{asset.caption}</p>
+                  )}
+                </div>
+              )
+
+            case 'animation':
+              return (
+                <div key={asset.asset_id} className={containerClass}>
+                  <img
+                    src={asset.urls.original || ''}
+                    alt={asset.alt_text || ''}
+                    className="rounded-lg w-full"
+                  />
+                  {asset.caption && (
+                    <p className="text-sm text-gray-600 italic mt-2 text-center">{asset.caption}</p>
+                  )}
+                </div>
+              )
+
+            case 'lottie':
+              return (
+                <div key={asset.asset_id} className={containerClass}>
+                  <div className="bg-white border-2 border-[#E5E5E5] rounded-[16px] p-4 overflow-hidden">
+                    <LottieAnimation
+                      src={asset.urls.original || ''}
+                      className="w-full h-auto max-h-96"
+                      loop={true}
+                      autoplay={true}
+                    />
+                  </div>
+                  {asset.caption && (
+                    <p className="text-sm text-gray-600 italic mt-2 text-center">{asset.caption}</p>
+                  )}
+                </div>
+              )
+
+            case 'video':
+              return (
+                <div key={asset.asset_id} className={containerClass}>
+                  <video
+                    src={asset.urls.original || ''}
+                    controls
+                    className="rounded-lg shadow-md w-full"
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                  {asset.caption && (
+                    <p className="text-sm text-gray-600 italic mt-2 text-center">{asset.caption}</p>
+                  )}
+                </div>
+              )
+
+            case 'calculator':
+            case 'chart':
+              // Render interactive components
+              const componentMap: Record<string, React.FC<any>> = {
+                'BudgetCalculator': BudgetCalculator,
+                'TaxBracketVisualizer': TaxBracketVisualizer,
+                'CompoundGrowthChart': CompoundGrowthChart,
+                'RiskReturnSpectrum': RiskReturnSpectrum,
+              };
+
+              const Component = asset.component_name ? componentMap[asset.component_name] : null;
+
+              if (Component) {
+                return (
+                  <div key={asset.asset_id} className={containerClass}>
+                    <Component {...(asset.component_props || {})} />
+                    {asset.caption && (
+                      <p className="text-sm text-gray-600 italic mt-2 text-center">{asset.caption}</p>
+                    )}
+                  </div>
+                );
+              }
+
+              // Fallback if component not found
+              return (
+                <div key={asset.asset_id} className={`${containerClass} bg-blue-50 border-2 border-blue-200 rounded-lg p-4`}>
+                  <p className="text-sm font-semibold text-blue-900 mb-2">
+                    Interactive {asset.type === 'calculator' ? 'Calculator' : 'Chart'}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {asset.component_name || `${asset.type} component`}
+                  </p>
+                  {asset.caption && (
+                    <p className="text-sm text-gray-700 mt-2">{asset.caption}</p>
+                  )}
+                </div>
+              )
+
+            default:
+              return null
+          }
+        })}
+      </div>
+    )
+  }
+
+  const renderContent = (contentData: string | any, blockType?: string, title?: string, media?: MediaAsset[]) => {
     // If it's a string (old format or explanation), render as markdown
     if (typeof contentData === 'string') {
       return contentData.split('\n').map((line, i) => {
@@ -1015,6 +1164,7 @@ export const LessonPage = () => {
               </div>
             )}
             {content.image_url && <img src={content.image_url} alt={title} className="rounded-lg mt-3 max-w-full" />}
+            {media && renderMedia(media)}
           </div>
         )
 
@@ -1051,6 +1201,10 @@ export const LessonPage = () => {
             {content.note && (
               <p className="text-xs text-gray-500 italic mt-2">Note: {content.note}</p>
             )}
+            {content.important && (
+              <p className="text-xs text-gray-600 font-medium mt-2">{content.important}</p>
+            )}
+            {media && renderMedia(media)}
           </div>
         )
 
@@ -1291,7 +1445,7 @@ export const LessonPage = () => {
                       <div className="absolute top-[-14px] left-1/2 -translate-x-1/2 sm:top-8 sm:left-[-14px] sm:translate-x-0 w-6 h-6 bg-white border-t-2 border-l-2 border-gray-200 transform rotate-45 sm:-rotate-45"></div>
                       {currentStepData.type === 'content' ? (
                         <div className="prose max-w-none text-base">
-                          {renderContent(currentStepData.content || '', currentStepData.block_type, currentStepData.title)}
+                          {renderContent(currentStepData.content || '', currentStepData.block_type, currentStepData.title, currentStepData.media)}
                         </div>
                       ) : (
                         <div className="flex items-start justify-between gap-3">

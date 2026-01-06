@@ -5,7 +5,7 @@ The backend includes a complete adaptive learning recommendation system that tra
 
 ## Current Implementation Status
 
-### ✅ What's Working Now
+###  What's Working Now
 
 1. **Mastery/ELO Tracking (BKT)**
    - Every question answer updates mastery using Bayesian Knowledge Tracing
