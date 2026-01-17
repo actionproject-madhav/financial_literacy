@@ -70,155 +70,102 @@ export const AuthPage: React.FC = () => {
     window.location.href = `${apiBase}/auth/google`;
   };
 
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: 'rgb(240, 240, 240)' }}>
+    <div className="min-h-screen bg-white font-sans text-brand-dark selection:bg-black selection:text-white flex items-center justify-center p-4 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md bg-white border-2 border-black rounded-[2rem] p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden"
       >
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-            className="w-20 h-20 bg-[#58CC02] rounded-[16px] flex items-center justify-center mx-auto mb-4 shadow-[0_4px_0_#46A302]"
-          >
-            <span className="text-white font-bold text-4xl">$</span>
-          </motion.div>
-          <h1 className="text-[32px] font-bold text-[#4B4B4B] mb-2" style={{ lineHeight: '40px' }}>
-            FinLit
-          </h1>
-          <p className="text-[17px] text-[#737373]" style={{ lineHeight: '24px' }}>
-            Master US Financial Literacy
-          </p>
+        {/* Decorative corner */}
+        <div className="absolute top-0 right-0 p-4">
+          <div className="w-8 h-8 bg-[#FF9600] rounded-full border-2 border-black flex items-center justify-center">
+            <span className="text-black font-bold">★</span>
+          </div>
         </div>
 
-        {/* Auth Card */}
-        <Card variant="elevated" padding="lg" className="mb-6">
-          <div className="text-center mb-6">
-            <h2 className="text-[23px] font-bold text-[#4B4B4B] mb-2" style={{ lineHeight: '32px' }}>
-              Welcome!
-            </h2>
-            <p className="text-[15px] text-[#737373]" style={{ lineHeight: '24px' }}>
-              Sign in to start your financial literacy journey
-            </p>
+        <div className="text-center mb-8">
+          <div className="inline-block bg-black text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
+            Join the Movement
+          </div>
+          <h1 className="text-4xl font-bold mb-2 tracking-tight">
+            {activeTab === 'signin' ? 'Welcome Back' : 'Join FinLit'}
+          </h1>
+          <p className="text-gray-600 font-medium">Master your money, level up your life.</p>
+        </div>
+
+        {/* Custom Tabs Implementation (Neo-Brutalist Style) */}
+        <div className="flex gap-2 mb-8 bg-gray-100 p-1.5 rounded-xl border-2 border-black">
+          <button
+            onClick={() => setActiveTab('signin')}
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all ${activeTab === 'signin'
+                ? 'bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] -translate-y-0.5'
+                : 'text-gray-500 hover:text-black'
+              }`}
+          >
+            Sign In
+          </button>
+          <button
+            onClick={() => setActiveTab('signup')}
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all ${activeTab === 'signup'
+                ? 'bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] -translate-y-0.5'
+                : 'text-gray-500 hover:text-black'
+              }`}
+          >
+            Create Account
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <button
+            onClick={handleGoogleSignIn}
+            className="w-full bg-white border-2 border-black text-black font-bold hover:bg-gray-50 flex items-center justify-center gap-3 py-4 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all"
+          >
+            {/* Google Icon SVG */}
+            <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
+              <path fill="#000" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#000" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#000" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+              <path fill="#000" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+            </svg>
+            <span>Continue with Google</span>
+          </button>
+
+          <div className="relative flex py-2 items-center">
+            <div className="flex-grow border-t-2 border-black/10"></div>
+            <span className="flex-shrink-0 mx-4 text-gray-400 text-xs font-bold uppercase tracking-widest">or demo access</span>
+            <div className="flex-grow border-t-2 border-black/10"></div>
           </div>
 
-          {/* Google Sign In Button */}
           <Button
-            variant="outline"
+            variant="secondary"
             size="lg"
             fullWidth
-            onClick={handleGoogleSignIn}
-            isLoading={isLoading}
-            leftIcon={
-              <svg className="w-6 h-6" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
-              </svg>
-            }
+            className="bg-[#EFF09E] border-2 border-black text-black font-bold py-4 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-[#E3E480] hover:-translate-y-0.5 active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all"
+            onClick={() => {
+              setLearnerId('demo-user-123');
+              setUser({
+                name: 'Demo User',
+                email: 'demo@test.com',
+                country: 'US',
+                visaType: 'F-1',
+                streak: 0,
+                totalXp: 0,
+                hearts: 5,
+                gems: 0,
+              });
+              navigate('/learn');
+            }}
           >
-            Continue with Google
+            Enter as Guest
           </Button>
+        </div>
 
-          {/* Divider */}
-          <div className="flex items-center my-6">
-            <div className="flex-1 border-t-2 border-[#E5E5E5]"></div>
-            <span className="px-4 text-[13px] text-[#737373] font-bold uppercase tracking-[0.04em]">
-              or
-            </span>
-            <div className="flex-1 border-t-2 border-[#E5E5E5]"></div>
-          </div>
-
-          {/* Benefits */}
-          <div className="space-y-4"> {/* Duolingo uses 16px spacing */}
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-[#58CC02] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div>
-                <p className="font-bold text-[#4B4B4B] text-[15px]" style={{ lineHeight: '24px' }}>Learn at your own pace</p>
-                <p className="text-[13px] text-[#737373] mt-1" style={{ lineHeight: '20px' }}>Adaptive lessons tailored to you</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-[#58CC02] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div>
-                <p className="font-bold text-[#4B4B4B] text-[15px]" style={{ lineHeight: '24px' }}>Cultural context included</p>
-                <p className="text-[13px] text-[#737373] mt-1" style={{ lineHeight: '20px' }}>Understand US finance from your background</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-[#58CC02] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div>
-                <p className="font-bold text-[#4B4B4B] text-[15px]" style={{ lineHeight: '24px' }}>Track your progress</p>
-                <p className="text-[13px] text-[#737373] mt-1" style={{ lineHeight: '20px' }}>Earn XP, maintain streaks, unlock achievements</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Skip for now - DEV ONLY */}
-          <div className="mt-6 pt-6 border-t-2 border-[#E5E5E5]">
-            <Button
-              variant="secondary"
-              size="lg"
-              fullWidth
-              onClick={() => {
-                // Set up demo user for testing
-                setLearnerId('demo-user-123');
-                setUser({
-                  name: 'Demo User',
-                  email: 'demo@test.com',
-                  country: 'US',
-                  visaType: 'F-1',
-                  streak: 0,
-                  totalXp: 0,
-                  hearts: 5,
-                  gems: 0,
-                });
-                navigate('/learn');
-              }}
-            >
-              Skip for now (Testing)
-            </Button>
-            <p className="text-[11px] text-[#AFAFAF] text-center mt-2">
-              ⚠️ Development mode only
-            </p>
-          </div>
-        </Card>
-
-        {/* Footer */}
-        <p className="text-center text-[13px] text-[#737373] mt-6" style={{ lineHeight: '20px' }}>
-          By continuing, you agree to our Terms of Service and Privacy Policy
+        <p className="text-center text-xs font-medium text-gray-500 mt-8 leading-relaxed px-4">
+          By jumping in, you agree to our <a href="#" className="underline text-black decoration-2">Terms</a> and <a href="#" className="underline text-black decoration-2">Privacy Policy</a>. No borders, just knowledge.
         </p>
       </motion.div>
     </div>

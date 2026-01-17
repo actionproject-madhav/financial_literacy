@@ -45,61 +45,80 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        // Surfaces
-        'duo-bg': '#F0F0F0',
+        // Professional Palette
+        'brand-dark': '#1F3D33',
+        'brand-dark-hover': '#162B24',
+        'brand-cream': '#F3F1E6',
+        'brand-mint': '#E1E6E3',
+        'brand-text': '#1F3D33',
+        'brand-gray': '#9CA3AF',
+
+        // Keep existing for backward compat where needed, but mapped to new palette where possible
+        'duo-bg': '#F3F1E6',
         'duo-surface': '#FFFFFF',
-        
-        // Brand colors
-        'duo-green': '#58CC02',
+        'duo-green': '#1F3D33',
+
+        // Keep existing primary colors for backward compatibility
+        primary: {
+          50: '#F3F1E6',
+          100: '#E1E6E3',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#1F3D33', // Main brand color
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#1F3D33',
+        },
+        // Brand colors (old, kept for reference/backward compatibility)
         'duo-green-hover': '#61D800',
         'duo-green-shadow': '#46A302',
         'duo-green-light': '#89E219',
-        
+
         'duo-blue': '#1CB0F6',
         'duo-blue-hover': '#14B8FF',
         'duo-blue-shadow': '#1899D6',
         'duo-blue-tint': '#DDF4FF',
-        
+
         'duo-purple': '#8549BA',
         'duo-purple-light': '#CE82FF',
         'duo-purple-tint': '#F3E5FF',
-        
+
         'duo-red': '#FF4B4B',
         'duo-red-dark': '#EA2B2B',
         'duo-red-tint': '#FFDFE0',
-        
+
         'duo-yellow': '#FFC800',
         'duo-orange': '#FF9600',
-        
+
         // Text
         'duo-text': '#4B4B4B',
         'duo-text-muted': '#737373',
         'duo-text-subtle': '#AFAFAF',
-        
+
         // Borders
         'duo-border': '#E5E5E5',
         'duo-border-focus': '#84D8FF',
-        
-        // Keep existing primary colors for backward compatibility
-        primary: {
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
-        },
       },
       fontFamily: {
-        'duo': ['Nunito', 'system-ui', '-apple-system', 'sans-serif'],
-        sans: ['Host Grotesk', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
-        jakarta: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        serif: ['Playfair Display', 'serif'],
+        sans: ['Space Grotesk', 'Inter', 'sans-serif'],
+        'duo': ['Space Grotesk', 'sans-serif'],
+        jakarta: ['Inter', 'sans-serif'],
       },
       fontSize: {
+        'xs': ['12px', { lineHeight: '18px' }],
+        'sm': ['14px', { lineHeight: '20px' }],
+        'base': ['16px', { lineHeight: '24px' }],
+        'lg': ['18px', { lineHeight: '28px' }],
+        'xl': ['20px', { lineHeight: '30px' }],
+        '2xl': ['24px', { lineHeight: '32px' }],
+        '3xl': ['30px', { lineHeight: '36px' }],
+        '4xl': ['36px', { lineHeight: '44px' }],
+        '5xl': ['48px', { lineHeight: '1.1' }],
+        '6xl': ['60px', { lineHeight: '1.1' }],
+        '7xl': ['72px', { lineHeight: '1.1' }],
         'duo-xs': ['12px', { lineHeight: '18px' }],
         'duo-sm': ['13px', { lineHeight: '20px' }],
         'duo-base': ['15px', { lineHeight: '24px' }],
@@ -146,8 +165,28 @@ export default {
         'fade-in': 'fadeIn 0.2s ease-out',
         'pulse-success': 'pulseSuccess 0.6s ease-out',
         'flame': 'flame 1s ease-in-out infinite',
+        'blob': 'blob 7s infinite',
+        'scroll': 'scroll 30s linear infinite',
       },
       keyframes: {
+        blob: {
+          "0%": {
+            transform: "translate(0px, 0px) scale(1)",
+          },
+          "33%": {
+            transform: "translate(30px, -50px) scale(1.1)",
+          },
+          "66%": {
+            transform: "translate(-20px, 20px) scale(0.9)",
+          },
+          "100%": {
+            transform: "translate(0px, 0px) scale(1)",
+          },
+        },
+        scroll: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
         shake: {
           '0%, 100%': { transform: 'translateX(0)' },
           '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-4px)' },

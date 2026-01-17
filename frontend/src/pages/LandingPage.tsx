@@ -1,26 +1,39 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../context/UserContext'
-import { useTheme } from '../context/ThemeContext'
-import { motion, useScroll, useTransform } from 'framer-motion'
-import { Moon, Sun } from 'lucide-react'
-import Lottie from 'lottie-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Globe,
+  ArrowUpRight,
+  Star,
+  Sparkles,
+  Zap,
+  Target,
+  Menu,
+  X,
+  ChevronRight,
+  TrendingUp,
+  Shield,
+  BookOpen,
+  Users
+} from 'lucide-react'
 
-// Import your animations (from src/assets/animations folder)
-import financeAnimation from '../assets/animations/Finance.json'
-import investingAnimation from '../assets/animations/investing.json'
-import stocksAnimation from '../assets/animations/stocks.json'
+// Scrolling avatars for the community section
+const communityAvatars = [
+  { id: 1, shape: 'rounded-full', img: 12 },
+  { id: 2, shape: 'rounded-[2rem]', img: 32 },
+  { id: 3, shape: 'rounded-tl-[3rem] rounded-br-[3rem] rounded-tr-lg rounded-bl-lg', img: 45 },
+  { id: 4, shape: 'rounded-full', img: 65 },
+  { id: 5, shape: 'rounded-[3rem] rounded-tr-none', img: 21 },
+  { id: 6, shape: 'rounded-[20px] rotate-2', img: 11 },
+  { id: 7, shape: 'rounded-t-[4rem] rounded-b-lg', img: 8 },
+  { id: 8, shape: 'rounded-full border-4 border-brand-mint', img: 5 },
+]
 
 const LandingPage = () => {
   const navigate = useNavigate()
   const { user, isLoading } = useUser()
-  const { toggleTheme, isDark } = useTheme()
-  const { scrollYProgress } = useScroll()
-
-  // Parallax effects
-  const y1 = useTransform(scrollYProgress, [0, 1], [0, -100])
-  const y2 = useTransform(scrollYProgress, [0, 1], [0, -200])
-  const y3 = useTransform(scrollYProgress, [0, 1], [0, 50])
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -29,383 +42,412 @@ const LandingPage = () => {
   }, [user, isLoading, navigate])
 
   return (
-    <div>
-      <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 dark:from-gray-950 dark:via-black dark:to-gray-900 transition-colors duration-700 relative overflow-hidden">
-        
-        {/* Animated Background Orbs */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div
-            animate={{
-              scale: [1, 1.2, 1],
-              rotate: [0, 90, 0],
-            }}
-            transition={{
-              duration: 20,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-            className="absolute -top-40 -right-40 w-64 h-64 md:w-96 md:h-96 bg-gradient-to-br from-emerald-400/20 to-teal-600/20 dark:from-emerald-500/10 dark:to-teal-700/10 rounded-full blur-3xl"
-          />
-          <motion.div
-            animate={{
-              scale: [1, 1.3, 1],
-              rotate: [0, -90, 0],
-            }}
-            transition={{
-              duration: 25,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-            className="absolute -bottom-40 -left-40 w-64 h-64 md:w-96 md:h-96 bg-gradient-to-tr from-purple-400/20 to-pink-600/20 dark:from-purple-500/10 dark:to-pink-700/10 rounded-full blur-3xl"
-          />
-        </div>
+    <div className="min-h-screen bg-white font-sans text-brand-dark selection:bg-black selection:text-white overflow-x-hidden">
 
-        {/* Navigation */}
-        <nav className="sticky top-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800">
-          <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
-              <div className="w-8 h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center">
-                <span className="text-white dark:text-black font-bold text-sm">F</span>
-              </div>
-              <span className="text-black dark:text-white font-bold text-xl">FinLit</span>
-            </div>
+      {/* Neo-Brutalist Floating Navbar */}
+      <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4">
+        <nav className="w-full max-w-5xl bg-white border-2 border-black rounded-full px-2 py-2 flex justify-between items-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative">
 
-            {/* Center Links */}
-            <div className="hidden md:flex items-center space-x-8 text-sm">
-              <a href="#features" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">Features</a>
-              <a href="#about" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">About</a>
-            </div>
+          {/* Logo */}
+          <div
+            className="flex items-center gap-2 cursor-pointer pl-4"
+            onClick={() => navigate('/')}
+          >
+            <div className="w-8 h-8 flex items-center justify-center bg-black rounded-full text-white font-bold text-lg">F</div>
+            <span className="font-bold text-xl tracking-tight uppercase">FinLit</span>
+          </div>
 
-            {/* Right Actions */}
-            <div className="flex items-center space-x-3">
+          {/* Desktop Links */}
+          <div className="hidden md:flex items-center space-x-1">
+            {['Mission', 'Curriculum', 'Community', 'Reviews'].map((item) => (
               <button
-                onClick={toggleTheme}
-                className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-900 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                key={item}
+                className="px-5 py-2 rounded-full hover:bg-black hover:text-white transition-all font-medium text-sm border border-transparent hover:border-black"
+                onClick={() => document.getElementById(item.toLowerCase())?.scrollIntoView({ behavior: 'smooth' })}
               >
-                {isDark ? <Sun className="w-5 h-5 text-gray-700 dark:text-gray-300" /> : <Moon className="w-5 h-5 text-gray-700 dark:text-gray-300" />}
+                {item}
               </button>
+            ))}
+          </div>
 
-              <button
-                onClick={() => navigate('/auth')}
-                className="bg-black dark:bg-white text-white dark:text-black px-6 py-2 rounded-lg text-sm font-semibold hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
-              >
-                Get Started
-              </button>
-            </div>
+          {/* Auth Buttons */}
+          <div className="flex items-center gap-2 pr-1">
+            <button
+              onClick={() => navigate('/auth')}
+              className="px-5 py-2.5 rounded-full font-bold text-sm hidden sm:block hover:bg-white/50 transition-colors"
+            >
+              Log in
+            </button>
+            <button
+              onClick={() => navigate('/auth')}
+              className="bg-[#EFF09E] border-2 border-black hover:bg-[#E3E480] text-black px-6 py-2.5 rounded-full font-bold transition-all text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+            >
+              Sign up
+            </button>
+
+            {/* Mobile Menu Toggle */}
+            <button
+              className="md:hidden p-2 rounded-full hover:bg-black/5"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X /> : <Menu />}
+            </button>
           </div>
         </nav>
-
-        {/* Hero Section */}
-        <div className="relative z-10 pt-12 md:pt-20 pb-10 md:pb-20 px-4 md:px-6">
-          <div className="max-w-7xl mx-auto">
-            
-            {/* Hero Text */}
-            <motion.div className="text-center mb-12 md:mb-20">
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-                className="inline-block mb-4 md:mb-6"
-              >
-                <span className="px-3 md:px-4 py-1.5 md:py-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full text-xs md:text-sm font-semibold">
-                  Built for International Students
-                </span>
-              </motion.div>
-
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.1 }}
-                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-gray-900 dark:text-white mb-6 md:mb-8 leading-tight px-4"
-              >
-                Investing,
-                <br />
-                <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                  Simplified
-                </span>
-              </motion.h1>
-
-              <motion.p
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 mb-8 md:mb-12 max-w-3xl mx-auto leading-relaxed px-4"
-              >
-                Start your investment journey with real-time market data, AI-powered insights, and educational resources designed for you.
-              </motion.p>
-
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-                className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 px-4"
-              >
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate('/auth')}
-                  className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-full text-base md:text-lg font-semibold shadow-2xl hover:shadow-emerald-500/50 transition-all"
-                >
-                  Start Investing
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-full sm:w-auto backdrop-blur-xl bg-white/50 dark:bg-black/50 text-gray-900 dark:text-white px-6 md:px-8 py-3 md:py-4 rounded-full text-base md:text-lg font-semibold border border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 transition-all"
-                >
-                  Watch Demo
-                </motion.button>
-              </motion.div>
-            </motion.div>
-
-            {/* Floating Dashboard Preview with Parallax */}
-            <div className="relative max-w-6xl mx-auto px-4">
-              
-              {/* Main Dashboard Screenshot - CENTER */}
-              <motion.div
-                initial={{ opacity: 0, y: 60 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 0.4 }}
-                style={{ y: y1 }}
-                className="relative z-20"
-              >
-                <div className="relative rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 border border-gray-200 dark:border-gray-800 p-1.5 md:p-2">
-                  <div className="aspect-video rounded-xl md:rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
-                    <img src="/dashboard.png" alt="Dashboard Preview" className="w-full h-full object-cover" />
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Finance Animation - TOP LEFT */}
-              <motion.div
-                initial={{ opacity: 0, x: -100, rotate: -10 }}
-                animate={{ opacity: 1, x: 0, rotate: -6 }}
-                transition={{ duration: 1, delay: 0.6 }}
-                style={{ y: y2 }}
-                className="absolute -top-10 md:-top-20 -left-2 md:-left-10 lg:-left-20 w-40 sm:w-48 md:w-64 lg:w-80 z-30"
-              >
-                <div className="backdrop-blur-xl bg-white/90 dark:bg-gray-900/90 rounded-2xl md:rounded-3xl p-3 md:p-6 shadow-2xl border border-gray-200 dark:border-gray-800 hover:scale-105 transition-transform duration-500">
-                  <div className="aspect-square rounded-xl md:rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 flex items-center justify-center overflow-hidden">
-                    <Lottie animationData={financeAnimation} loop={true} className="w-full h-full" />
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Investing Animation - TOP RIGHT */}
-              <motion.div
-                initial={{ opacity: 0, x: 100, rotate: 10 }}
-                animate={{ opacity: 1, x: 0, rotate: 6 }}
-                transition={{ duration: 1, delay: 0.8 }}
-                style={{ y: y3 }}
-                className="absolute -top-6 md:-top-10 -right-2 md:-right-10 lg:-right-20 w-48 sm:w-56 md:w-72 lg:w-96 z-30"
-              >
-                <div className="backdrop-blur-xl bg-white/90 dark:bg-gray-900/90 rounded-2xl md:rounded-3xl p-3 md:p-6 shadow-2xl border border-gray-200 dark:border-gray-800 hover:scale-105 transition-transform duration-500">
-                  <div className="aspect-video rounded-xl md:rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 flex items-center justify-center overflow-hidden">
-                    <Lottie animationData={investingAnimation} loop={true} className="w-full h-full" />
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Learning Animation - BOTTOM LEFT */}
-              <motion.div
-                initial={{ opacity: 0, x: -100, rotate: 8 }}
-                animate={{ opacity: 1, x: 0, rotate: 4 }}
-                transition={{ duration: 1, delay: 1 }}
-                style={{ y: y1 }}
-                className="absolute -bottom-8 md:-bottom-16 -left-2 md:-left-10 lg:-left-16 w-36 sm:w-44 md:w-56 lg:w-72 z-10"
-              >
-                <div className="backdrop-blur-xl bg-white/90 dark:bg-gray-900/90 rounded-2xl md:rounded-3xl p-3 md:p-6 shadow-2xl border border-gray-200 dark:border-gray-800 hover:scale-105 transition-transform duration-500">
-                  <div className="aspect-[4/5] rounded-xl md:rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center overflow-hidden">
-                    <Lottie animationData={stocksAnimation} loop={true} className="w-full h-full" />
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Investing Animation (Repeat) - BOTTOM RIGHT */}
-              <motion.div
-                initial={{ opacity: 0, x: 100, rotate: -8 }}
-                animate={{ opacity: 1, x: 0, rotate: -4 }}
-                transition={{ duration: 1, delay: 1.2 }}
-                style={{ y: y2 }}
-                className="absolute -bottom-6 md:-bottom-12 -right-2 md:-right-10 lg:-right-16 w-40 sm:w-52 md:w-64 lg:w-80 z-10"
-              >
-                <div className="backdrop-blur-xl bg-white/90 dark:bg-gray-900/90 rounded-2xl md:rounded-3xl p-3 md:p-6 shadow-2xl border border-gray-200 dark:border-gray-800 hover:scale-105 transition-transform duration-500">
-                  <div className="aspect-[3/4] rounded-xl md:rounded-2xl bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 flex items-center justify-center overflow-hidden">
-                    <Lottie animationData={investingAnimation} loop={true} className="w-full h-full" />
-                  </div>
-                </div>
-              </motion.div>
-
-            </div>
-          </div>
-        </div>
-
-        {/* Features Section */}
-        <div className="relative z-10 py-16 md:py-32 px-4 md:px-6 bg-gradient-to-b from-transparent to-white/50 dark:to-black/50 mt-20 md:mt-32">
-          <div className="max-w-7xl mx-auto">
-            
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="text-center mb-12 md:mb-20"
-            >
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-4 md:mb-6">
-                Everything you need to
-                <br />
-                <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                  start investing
-                </span>
-              </h2>
-              <p className="text-base md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4">
-                Powerful tools and resources designed specifically for international students
-              </p>
-            </motion.div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-              
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                whileHover={{ y: -10 }}
-                className="backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 rounded-2xl md:rounded-3xl p-6 md:p-8 border border-gray-200 dark:border-gray-800 shadow-lg hover:shadow-2xl transition-all"
-              >
-                <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 shadow-lg overflow-hidden">
-                  <div className="w-8 h-8 md:w-10 md:h-10">
-                    <Lottie animationData={financeAnimation} loop={true} />
-                  </div>
-                </div>
-                <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3 md:mb-4">Real-Time Data</h3>
-                <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
-                  Access live market prices, charts, and financial data powered by Yahoo Finance. No delays, no mock data.
-                </p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                whileHover={{ y: -10 }}
-                className="backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 rounded-2xl md:rounded-3xl p-6 md:p-8 border border-gray-200 dark:border-gray-800 shadow-lg hover:shadow-2xl transition-all"
-              >
-                <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 shadow-lg overflow-hidden">
-                  <div className="w-8 h-8 md:w-10 md:h-10">
-                    <Lottie animationData={investingAnimation} loop={true} />
-                  </div>
-                </div>
-                <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3 md:mb-4">AI-Powered Insights</h3>
-                <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
-                  Get personalized investment recommendations and portfolio analysis from our intelligent AI advisor.
-                </p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                whileHover={{ y: -10 }}
-                className="backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 rounded-2xl md:rounded-3xl p-6 md:p-8 border border-gray-200 dark:border-gray-800 shadow-lg hover:shadow-2xl transition-all sm:col-span-2 lg:col-span-1"
-              >
-                <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 shadow-lg overflow-hidden">
-                  <div className="w-8 h-8 md:w-10 md:h-10">
-                    <Lottie animationData={stocksAnimation} loop={true} />
-                  </div>
-                </div>
-                <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3 md:mb-4">Learn & Grow</h3>
-                <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
-                  Master investing with interactive courses, video tutorials, and resources tailored for international students.
-                </p>
-              </motion.div>
-
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Section */}
-        <div className="relative z-10 py-12 md:py-20 px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="max-w-5xl mx-auto backdrop-blur-xl bg-gradient-to-br from-emerald-500/10 to-teal-600/10 dark:from-emerald-500/5 dark:to-teal-600/5 rounded-2xl md:rounded-3xl p-8 md:p-12 border border-emerald-500/20 dark:border-emerald-500/10"
-          >
-            <div className="grid grid-cols-3 gap-4 md:gap-8 text-center">
-              <div>
-                <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">10K+</div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">Active Students</div>
-              </div>
-              <div>
-                <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">$50M+</div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">Assets Managed</div>
-              </div>
-              <div>
-                <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">98%</div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">Satisfaction</div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* CTA Section */}
-        <div className="relative z-10 py-16 md:py-32 px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="max-w-4xl mx-auto text-center"
-          >
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6 md:mb-8">
-              Ready to start your
-              <br />
-              investment journey?
-            </h2>
-            <p className="text-base md:text-xl text-gray-600 dark:text-gray-300 mb-8 md:mb-12 max-w-2xl mx-auto px-4">
-              Join thousands of international students already building their financial future with FinLit.
-            </p>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/auth')}
-              className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 md:px-10 py-4 md:py-5 rounded-full text-lg md:text-xl font-semibold shadow-2xl hover:shadow-emerald-500/50 transition-all"
-            >
-              Get Started for Free
-            </motion.button>
-          </motion.div>
-        </div>
-
-        {/* Footer */}
-        <footer className="relative z-10 border-t border-gray-200 dark:border-gray-800 py-8 md:py-12 px-4 md:px-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-              <div className="flex items-center space-x-2">
-                <div className="w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold text-xs md:text-sm">F</span>
-                </div>
-                <span className="text-gray-900 dark:text-white font-semibold text-base md:text-lg">FinLit</span>
-              </div>
-              
-              <div className="flex items-center gap-6 md:gap-8 text-xs md:text-sm text-gray-600 dark:text-gray-400">
-                <a href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors">Privacy</a>
-                <a href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors">Terms</a>
-                <a href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors">Contact</a>
-              </div>
-
-              <p className="text-xs md:text-sm text-gray-500 text-center md:text-left">
-                © 2024 FinLit. Real-time data
-              </p>
-            </div>
-          </div>
-        </footer>
-
       </div>
+
+      {/* Hero Section */}
+      <section className="pt-32 pb-8 lg:pt-36 lg:pb-12 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row items-stretch gap-8">
+
+            {/* Left Content (MUSEMENTOR Style Card) */}
+            <div className="lg:w-1/2 flex flex-col gap-6">
+
+              {/* Main Headline Card */}
+              <div className="bg-white border-2 border-black rounded-[2rem] p-6 lg:p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden group hover:translate-x-[-4px] hover:translate-y-[-4px] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all duration-300">
+                <div className="absolute top-0 right-0 p-4">
+                  <div className="w-12 h-12 bg-[#EFF09E] rounded-full border-2 border-black flex items-center justify-center animate-spin-slow">
+                    <Star className="w-6 h-6 fill-black" />
+                  </div>
+                </div>
+
+                <div className="inline-block bg-black text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
+                  Version 2.0 Live
+                </div>
+
+                <h1 className="text-4xl lg:text-6xl font-bold leading-[0.9] mb-4 tracking-tighter">
+                  Finance <br />
+                  that doesn't <br />
+                  <span className="italic font-serif text-[#FF9600]">bore you.</span>
+                </h1>
+
+                <p className="text-lg font-medium text-brand-dark mb-6 max-w-md leading-relaxed">
+                  Gamified lessons, real-time simulations, and a community of 10k+ international students mastering their money.
+                </p>
+
+                <div className="flex flex-wrap gap-4">
+                  <button
+                    onClick={() => navigate('/auth')}
+                    className="bg-black text-white px-6 py-3 rounded-full font-bold text-lg hover:bg-gray-800 transition-all flex items-center gap-2 group"
+                  >
+                    Start Learning
+                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  <button className="px-6 py-3 rounded-full font-bold text-lg border-2 border-black hover:bg-gray-50 transition-all flex items-center gap-2">
+                    <Zap className="w-5 h-5" />
+                    Watch Demo
+                  </button>
+                </div>
+              </div>
+
+              {/* Stat Card */}
+              <div className="grid grid-cols-2 gap-6">
+                <div className="bg-[#FF9600] border-2 border-black rounded-[2rem] p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between h-36 hover:-translate-y-1 transition-transform">
+                  <div className="flex justify-between items-start">
+                    <span className="font-bold text-2xl">174+</span>
+                    <ArrowUpRight className="w-6 h-6" />
+                  </div>
+                  <span className="font-bold text-lg leading-5">Countries<br />Represented</span>
+                </div>
+                <div className="bg-[#CE82FF] border-2 border-black rounded-[2rem] p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between h-36 hover:-translate-y-1 transition-transform">
+                  <div className="flex justify-between items-start">
+                    <span className="font-bold text-2xl">4.9/5</span>
+                    <Star className="w-6 h-6 fill-black" />
+                  </div>
+                  <div className="flex -space-x-2">
+                    {[1, 2, 3, 4].map(i => (
+                      <div key={i} className="w-8 h-8 rounded-full border-2 border-black bg-white overflow-hidden">
+                        <img src={`https://i.pravatar.cc/100?img=${i + 20}`} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Right Content (Bento Grid) */}
+            <div className="lg:w-1/2 flex flex-col gap-6">
+
+              {/* Hero GIF Card */}
+              <div className="h-full min-h-[300px] relative group flex items-center justify-center">
+                <img src="/main-landing.gif" className="w-full h-auto object-contain scale-110" />
+
+                {/* Floating Action Button Style Element */}
+                <div className="absolute bottom-4 right-4 bg-black text-white p-4 rounded-full shadow-xl hover:scale-110 transition-transform cursor-pointer">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+              </div>
+
+              {/* Bottom Row */}
+              <div className="grid grid-cols-3 gap-6">
+                {/* Small fun card */}
+                <div className="col-span-1 bg-white border-2 border-black rounded-[2rem] flex items-center justify-center p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:8px_8px] opacity-20"></div>
+                  <Globe className="w-10 h-10 animate-spin-slow" />
+                </div>
+
+                {/* Wide card */}
+                <div className="col-span-2 bg-[#58CC02] border-2 border-black rounded-[2rem] p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-between text-white relative overflow-hidden group cursor-pointer hover:bg-[#4ab802] transition-colors">
+                  <div>
+                    <div className="font-bold text-xl">Daily Streak</div>
+                    <div className="text-sm opacity-90">Keep it going!</div>
+                  </div>
+                  <div className="text-4xl font-black italic">12</div>
+                  <Zap className="absolute -right-4 -bottom-4 w-24 h-24 text-white/20 group-hover:rotate-12 transition-transform" />
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Marquee Section (Musmentor Style Barcode/Labels) */}
+      <div className="border-y-2 border-black bg-white overflow-hidden py-6 relative">
+        <div className="flex animate-scroll whitespace-nowrap items-center gap-12">
+          {[...Array(10)].map((_, i) => (
+            <React.Fragment key={i}>
+              <div className="flex items-center gap-2 font-bold text-2xl uppercase tracking-tighter">
+                <Star className="w-6 h-6 fill-black" />
+                Financial Literacy
+              </div>
+              <div className="w-32 h-8 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAACCAYAAAB/qH1jAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH5gMWEQo32j5yJgAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAVSURBVAjXYvj//z8DAwMTAwMDw38GAAuUAwX9m2L8AAAAAElFTkSuQmCC')] opacity-50"></div>
+              <div className="font-mono text-xl border border-black px-2 rounded">
+                INVESTING 101
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+      {/* Mission Section */}
+      <section id="mission" className="py-24 px-4 bg-white border-b-2 border-black">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-block bg-[#FF9600] border-2 border-black px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            Why We Exist
+          </div>
+          <h2 className="text-5xl lg:text-7xl font-bold leading-tight mb-8">
+            Financial freedom shouldn't have <span className="text-[#58CC02] underline decoration-4 underline-offset-8">borders</span>.
+          </h2>
+          <p className="text-xl lg:text-2xl font-medium text-gray-800 leading-relaxed max-w-3xl mx-auto">
+            Moving to a new country is hard enough. Understanding credit scores, taxes, and investing shouldn't be.
+            We simplify the financial complexities for the immigrant community, stripping away the jargon to empower you with the tools you need.
+            <br /><br />
+            We believe your ambition deserves a foundation <span className="bg-[#EFF09E] px-2 py-0.5 border-2 border-black rounded-lg inline-block transform -rotate-1">as strong as your dreams</span>.
+          </p>
+        </div>
+      </section>
+
+      {/* Feature Bento Grid (Using requested GIFs) */}
+      <section id="curriculum" className="py-24 px-4 bg-[#F2F0E4]">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+            <div>
+              <h2 className="text-5xl lg:text-7xl font-bold leading-none mb-4">
+                Your Path <br />
+                <span className="text-[#58CC02]">To Wealth</span>
+              </h2>
+              <p className="text-xl font-medium text-gray-600 max-w-lg">
+                Choose your focused track. Each module is designed to solve a specific financial challenge.
+              </p>
+            </div>
+            <button className="bg-transparent border-2 border-black px-8 py-4 rounded-full font-bold hover:bg-black hover:text-white transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none">
+              View Full Curriculum
+            </button>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Card 1 */}
+            <motion.div
+              whileHover={{ y: -8 }}
+              className="bg-[#C4F9E2] border-2 border-black rounded-[2.5rem] p-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] group"
+            >
+              <div className="h-64 bg-white rounded-[2rem] overflow-hidden mb-6 relative flex items-center justify-center p-6">
+                <div className="absolute top-4 left-4 bg-[#58CC02] border border-black text-white px-3 py-1 rounded-full text-xs font-bold uppercase z-10">Beginner</div>
+                <img src="/save-money.gif" className="w-full h-full object-contain" />
+              </div>
+              <div className="px-4 pb-4">
+                <h3 className="text-2xl font-bold mb-2 group-hover:underline decoration-2 underline-offset-4">Smart Saving</h3>
+                <p className="text-gray-600 font-medium mb-6">Build your emergency fund and stop living paycheck to paycheck.</p>
+                <div className="flex justify-between items-center border-t-2 border-black/10 pt-4">
+                  <span className="font-bold">12 Lessons</span>
+                  <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-white">
+                    <ArrowUpRight className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Card 2 */}
+            <motion.div
+              whileHover={{ y: -8 }}
+              className="bg-[#EFF09E] border-2 border-black rounded-[2.5rem] p-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] group"
+            >
+              <div className="h-64 bg-white rounded-[2rem] overflow-hidden mb-6 relative flex items-center justify-center p-6">
+                <div className="absolute top-4 left-4 bg-black text-white px-3 py-1 rounded-full text-xs font-bold uppercase z-10">Advanced</div>
+                <img src="/side-hustle.gif" className="w-full h-full object-contain" />
+              </div>
+              <div className="px-4 pb-4">
+                <h3 className="text-2xl font-bold mb-2 group-hover:underline decoration-2 underline-offset-4">Side Hustles</h3>
+                <p className="text-gray-800 font-medium mb-6">Learn how to monetize your skills and generate passive income streams.</p>
+                <div className="flex justify-between items-center border-t-2 border-black/10 pt-4">
+                  <span className="font-bold">8 Modules</span>
+                  <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-white">
+                    <ArrowUpRight className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Card 3 */}
+            <motion.div
+              whileHover={{ y: -8 }}
+              className="bg-[#E7C6FF] border-2 border-black rounded-[2.5rem] p-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] group"
+            >
+              <div className="h-64 bg-white rounded-[2rem] overflow-hidden mb-6 relative flex items-center justify-center p-6">
+                <div className="absolute top-4 left-4 bg-[#CE82FF] border border-black text-white px-3 py-1 rounded-full text-xs font-bold uppercase z-10">Essential</div>
+                <img src="/debt-free.gif" className="w-full h-full object-contain" />
+              </div>
+              <div className="px-4 pb-4">
+                <h3 className="text-2xl font-bold mb-2 group-hover:underline decoration-2 underline-offset-4">Debt Crusher</h3>
+                <p className="text-gray-600 font-medium mb-6">Strategies to pay off student loans and high-interest debt fast.</p>
+                <div className="flex justify-between items-center border-t-2 border-black/10 pt-4">
+                  <span className="font-bold">5 Steps</span>
+                  <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-white">
+                    <ArrowUpRight className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Community "Funvera" Style Blocks */}
+      <section id="community" className="py-24">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-5xl lg:text-6xl font-bold text-center mb-16">
+            What <span className="inline-block bg-[#EFF09E] px-4 -rotate-2 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">Students</span> Love
+          </h2>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 h-auto lg:h-[600px]">
+            {/* Block 1 */}
+            <div className="bg-[#FF4B4B] rounded-[2rem] p-8 border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between text-white lg:col-span-1 lg:row-span-2 hover:scale-[1.02] transition-transform">
+              <div>
+                <h3 className="text-3xl font-bold leading-tight mb-4">"Learning here feels like playing!"</h3>
+                <p className="opacity-90 font-medium">I used to be scared of investing. Now I check my portfolio every morning like it's a game.</p>
+              </div>
+              <div className="flex items-center gap-3 mt-8">
+                <img src="https://i.pravatar.cc/100?img=5" className="w-12 h-12 rounded-full border-2 border-white" />
+                <div className="font-bold text-sm">Adil B.<br /><span className="font-normal opacity-75">Student, UK</span></div>
+              </div>
+            </div>
+
+            {/* Block 2 */}
+            <div className="bg-[#CE82FF] rounded-[2rem] p-8 border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-center text-white lg:col-span-2 hover:scale-[1.02] transition-transform">
+              <h3 className="text-3xl md:text-4xl font-bold leading-tight mb-6">The interactive lessons make complex finance super fun.</h3>
+              <div className="flex gap-2">
+                <div className="bg-black/20 px-4 py-2 rounded-full font-bold text-sm">#DebtFree</div>
+                <div className="bg-black/20 px-4 py-2 rounded-full font-bold text-sm">#Investing</div>
+              </div>
+            </div>
+
+            {/* Block 3 */}
+            <div className="bg-[#58CC02] rounded-[2rem] p-8 border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between text-white lg:col-span-1 lg:row-span-2 hover:scale-[1.02] transition-transform">
+              <div className="w-full h-32 bg-black/10 rounded-xl mb-6 flex items-center justify-center">
+                <span className="text-6xl font-black text-white text-shadow-sm">$5K</span>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold leading-tight mb-4">Real Results</h3>
+                <p className="opacity-90 font-medium">Saved my first $5,000 in just 3 months using the budgeting tool.</p>
+              </div>
+              <div className="flex items-center gap-3 mt-8">
+                <img src="https://i.pravatar.cc/100?img=12" className="w-12 h-12 rounded-full border-2 border-white" />
+                <div className="font-bold text-sm">Sarah K.<br /><span className="font-normal opacity-75">Student, Canada</span></div>
+              </div>
+            </div>
+
+            {/* Block 4 */}
+            <div className="bg-[#FF9600] rounded-[2rem] p-8 border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between text-white lg:col-span-2 hover:scale-[1.02] transition-transform">
+              <div className="flex justify-between items-start">
+                <h3 className="text-3xl font-bold">I love the drawing... wait, I mean the dashboards!</h3>
+                <Star className="w-8 h-8 fill-white" />
+              </div>
+              <div className="flex items-center gap-3 mt-4">
+                <img src="https://i.pravatar.cc/100?img=8" className="w-12 h-12 rounded-full border-2 border-white" />
+                <div className="font-bold text-sm">Maria L.<br /><span className="font-normal opacity-75">Student, USA</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Footer */}
+      <section className="px-4 pb-12">
+        <div className="max-w-7xl mx-auto bg-white text-black rounded-[3rem] p-12 lg:p-24 relative overflow-hidden border-2 border-black shadow-[12px_12px_0px_0px_rgba(88,204,2,1)]">
+          <div className="relative z-10 max-w-2xl">
+            <h2 className="text-5xl lg:text-7xl font-bold mb-8 text-black">
+              Start <br />
+              <div className="bg-black text-white inline-block px-4 mt-2 rotate-2">Learning</div>
+            </h2>
+            <p className="text-xl text-gray-800 mb-12 font-medium">
+              Give your wallet a joyful learning experience filled with growth, confidence, and endless discovery.
+            </p>
+            <button
+              onClick={() => navigate('/auth')}
+              className="bg-[#58CC02] text-white px-10 py-5 rounded-full font-bold text-xl hover:bg-[#4ab802] transition-all border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-[2px]"
+            >
+              Get Started For Free
+            </button>
+          </div>
+
+          {/* Decor GIF */}
+          <div className="absolute top-12 right-0 hidden lg:block h-[400px] w-[400px] pointer-events-none mr-12">
+            <img src="/happy-women.gif" className="w-full h-full object-contain" />
+          </div>
+
+          {/* Footer Links Grid */}
+          <div className="relative z-10 mt-24 border-t border-black/20 pt-12 grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div>
+              <h4 className="font-bold text-gray-500 mb-4 text-sm uppercase tracking-wider">Programs</h4>
+              <ul className="space-y-2 font-medium text-gray-600">
+                <li><a href="#" className="hover:text-[#58CC02]">Budgeting</a></li>
+                <li><a href="#" className="hover:text-[#58CC02]">Investing</a></li>
+                <li><a href="#" className="hover:text-[#58CC02]">Early Retirement</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold text-gray-500 mb-4 text-sm uppercase tracking-wider">Resources</h4>
+              <ul className="space-y-2 font-medium text-gray-600">
+                <li><a href="#" className="hover:text-[#58CC02]">Calculators</a></li>
+                <li><a href="#" className="hover:text-[#58CC02]">Blog</a></li>
+                <li><a href="#" className="hover:text-[#58CC02]">Community</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold text-gray-500 mb-4 text-sm uppercase tracking-wider">Company</h4>
+              <ul className="space-y-2 font-medium text-gray-600">
+                <li><a href="#" className="hover:text-[#58CC02]">About Us</a></li>
+                <li><a href="#" className="hover:text-[#58CC02]">Careers</a></li>
+                <li><a href="#" className="hover:text-[#58CC02]">Contact</a></li>
+              </ul>
+            </div>
+            <div className="col-span-2 md:col-span-1">
+              <div className="mb-4 font-bold text-2xl flex items-center gap-2">
+                <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white">F</div>
+                FinLit
+              </div>
+              <p className="text-sm text-gray-500">
+                © 2025 FinLit Inc.<br />All rights reserved.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
     </div>
   )
 }
