@@ -2,7 +2,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { LogOut, HelpCircle } from 'lucide-react'
 import { useUserStore } from '../../stores/userStore'
 import { cn } from '../../utils/cn'
-import { useState } from 'react'
 import { useLanguage } from '../../contexts/LanguageContext'
 import { authApi } from '../../services/api'
 
@@ -15,9 +14,6 @@ export const Sidebar = ({ onCoachClick }: SidebarProps) => {
   const navigate = useNavigate()
   const { logout } = useUserStore()
   const { t } = useLanguage()
-  const [isOpen, setIsOpen] = useState(false)
-
-  const isMobile = window.innerWidth < 1024;
 
   // Using custom SVGs from public folder
   const menuItems = [
@@ -55,24 +51,12 @@ export const Sidebar = ({ onCoachClick }: SidebarProps) => {
               className={cn(
                 "flex items-center gap-4 px-4 py-2 rounded-xl uppercase tracking-widest text-sm font-bold",
                 "outline-none focus:outline-none focus-visible:outline-none no-underline",
-                "select-none relative",
-                // Specific transitions to avoid conflicts
-                "transition-[transform,background-color,color] duration-200 ease-out",
-                // Hover effects - smooth scale and background
-                "hover:scale-[1.02]",
-                // Active/click effect - satisfying press down
-                "active:scale-95 active:transition-transform active:duration-75",
+                "select-none",
+                "transition-colors duration-100 ease-out",
                 isActive
                   ? "bg-sky-100 text-sky-500"
-                  : "bg-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                  : "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-700 active:bg-gray-200"
               )}
-              style={{
-                WebkitTapHighlightColor: 'transparent',
-                border: 'none',
-                transformOrigin: 'left center',
-                backfaceVisibility: 'hidden',
-                transform: 'translateZ(0)'
-              }}
             >
               <img
                 src={item.icon}
@@ -89,12 +73,7 @@ export const Sidebar = ({ onCoachClick }: SidebarProps) => {
       <div className="p-4 border-t border-gray-100">
         <Link
           to="/help"
-          className="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-gray-700 font-bold text-sm uppercase tracking-widest transition-[transform,background-color,color] duration-200 ease-out rounded-xl hover:bg-gray-50 hover:scale-[1.02] active:scale-95 active:transition-transform active:duration-75"
-          style={{
-            transformOrigin: 'left center',
-            backfaceVisibility: 'hidden',
-            transform: 'translateZ(0)'
-          }}
+          className="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-gray-700 font-bold text-sm uppercase tracking-widest transition-colors duration-100 ease-out rounded-xl hover:bg-gray-100 active:bg-gray-200"
         >
           <HelpCircle className="w-5 h-5" strokeWidth={2.5} />
           <span>Help</span>
@@ -114,12 +93,7 @@ export const Sidebar = ({ onCoachClick }: SidebarProps) => {
             // Navigate to auth page (HashRouter will add # automatically)
             navigate('/auth');
           }}
-          className="w-full flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-red-500 font-bold text-sm uppercase tracking-widest transition-[transform,background-color,color] duration-200 ease-out rounded-xl hover:bg-red-50 hover:scale-[1.02] active:scale-95 active:transition-transform active:duration-75"
-          style={{
-            transformOrigin: 'left center',
-            backfaceVisibility: 'hidden',
-            transform: 'translateZ(0)'
-          }}
+          className="w-full flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-red-500 font-bold text-sm uppercase tracking-widest transition-colors duration-100 ease-out rounded-xl hover:bg-red-50 active:bg-red-100"
         >
           <LogOut className="w-5 h-5" strokeWidth={2.5} />
           <span>Logout</span>
