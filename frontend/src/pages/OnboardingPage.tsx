@@ -322,7 +322,7 @@ export const OnboardingPage: React.FC = () => {
 
           if (sessionUser && sessionUser.learner_id) {
             currentLearnerId = sessionUser.learner_id;
-            setLearnerId(currentLearnerId);
+            setLearnerId(sessionUser.learner_id);
           }
         }
 
