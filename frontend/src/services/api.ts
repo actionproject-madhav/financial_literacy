@@ -1,5 +1,14 @@
-// Use Vite proxy for development (relative URLs), or full URL for production
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+// API Base URL configuration
+// In production (Vercel), use relative URLs to leverage Vercel's proxy rewrites
+// In development, use the VITE_API_BASE_URL (usually localhost:5000)
+const isProduction = import.meta.env.PROD;
+const configuredApiBase = import.meta.env.VITE_API_BASE_URL || '';
+
+// Use relative URLs in production (goes through Vercel proxy), full URL in dev
+const API_BASE = isProduction ? '' : configuredApiBase;
+
+// For OAuth redirects, always use the full backend URL (not proxied)
+export const OAUTH_BASE_URL = configuredApiBase || 'https://financialliteracy-production.up.railway.app';
 
 // Generic fetch wrapper
 async function fetchApi<T>(
@@ -37,6 +46,16 @@ export const authApi = {
   logout: () =>
     fetchApi<{ success: boolean }>('/auth/logout', {
       method: 'POST',
+    }),
+
+  /**
+   * Exchange an auth token (from OAuth redirect URL) for a session.
+   * This is used when cross-site cookies are blocked.
+   */
+  exchangeToken: (token: string) =>
+    fetchApi<{ success: boolean; user: any }>('/auth/exchange-token', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
     }),
 };
 
