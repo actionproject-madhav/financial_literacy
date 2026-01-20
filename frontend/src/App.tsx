@@ -16,6 +16,7 @@ import { QuestsPage } from './pages/QuestsPage';
 import { HelpPage } from './pages/HelpPage';
 import LandingPage from './pages/LandingPage';
 import { AuthPage } from './pages/AuthPage';
+import { AuthCallbackPage } from './pages/AuthCallbackPage';
 import { OnboardingPage } from './pages/OnboardingPage';
 import { DiagnosticPage } from './pages/DiagnosticPage';
 import { ReviewPage } from './pages/ReviewPage';
@@ -62,6 +63,7 @@ function App() {
             {/* Public routes */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/auth-callback" element={<AuthCallbackPage />} />
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/diagnostic" element={<DiagnosticPage />} />
 

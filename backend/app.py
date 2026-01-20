@@ -56,19 +56,26 @@ CORS(app,
 
 # Configure session
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your-secret-key-change-this')
-# Production: Use secure cookies (HTTPS), Development: Allow HTTP
-is_production = os.getenv('FLASK_ENV') == 'production' or (FRONTEND_URL_ENV and not FRONTEND_URL_ENV.startswith('http://localhost'))
+# Production environment detection
+# Consider production if FLASK_ENV is production OR if FRONTEND_URL is not localhost
+is_production = (
+    os.getenv('FLASK_ENV') == 'production' or 
+    (FRONTEND_URL_ENV and 'localhost' not in FRONTEND_URL_ENV and '127.0.0.1' not in FRONTEND_URL_ENV) or
+    os.getenv('RAILWAY_ENVIRONMENT') is not None  # Railway specific check
+)
 
-# Cross-origin cookie settings for production
+# Cross-origin cookie settings for production (Vercel -> Railway)
 if is_production:
-    app.config['SESSION_COOKIE_SECURE'] = True  # Require HTTPS
-    app.config['SESSION_COOKIE_SAMESITE'] = 'None'  # Allow cross-origin (Railway to Vercel)
+    print("🌐 Production environment detected, enabling secure cross-origin cookies")
+    app.config['SESSION_COOKIE_SECURE'] = True  # Required for SameSite=None
+    app.config['SESSION_COOKIE_SAMESITE'] = 'None'  # Required for cross-domain cookies
 else:
-    app.config['SESSION_COOKIE_SECURE'] = False  # Allow HTTP for localhost
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Localhost doesn't need None
+    print("💻 Development environment detected, using Lax cookies")
+    app.config['SESSION_COOKIE_SECURE'] = False
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent XSS
-app.config['SESSION_COOKIE_DOMAIN'] = None  # None for proper cross-origin handling
+app.config['SESSION_COOKIE_DOMAIN'] = None  # Let the browser handle domain
 app.config['SESSION_COOKIE_PATH'] = '/'
 app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 

@@ -312,26 +312,35 @@ export const OnboardingPage: React.FC = () => {
   useEffect(() => {
     const checkOnboardingStatus = async () => {
       try {
-        // First check if user is authenticated
-        const sessionUser = await authApi.getCurrentUser();
+        // First check if we already have a learner ID in the store
+        // (This happens when coming from AuthCallbackPage via token exchange)
+        let currentLearnerId = learnerId;
 
-        if (!sessionUser || !sessionUser.learner_id) {
+        if (!currentLearnerId) {
+          // Try to get from session (via cookie)
+          const sessionUser = await authApi.getCurrentUser();
+
+          if (sessionUser && sessionUser.learner_id) {
+            currentLearnerId = sessionUser.learner_id;
+            setLearnerId(currentLearnerId);
+          }
+        }
+
+        if (!currentLearnerId) {
           // Not authenticated, redirect to auth
+          console.log('No learner ID found, redirecting to auth');
           navigate('/auth');
           return;
         }
 
-        // Store learner ID
-        setLearnerId(sessionUser.learner_id);
-
         // Check if already onboarded
-        const learner = await learnerApi.getProfile(sessionUser.learner_id);
+        const learner = await learnerApi.getProfile(currentLearnerId);
 
         if (learner.onboarding_completed) {
           // Already onboarded, go to learn page
           setUser({
-            name: learner.display_name || sessionUser.name || 'User',
-            email: sessionUser.email || learner.email || '',
+            name: learner.display_name || 'User',
+            email: learner.email || '',
             country: learner.country_of_origin || 'US',
             visaType: learner.visa_type || 'Other',
             streak: learner.streak_count || 0,
@@ -353,7 +362,7 @@ export const OnboardingPage: React.FC = () => {
     };
 
     checkOnboardingStatus();
-  }, [navigate, setLearnerId, setUser]);
+  }, [navigate, learnerId, setLearnerId, setUser]);
 
   // Navigation functions
   const goNext = () => {

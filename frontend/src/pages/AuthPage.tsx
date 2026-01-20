@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '../components/ui';
 import { Card } from '../components/ui';
-import { authApi, learnerApi } from '../services/api';
+import { authApi, learnerApi, OAUTH_BASE_URL } from '../services/api';
 import { useUserStore } from '../stores/userStore';
 
 export const AuthPage: React.FC = () => {
@@ -65,9 +65,9 @@ export const AuthPage: React.FC = () => {
 
   const handleGoogleSignIn = () => {
     setIsLoading(true);
-    // Redirect to backend OAuth endpoint via proxy
-    const apiBase = import.meta.env.VITE_API_BASE_URL || '';
-    window.location.href = `${apiBase}/auth/google`;
+    // Redirect to backend OAuth endpoint (must go to backend directly, not through proxy)
+    // The OAUTH_BASE_URL is the full backend URL for OAuth flows
+    window.location.href = `${OAUTH_BASE_URL}/auth/google`;
   };
 
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');

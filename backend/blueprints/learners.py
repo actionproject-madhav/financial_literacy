@@ -15,6 +15,18 @@ from datetime import datetime, timedelta
 learners_bp = Blueprint('learners', __name__, url_prefix='/api/learners')
 
 
+def validate_object_id(id_str):
+    """Check if a string is a valid MongoDB ObjectId"""
+    try:
+        if not id_str or len(id_str) != 24:
+            return False
+        # Try to convert - will raise exception if invalid hex
+        ObjectId(id_str)
+        return True
+    except:
+        return False
+
+
 def get_db():
     """Get database instance from app context"""
     return current_app.config['DATABASE']
@@ -60,6 +72,9 @@ def complete_onboarding():
 
         if not learner_id:
             return jsonify({'error': 'learner_id required'}), 400
+            
+        if not validate_object_id(learner_id):
+            return jsonify({'error': f'Invalid learner_id format: {learner_id}'}), 400
 
         db = get_db()
 
@@ -112,20 +127,12 @@ def complete_onboarding():
 def get_learner(learner_id):
     """
     Get learner profile.
-
-    Response:
-    {
-        "learner_id": "...",
-        "email": "...",
-        "display_name": "...",
-        "native_language": "Spanish",
-        "country_of_origin": "MEX",
-        "total_xp": 1250,
-        "streak_count": 7,
-        ...
-    }
+    ...
     """
     try:
+        if not validate_object_id(learner_id):
+            return jsonify({'error': f'Invalid learner_id format: {learner_id}'}), 400
+            
         db = get_db()
 
         learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
@@ -239,6 +246,9 @@ def initialize_skills(learner_id):
     }
     """
     try:
+        if not validate_object_id(learner_id):
+            return jsonify({'error': f'Invalid learner_id format: {learner_id}'}), 400
+            
         db = get_db()
 
         # Verify learner exists
@@ -539,6 +549,9 @@ def get_learner_stats(learner_id):
     }
     """
     try:
+        if not validate_object_id(learner_id):
+            return jsonify({'error': f'Invalid learner_id format: {learner_id}'}), 400
+            
         db = get_db()
         
         # Verify learner exists
@@ -653,6 +666,9 @@ def get_hearts(learner_id):
     }
     """
     try:
+        if not validate_object_id(learner_id):
+            return jsonify({'error': f'Invalid learner_id format: {learner_id}'}), 400
+            
         db = get_db()
 
         learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
@@ -729,6 +745,9 @@ def lose_heart(learner_id):
     }
     """
     try:
+        if not validate_object_id(learner_id):
+            return jsonify({'error': f'Invalid learner_id format: {learner_id}'}), 400
+            
         db = get_db()
 
         learner = db.collections.learners.find_one({'_id': ObjectId(learner_id)})
