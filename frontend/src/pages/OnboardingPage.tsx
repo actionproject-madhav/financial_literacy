@@ -334,7 +334,8 @@ export const OnboardingPage: React.FC = () => {
         }
 
         // Check if already onboarded
-        const learner = await learnerApi.getProfile(currentLearnerId);
+        // TypeScript narrowing: currentLearnerId is guaranteed to be string here
+        const learner = await learnerApi.getProfile(currentLearnerId as string);
 
         if (learner.onboarding_completed) {
           // Already onboarded, go to learn page
