@@ -11,6 +11,18 @@ export const AuthPage: React.FC = () => {
   const { learnerId, setLearnerId, setUser } = useUserStore();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Extract and store referral code from URL on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
+    const refCode = urlParams.get('ref');
+
+    if (refCode) {
+      // Store referral code in localStorage for later use during signup
+      localStorage.setItem('referral_code', refCode);
+      console.log('Referral code stored:', refCode);
+    }
+  }, []);
+
   // Check if already authenticated
   useEffect(() => {
     const checkAuth = async () => {

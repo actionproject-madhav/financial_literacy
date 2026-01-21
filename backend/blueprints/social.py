@@ -986,26 +986,26 @@ def track_referral():
 
         db.collections.referrals.insert_one(referral)
 
+        # Award XP to both referrer and referee
+        reward_xp = 100  # XP for each user
+
         # Award XP to referrer
-        reward_xp = 100  # Customize as needed
         db.collections.learners.update_one(
             {'_id': referrer['_id']},
             {'$inc': {'total_xp': reward_xp}}
         )
 
-        # Update daily progress for leaderboard tracking
-        from datetime import date
-        today = date.today()
-        db.collections.update_daily_progress(
-            learner_id=referrer_id,
-            date_obj=today,
-            xp_earned=reward_xp
+        # Award XP to referee (new user)
+        db.collections.learners.update_one(
+            {'_id': ObjectId(referred_user_id)},
+            {'$inc': {'total_xp': reward_xp}}
         )
 
         return jsonify({
             'success': True,
             'referrer_id': str(referrer['_id']),
-            'reward_xp': reward_xp
+            'reward_xp': reward_xp,
+            'message': f'Both users awarded {reward_xp} XP!'
         }), 200
 
     except Exception as e:

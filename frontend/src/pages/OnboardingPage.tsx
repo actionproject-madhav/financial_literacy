@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Lottie from 'lottie-react';
 import { Button, Card } from '../components/ui';
-import { learnerApi, authApi } from '../services/api';
+import { learnerApi, authApi, socialApi } from '../services/api';
 import { useUserStore } from '../stores/userStore';
 import { ChevronLeft, ChevronRight, Check, Globe, Briefcase, Target, Clock, Sparkles } from 'lucide-react';
 import { LottieAnimation } from '../components/LottieAnimation';
@@ -430,6 +430,20 @@ export const OnboardingPage: React.FC = () => {
         daily_goal_minutes: data.daily_goal_minutes,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       });
+
+      // Check for referral code and track it
+      const referralCode = localStorage.getItem('referral_code');
+      if (referralCode) {
+        try {
+          await socialApi.trackReferral(referralCode, learnerId);
+          console.log('Referral tracked successfully');
+          // Clear the referral code from storage
+          localStorage.removeItem('referral_code');
+        } catch (error) {
+          console.error('Failed to track referral:', error);
+          // Don't block onboarding if referral tracking fails
+        }
+      }
 
       // Update user store
       const countryName = COUNTRIES.find(c => c.code === data.country_of_origin)?.name || data.country_of_origin;
