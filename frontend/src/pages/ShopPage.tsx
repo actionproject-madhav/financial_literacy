@@ -87,9 +87,11 @@ export const ShopPage: React.FC = () => {
   const toast = useToast();
   const gems = user?.gems || 0;
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [purchasedItems, setPurchasedItems] = useState<Set<string>>(new Set());
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paymentModal, setPaymentModal] = useState<{
     isOpen: boolean;
@@ -125,9 +127,12 @@ export const ShopPage: React.FC = () => {
     })),
   ];
 
-  const filteredItems = selectedCategory === 'all'
-    ? allItems
-    : allItems.filter(item => item.category === selectedCategory);
+  const filteredItems = allItems.filter(item => {
+    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   // Sync gems from backend on mount
   useEffect(() => {
@@ -404,13 +409,18 @@ export const ShopPage: React.FC = () => {
                   <input
                     type="text"
                     placeholder="Look up any item you desire..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-11 pr-4 py-3 rounded-full bg-gray-50 border-2 border-transparent text-sm font-bold text-gray-600 focus:bg-white focus:border-[#FF9600] placeholder:text-gray-400 transition-all outline-none"
                   />
                 </div>
 
                 <div className="flex items-center gap-3 ml-4">
                   {/* Filter Button */}
-                  <div className="p-3 rounded-xl border-2 border-gray-100 hover:bg-gray-50 cursor-pointer">
+                  <div
+                    className="p-3 rounded-xl border-2 border-gray-100 hover:bg-gray-50 cursor-pointer lg:hidden"
+                    onClick={() => setShowMobileFilters(true)}
+                  >
                     <Filter className="w-5 h-5 text-gray-400" />
                   </div>
                   {/* Gem Display */}
@@ -419,8 +429,11 @@ export const ShopPage: React.FC = () => {
               </div>
 
               {/* Filter Button Row */}
-              <div className="flex items-center justify-end mb-6">
-                <button className="px-4 py-2 rounded-xl bg-white border-2 border-gray-100 font-bold text-gray-500 text-sm hover:bg-gray-50 transition-colors">
+              <div className="flex items-center justify-end mb-6 lg:hidden">
+                <button
+                  onClick={() => setShowMobileFilters(true)}
+                  className="px-4 py-2 rounded-xl bg-white border-2 border-gray-100 font-bold text-gray-500 text-sm hover:bg-gray-50 transition-colors"
+                >
                   Filter
                 </button>
               </div>
@@ -520,6 +533,79 @@ export const ShopPage: React.FC = () => {
           </div>
         </div>
       </div>
+      <AnimatePresence>
+        {showMobileFilters && (
+          <div className="fixed inset-0 z-[100] lg:hidden">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMobileFilters(false)}
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              className="absolute right-0 top-0 bottom-0 w-80 bg-white shadow-2xl p-6"
+            >
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-xl font-extrabold text-gray-800 flex items-center gap-2">
+                  <ShoppingBag className="w-6 h-6 text-[#1CB0F6]" />
+                  Categories
+                </h2>
+                <button
+                  onClick={() => setShowMobileFilters(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <Plus className="w-6 h-6 rotate-45 text-gray-400" />
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {CATEGORIES.map(cat => {
+                  const Icon = cat.icon;
+                  const isActive = selectedCategory === cat.id;
+
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => {
+                        setSelectedCategory(cat.id);
+                        setShowMobileFilters(false);
+                      }}
+                      className={cn(
+                        "w-full flex items-center justify-between p-4 rounded-2xl transition-all font-bold",
+                        isActive
+                          ? "bg-orange-50 text-[#FF9600] ring-1 ring-[#FF9600]"
+                          : "text-gray-500 hover:bg-gray-50"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon className={cn("w-5 h-5", isActive ? "text-[#FF9600]" : "text-gray-400")} />
+                        <span>{cat.label}</span>
+                      </div>
+                      {isActive && <CheckCircle2 className="w-5 h-5" />}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div className="mt-12 p-6 bg-blue-50 rounded-3xl border border-blue-100">
+                <h3 className="font-extrabold text-[#1CB0F6] mb-1">Earn Free Gems</h3>
+                <p className="text-sm text-blue-600/80 mb-4">Complete daily quests and maintain your streak!</p>
+                <Button
+                  fullWidth
+                  variant="primary"
+                  onClick={() => navigate('/quests')}
+                >
+                  View Quests
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 };
