@@ -4,6 +4,7 @@ import { Users } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { useUserStore } from '../stores/userStore';
 import { leaderboardApi, MyLeagueResponse, League, socialApi } from '../services/api';
+import { ProfileAvatar } from '../components/social/ProfileAvatar';
 
 // --- Custom SVGs for "Non-Tacky" Look ---
 
@@ -243,32 +244,12 @@ export const LeaderboardPage: React.FC = () => {
             </div>
 
             {/* Avatar */}
-                    {(entry.profile_image || entry.avatar_url || entry.profile_picture_url) ? (
-                      <img
-                        src={entry.profile_image || entry.avatar_url || entry.profile_picture_url}
-                        alt={entry.display_name}
-                        className="w-12 h-12 rounded-full object-cover shadow-sm border-2 border-white"
-                        onError={(e) => {
-                          // Fallback to initials if image fails to load
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          const parent = target.parentElement;
-                          if (parent) {
-                            parent.innerHTML = `<div class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shadow-sm ${index === 0 ? 'bg-yellow-400' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-orange-400' : isCurrentUser ? 'bg-sky-400' : 'bg-indigo-400'}">${entry.initials || entry.display_name.charAt(0).toUpperCase()}</div>`;
-                          }
-                        }}
-                      />
-                    ) : (
-                      <div className={cn(
-                        "w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shadow-sm",
-                        index === 0 ? "bg-yellow-400" :
-                          index === 1 ? "bg-gray-400" :
-                            index === 2 ? "bg-orange-400" :
-                              isCurrentUser ? "bg-sky-400" : "bg-indigo-400"
-                      )}>
-                        {entry.initials || entry.display_name.charAt(0).toUpperCase()}
-                      </div>
-                    )}
+            <ProfileAvatar
+              profilePictureUrl={entry.profile_image || entry.profile_picture_url}
+              avatarUrl={entry.avatar_url}
+              displayName={entry.display_name}
+              size="md"
+            />
 
                     {/* Name */}
                     <div className="flex-1 font-bold text-gray-700">
@@ -341,25 +322,12 @@ export const LeaderboardPage: React.FC = () => {
                 <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
                   {friendStreaks.slice(0, 5).map((friend) => (
                     <div key={friend.user_id} className="flex items-center gap-2 bg-white/10 rounded-lg p-2">
-                      {(friend.avatar_url || friend.profile_picture_url) ? (
-                        <img
-                          src={friend.avatar_url || friend.profile_picture_url}
-                          alt={friend.display_name}
-                          className="w-8 h-8 rounded-full object-cover border-2 border-white/20"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const parent = target.parentElement;
-                            if (parent) {
-                              parent.innerHTML = `<div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-xs">${friend.display_name.charAt(0).toUpperCase()}</div>`;
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-xs">
-                          {friend.display_name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
+                      <ProfileAvatar
+                        profilePictureUrl={friend.profile_picture_url}
+                        avatarUrl={friend.avatar_url}
+                        displayName={friend.display_name}
+                        size="sm"
+                      />
                       <div className="flex-1 min-w-0">
                         <div className="text-white font-bold text-sm truncate">{friend.display_name}</div>
                         <div className="text-white/80 text-xs">{friend.streak_count} day streak</div>

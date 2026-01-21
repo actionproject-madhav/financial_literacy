@@ -20,6 +20,7 @@ import { useToast } from '../components/ui/Toast';
 import { LottieAnimation } from '../components/LottieAnimation';
 
 const AVATAR_OPTIONS = [
+  // Character avatars
   '/characters/12.png',
   '/characters/13.png',
   '/characters/14.png',
@@ -29,6 +30,14 @@ const AVATAR_OPTIONS = [
   '/characters/18.png',
   '/characters/19.png',
   '/characters/20.png',
+  // Monster avatars
+  '/3d-models/monster-1.png',
+  '/3d-models/monster-2.png',
+  '/3d-models/monster-3.png',
+  '/3d-models/monster-4.png',
+  '/3d-models/monster-5.png',
+  '/3d-models/monster-6.png',
+  '/3d-models/monster-7.png',
 ];
 
 const BACKGROUND_COLORS = [
