@@ -9,6 +9,8 @@ interface CelebrationOverlayProps {
     gemsEarned?: number
     accuracy?: number
     title?: string
+    subtitle?: string
+    variant?: 'lesson' | 'purchase' | 'streak_freeze'
     nextRecommendation?: {
         kc_name: string
         domain: string
@@ -22,17 +24,33 @@ export const CelebrationOverlay = ({
     xpEarned = 20,
     gemsEarned = 5,
     accuracy = 100,
-    title = "Lesson Complete!",
+    title,
+    subtitle,
+    variant = 'lesson',
     nextRecommendation = null,
 }: CelebrationOverlayProps) => {
     const [showStats, setShowStats] = useState(false)
     const audioRef = useRef<HTMLAudioElement | null>(null)
 
+    // Determine content based on variant
+    const isPurchase = variant === 'purchase';
+    const isStreakFreeze = variant === 'streak_freeze';
+    const isLesson = variant === 'lesson';
+
+    const defaultTitle = isLesson ? "Lesson Complete!" :
+        isStreakFreeze ? "Streak Freeze Activated!" :
+            "Purchase Successful!";
+
+    const displayTitle = title || defaultTitle;
+
+    const animationSrc = isStreakFreeze ? "/streak-nice.gif" : "/happy-women.gif";
+    const soundSrc = isPurchase ? '/assets/sounds/effects/coin-collect.mp3' : '/assets/sounds/effects/correct.mp3';
+
     useEffect(() => {
         if (isVisible) {
             // Play celebration sound
             try {
-                audioRef.current = new Audio('/assets/sounds/effects/coin-collect.mp3')
+                audioRef.current = new Audio(soundSrc)
                 audioRef.current.volume = 0.5
                 audioRef.current.play().catch(() => { })
             } catch (e) {
@@ -50,7 +68,7 @@ export const CelebrationOverlay = ({
         } else {
             setShowStats(false)
         }
-    }, [isVisible])
+    }, [isVisible, soundSrc])
 
     return (
         <AnimatePresence>
@@ -63,7 +81,7 @@ export const CelebrationOverlay = ({
                 >
                     {/* Main Content Container */}
                     <div className="flex flex-col items-center justify-center flex-1 px-6 pt-16">
-                        {/* Celebration Animation - Happy Women GIF */}
+                        {/* Celebration Animation */}
                         <motion.div
                             initial={{ y: -30, opacity: 0, scale: 0.8 }}
                             animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -72,34 +90,46 @@ export const CelebrationOverlay = ({
                         >
                             <div className="w-48 h-48 md:w-56 md:h-56">
                                 <img
-                                    src="/happy-women.gif"
+                                    src={animationSrc}
                                     alt="Celebration"
                                     className="w-full h-full object-contain"
                                 />
                             </div>
                         </motion.div>
 
-                        {/* Title - Yellow and smaller as requested */}
+                        {/* Title */}
                         <motion.h1
                             initial={{ y: 20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.5 }}
-                            className="text-2xl md:text-3xl font-extrabold text-[#ffc840] text-center mb-10"
+                            className="text-2xl md:text-3xl font-extrabold text-[#ffc840] text-center mb-4"
                         >
-                            {title}
+                            {displayTitle}
                         </motion.h1>
 
-                        {/* Stats Cards - New Layout based on image */}
+                        {/* Subtitle */}
+                        {subtitle && (
+                            <motion.p
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.6 }}
+                                className="text-gray-500 font-bold text-center mb-8 max-w-sm"
+                            >
+                                {subtitle}
+                            </motion.p>
+                        )}
+
+                        {/* Stats Cards */}
                         <AnimatePresence>
-                            {showStats && (
+                            {showStats && !isStreakFreeze && (
                                 <motion.div
                                     initial={{ y: 20, opacity: 0 }}
                                     animate={{ y: 0, opacity: 1 }}
                                     transition={{ delay: 0.1, type: 'spring', stiffness: 150 }}
-                                    className={`flex gap-6 ${xpEarned === 0 ? 'justify-center' : ''}`}
+                                    className="flex gap-6 justify-center"
                                 >
-                                    {/* XP Card - Only show if XP > 0 */}
-                                    {xpEarned > 0 && (
+                                    {/* XP Card - Only show if XP > 0 and it's a lesson */}
+                                    {isLesson && xpEarned > 0 && (
                                         <motion.div
                                             whileHover={{ scale: 1.05 }}
                                             className="flex flex-col bg-white border-2 border-[#ffc840] rounded-2xl overflow-hidden min-w-[150px] shadow-sm"
@@ -118,34 +148,36 @@ export const CelebrationOverlay = ({
                                         </motion.div>
                                     )}
 
-                                    {/* Gems Card - Amber Header style to match coin theme */}
-                                    <motion.div
-                                        whileHover={{ scale: 1.05 }}
-                                        className="flex flex-col bg-white border-2 border-amber-400 rounded-2xl overflow-hidden min-w-[150px] shadow-sm"
-                                    >
-                                        <div className="bg-amber-400 py-2 px-4 text-center">
-                                            <span className="text-xs font-black text-white uppercase tracking-wider">
-                                                {title?.includes('Payment') ? 'Coins Added' : 'Gems'}
-                                            </span>
-                                        </div>
-                                        <div className="py-6 px-4 flex items-center justify-center gap-3">
-                                            <img
-                                                src="/coin.svg"
-                                                alt="Gems"
-                                                className="w-8 h-8 object-contain"
-                                            />
-                                            <span className="text-3xl font-black text-amber-500">
-                                                {gemsEarned}
-                                            </span>
-                                        </div>
-                                    </motion.div>
+                                    {/* Gems/Coins Card */}
+                                    {(gemsEarned > 0 || isPurchase) && (
+                                        <motion.div
+                                            whileHover={{ scale: 1.05 }}
+                                            className="flex flex-col bg-white border-2 border-amber-400 rounded-2xl overflow-hidden min-w-[150px] shadow-sm"
+                                        >
+                                            <div className="bg-amber-400 py-2 px-4 text-center">
+                                                <span className="text-xs font-black text-white uppercase tracking-wider">
+                                                    {isPurchase ? 'Coins Added' : 'Gems'}
+                                                </span>
+                                            </div>
+                                            <div className="py-6 px-4 flex items-center justify-center gap-3">
+                                                <img
+                                                    src="/coin.svg"
+                                                    alt="Gems"
+                                                    className="w-8 h-8 object-contain"
+                                                />
+                                                <span className="text-3xl font-black text-amber-500">
+                                                    {gemsEarned}
+                                                </span>
+                                            </div>
+                                        </motion.div>
+                                    )}
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
 
                     {/* Next Recommendation */}
-                    {nextRecommendation && showStats && (
+                    {isLesson && nextRecommendation && showStats && (
                         <motion.div
                             initial={{ y: 20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
@@ -174,12 +206,11 @@ export const CelebrationOverlay = ({
                         initial={{ y: 30, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 1 }}
-                        className={`w-full p-8 border-t-2 border-gray-100 flex items-center max-w-4xl mx-auto bg-white mb-4 ${
-                            title?.includes('Payment') ? 'justify-center' : 'justify-between'
-                        }`}
+                        className={`w-full p-8 border-t-2 border-gray-100 flex items-center max-w-4xl mx-auto bg-white mb-4 ${!isLesson ? 'justify-center' : 'justify-between'
+                            }`}
                     >
-                        {/* Review Lesson Button - Only show for lesson completion */}
-                        {!title?.includes('Payment') && (
+                        {/* Review Lesson Button */}
+                        {isLesson && (
                             <button
                                 onClick={onComplete}
                                 className="px-8 py-3 rounded-2xl text-gray-400 font-extrabold text-sm uppercase tracking-widest hover:text-black transition-colors"
@@ -193,7 +224,7 @@ export const CelebrationOverlay = ({
                             onClick={onComplete}
                             className="px-16 py-4 bg-[#1cb0f6] hover:bg-[#1899d6] text-white font-extrabold text-base rounded-2xl border-b-4 border-[#1899d6] active:border-b-0 active:translate-y-1 transition-all uppercase tracking-widest shadow-sm"
                         >
-                            {title?.includes('Payment') ? 'Awesome!' : 'Continue'}
+                            {!isLesson ? 'Awesome!' : 'Continue'}
                         </button>
                     </motion.div>
                 </motion.div>

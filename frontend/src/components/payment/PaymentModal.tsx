@@ -199,6 +199,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         gemsEarned={coins}
         accuracy={100}
         title="Payment Successful!"
+        subtitle={`You've successfully added ${coins} coins to your account.`}
+        variant="purchase"
       />
     );
   }
