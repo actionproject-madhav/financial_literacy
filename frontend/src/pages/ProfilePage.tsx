@@ -15,6 +15,7 @@ import { FriendRequestsModal } from '../components/social/FriendRequestsModal';
 import { ReferralModal } from '../components/social/ReferralModal';
 import { FollowersFollowingModal } from '../components/social/FollowersFollowingModal';
 import { FriendsListModal } from '../components/social/FriendsListModal';
+import { AchievementsModal } from '../components/social/AchievementsModal';
 import { cn } from '../utils/cn';
 import { useToast } from '../components/ui/Toast';
 import { LottieAnimation } from '../components/LottieAnimation';
@@ -115,6 +116,7 @@ export const ProfilePage: React.FC = () => {
   const [showFriendsModal, setShowFriendsModal] = useState(false);
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
+  const [showAchievementsModal, setShowAchievementsModal] = useState(false);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
   const [friendsCount, setFriendsCount] = useState(0);
   const [followersCount, setFollowersCount] = useState(0);
@@ -378,7 +380,11 @@ export const ProfilePage: React.FC = () => {
           <div className="relative">
             {/* Banner */}
             <div className="h-48 bg-[#dceeff] rounded-2xl relative">
-              <button className="absolute top-4 right-4 text-[#1cb0f6] hover:bg-[#cce5ff] p-2 rounded-xl transition-colors">
+              <button
+                onClick={() => navigate('/settings')}
+                className="absolute top-4 right-4 text-[#1cb0f6] hover:bg-[#cce5ff] p-2 rounded-xl transition-colors"
+                title="Settings"
+              >
                 <Settings className="w-5 h-5" />
               </button>
             </div>
@@ -691,7 +697,12 @@ export const ProfilePage: React.FC = () => {
         <div>
           <div className="flex justify-between items-center mb-6 mt-10">
             <h2 className="text-2xl font-bold text-[#3c3c3c]">Achievements</h2>
-            <button className="text-[#1cb0f6] font-bold text-sm uppercase tracking-wider hover:opacity-80">VIEW ALL</button>
+            <button
+              onClick={() => setShowAchievementsModal(true)}
+              className="text-[#1cb0f6] font-bold text-sm uppercase tracking-wider hover:opacity-80"
+            >
+              VIEW ALL
+            </button>
           </div>
 
           <div className="border-2 border-[#e5e5e5] rounded-2xl overflow-hidden">
@@ -986,6 +997,12 @@ export const ProfilePage: React.FC = () => {
         isOpen={showFollowingModal}
         onClose={() => setShowFollowingModal(false)}
         type="following"
+      />
+      <AchievementsModal
+        isOpen={showAchievementsModal}
+        onClose={() => setShowAchievementsModal(false)}
+        earnedAchievements={earnedAchievements}
+        availableAchievements={availableAchievements}
       />
     </div>
   );
