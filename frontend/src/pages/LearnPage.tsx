@@ -434,7 +434,12 @@ export const LearnPage = () => {
                             <div className="flex items-start justify-between">
                                 <div>
                                     <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-xs text-gray-500">Try Premium</span>
+                                        <button 
+                                            onClick={() => navigate('/shop')}
+                                            className="text-xs text-blue-500 hover:text-blue-600 font-medium transition-colors cursor-pointer"
+                                        >
+                                            Try Premium
+                                        </button>
                                         <span className="text-yellow-400">⚡</span>
                                     </div>
                                     <h2 className="text-2xl font-extrabold text-gray-800">
@@ -497,13 +502,31 @@ export const LearnPage = () => {
                         <div className="px-4 pb-3">
                             <span className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2 block">Recent Topics</span>
                             <div className="flex flex-wrap gap-2">
-                                <span className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-200 cursor-pointer transition-colors">
+                                <span 
+                                    onClick={() => {
+                                        const event = new CustomEvent('openCoach', { detail: { message: 'Help me with tax filing' } });
+                                        window.dispatchEvent(event);
+                                    }}
+                                    className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-200 cursor-pointer transition-colors"
+                                >
                                     Tax Filing
                                 </span>
-                                <span className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-200 cursor-pointer transition-colors">
+                                <span 
+                                    onClick={() => {
+                                        const event = new CustomEvent('openCoach', { detail: { message: 'How do I get an SSN?' } });
+                                        window.dispatchEvent(event);
+                                    }}
+                                    className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-200 cursor-pointer transition-colors"
+                                >
                                     SSN Tips
                                 </span>
-                                <span className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-200 cursor-pointer transition-colors">
+                                <span 
+                                    onClick={() => {
+                                        const event = new CustomEvent('openCoach', { detail: { message: 'What banks are best for immigrants?' } });
+                                        window.dispatchEvent(event);
+                                    }}
+                                    className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-200 cursor-pointer transition-colors"
+                                >
                                     Banking
                                 </span>
                             </div>
@@ -527,7 +550,7 @@ export const LearnPage = () => {
                     </div>
 
                     {/* My American Journey Widget */}
-                    <div className="border-2 border-gray-200 rounded-2xl p-4 bg-white hover:bg-gray-50 transition-colors">
+                    <div className="border-2 border-gray-200 rounded-2xl p-4 bg-white hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => navigate('/section/banking-fundamentals')}>
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="font-bold text-gray-900">My American Journey</h3>
                             <span className="text-gray-400">↗</span>
@@ -557,8 +580,14 @@ export const LearnPage = () => {
                             </div>
                         </div>
                         <div className="mt-4 pt-4 border-t-2 border-gray-100">
-                            <button className="w-full text-center text-gray-400 text-xs font-extrabold uppercase tracking-widest hover:text-gray-600">
-                                View Full Roadmap
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate('/section/banking-fundamentals');
+                                }}
+                                className="w-full text-center text-blue-500 text-xs font-extrabold uppercase tracking-widest hover:text-blue-600 transition-colors"
+                            >
+                                Continue Journey
                             </button>
                         </div>
                     </div>
@@ -587,24 +616,38 @@ export const LearnPage = () => {
                     </div>
 
                     {/* Try Super */}
-                    <div className="border-2 border-gray-200 rounded-2xl p-4 relative overflow-hidden group cursor-pointer hover:bg-gray-50 transition-colors bg-white">
+                    <div className="border-2 border-gray-200 rounded-2xl p-4 relative overflow-hidden group cursor-pointer hover:bg-gray-50 transition-colors bg-white" onClick={() => navigate('/shop')}>
                         <div className="relative z-10">
                             <div className="flex justify-between items-start mb-2">
                                 <h3 className="font-bold text-gray-900 leading-tight">Try Super for free</h3>
                                 <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold text-[10px] px-2 py-1 rounded-lg uppercase tracking-wide">NEW</div>
                             </div>
                             <p className="text-gray-500 text-sm mb-6 leading-relaxed">No ads, personalized practice, and unlimited Legendary!</p>
-                            <button className="w-full py-3 bg-blue-500 text-white font-bold rounded-xl border-b-4 border-blue-600 hover:bg-blue-400 active:border-b-0 active:translate-y-1 transition-all uppercase tracking-widest text-sm shadow-sm">
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate('/shop');
+                                }}
+                                className="w-full py-3 bg-blue-500 text-white font-bold rounded-xl border-b-4 border-blue-600 hover:bg-blue-400 active:border-b-0 active:translate-y-1 transition-all uppercase tracking-widest text-sm shadow-sm"
+                            >
                                 TRY 1 WEEK FREE
                             </button>
                         </div>
                     </div>
 
                     {/* Gold League */}
-                    <div className="border-2 border-gray-200 rounded-2xl p-4 bg-white hover:bg-gray-50 transition-colors cursor-pointer">
+                    <div className="border-2 border-gray-200 rounded-2xl p-4 bg-white hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => navigate('/leaderboard')}>
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="font-bold text-gray-900">Gold League</h3>
-                            <button onClick={() => navigate('/leaderboard')} className="text-cyan-500 font-bold text-xs uppercase tracking-widest hover:text-cyan-400">VIEW LEAGUE</button>
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate('/leaderboard');
+                                }}
+                                className="text-cyan-500 font-bold text-xs uppercase tracking-widest hover:text-cyan-400"
+                            >
+                                VIEW LEAGUE
+                            </button>
                         </div>
                         <div className="flex items-center gap-4">
                             <img src="/trophy.svg" alt="Trophy" className="w-12 h-12 object-contain" />
@@ -613,20 +656,28 @@ export const LearnPage = () => {
                     </div>
 
                     {/* Daily Quests */}
-                    <div className="border-2 border-gray-200 rounded-2xl p-4 bg-white hover:bg-gray-50 transition-colors cursor-pointer">
+                    <div className="border-2 border-gray-200 rounded-2xl p-4 bg-white hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => navigate('/quests')}>
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="font-bold text-gray-900">Daily Quests</h3>
-                            <button onClick={() => navigate('/quests')} className="text-cyan-500 font-bold text-xs uppercase tracking-widest hover:text-cyan-400">VIEW ALL</button>
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate('/quests');
+                                }}
+                                className="text-cyan-500 font-bold text-xs uppercase tracking-widest hover:text-cyan-400"
+                            >
+                                VIEW ALL
+                            </button>
                         </div>
                         <div className="flex items-center gap-4">
                             <img src="/generated_icons/xp_bolt.png" alt="XP" className="w-10 h-10 object-contain" />
                             <div className="flex-1">
                                 <div className="flex justify-between text-sm font-bold mb-1">
                                     <span className="text-gray-700">Earn 50 XP</span>
-                                    <span className="text-gray-400">35 / 50</span>
+                                    <span className="text-gray-400">{user.totalXp % 50} / 50</span>
                                 </div>
                                 <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
-                                    <div className="h-full bg-orange-500 rounded-full shadow-inner" style={{ width: '70%' }}></div>
+                                    <div className="h-full bg-orange-500 rounded-full shadow-inner" style={{ width: `${((user.totalXp % 50) / 50) * 100}%` }}></div>
                                 </div>
                             </div>
                         </div>
