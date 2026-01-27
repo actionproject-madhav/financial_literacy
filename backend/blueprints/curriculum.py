@@ -109,39 +109,38 @@ def get_courses():
         db = get_db()
         learner_id = request.args.get('learner_id')
 
-        # Get all active knowledge components grouped by domain
-        pipeline = [
-            {'$match': {'is_active': True}},
-            {'$group': {
-                '_id': '$domain',
-                'lessons': {'$push': {
-                    'kc_id': {'$toString': '$_id'},
-                    'slug': '$slug',
-                    'name': '$name',
-                    'description': '$description',
-                    'difficulty_tier': '$difficulty_tier',
-                    'bloom_level': '$bloom_level',
-                    'estimated_minutes': '$estimated_minutes',
-                    'icon_url': '$icon_url'
-                }},
-                'lessons_count': {'$sum': 1}
-            }},
-            {'$sort': {'_id': 1}}
-        ]
+        # Get all active curriculum modules with their lessons
+        modules = list(db.collections.curriculum_modules.find(
+            {'is_active': True}
+        ).sort('order', 1))
+        
+        # For each module, get its lessons
+        domains = []
+        for module in modules:
+            lessons = list(db.collections.curriculum_lessons.find({
+                'module_id': module['module_id'],
+                'is_active': True
+            }))
+            
+            domains.append({
+                '_id': module['module_id'],
+                'lessons': [{
+                    'kc_id': lesson['lesson_id'],
+                    'slug': lesson.get('skill_slug', lesson['lesson_id']),
+                    'name': lesson['title'],
+                    'description': lesson.get('learning_objectives', [''])[0] if lesson.get('learning_objectives') else '',
+                    'difficulty_tier': 1,
+                    'bloom_level': 'understand',
+                    'estimated_minutes': lesson.get('estimated_minutes', 10),
+                    'icon_url': None
+                } for lesson in lessons],
+                'lessons_count': len(lessons),
+                'module_name': module['name'],
+                'module_description': module.get('description', ''),
+                'module_order': module.get('order', 0)
+            })
 
-        domains = list(db.collections.knowledge_components.aggregate(pipeline))
-
-        # Get question counts per domain
-        questions_pipeline = [
-            {'$lookup': {
-                'from': 'learning_items',
-                'localField': 'kc_id',
-                'foreignField': '_id',
-                'as': 'items'
-            }}
-        ]
-
-        # Get learner skill states if learner_id provided
+        # Get learner skill states if learner_id provided (using lesson_id as reference)
         learner_progress = {}
         if learner_id:
             states = list(db.collections.learner_skill_states.find({
@@ -169,18 +168,19 @@ def get_courses():
 
             available_domains.append(domain)
 
-            metadata = DOMAIN_METADATA.get(domain, {
-                'title': domain.replace('_', ' ').title(),
-                'description': f'Learn about {domain}',
-                'level': 'beginner',
-                'order': 99
-            })
-
-            # Count questions for this domain
-            kc_ids = [ObjectId(l['kc_id']) for l in domain_data['lessons']]
-            questions_count = db.collections.item_kc_mappings.count_documents({
-                'kc_id': {'$in': kc_ids}
-            })
+            # Use module data directly
+            title = domain_data.get('module_name', domain.replace('_', ' ').replace('-', ' ').title())
+            description = domain_data.get('module_description', f'Learn about {domain}')
+            
+            # Count questions for this domain (count content blocks in lessons)
+            questions_count = 0
+            for lesson in domain_data['lessons']:
+                # Get the actual lesson document to count quiz content blocks
+                lesson_doc = db.collections.curriculum_lessons.find_one({'lesson_id': lesson['kc_id']})
+                if lesson_doc and lesson_doc.get('content_blocks'):
+                    # Count quiz-type blocks (those without 'type' field or with type='quiz' from generated questions)
+                    questions_count += sum(1 for block in lesson_doc['content_blocks'] 
+                                          if block.get('type') == 'quiz' or not block.get('type'))
 
             # Calculate progress if learner_id provided
             progress = 0
@@ -195,9 +195,9 @@ def get_courses():
 
             courses.append({
                 'id': domain,
-                'title': metadata['title'],
-                'description': metadata['description'],
-                'level': metadata['level'],
+                'title': title,
+                'description': description,
+                'level': 'beginner',  # Default for now
                 'order': metadata['order'],
                 'lessons_count': domain_data['lessons_count'],
                 'questions_count': questions_count,
