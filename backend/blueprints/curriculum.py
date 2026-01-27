@@ -198,7 +198,7 @@ def get_courses():
                 'title': title,
                 'description': description,
                 'level': 'beginner',  # Default for now
-                'order': metadata['order'],
+                'order': domain_data.get('module_order', 0),
                 'lessons_count': domain_data['lessons_count'],
                 'questions_count': questions_count,
                 'unlocked': True,  # For now, all courses unlocked
