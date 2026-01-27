@@ -1447,6 +1447,7 @@ export const LessonPage = () => {
         return (
           <div className="space-y-3">
             {title && <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>}
+            {content.scenario && <p className="text-gray-600 italic mb-3">{content.scenario}</p>}
             {content.text && <p className="text-gray-700 leading-relaxed mb-3">{content.text}</p>}
             {content.definition && <p className="text-gray-700 leading-relaxed mb-3">{content.definition}</p>}
             
@@ -1462,14 +1463,27 @@ export const LessonPage = () => {
                       <p className="font-semibold text-gray-800 mb-2">{label}:</p>
                     )}
                     {isObjectArray ? (
-                      <ul className="space-y-2">
-                        {value.map((item: any, idx: number) => (
-                          <li key={idx} className="text-gray-700">
-                            {item.item || item.text || item.label || JSON.stringify(item)}
-                            {item.target && <span className="text-sm text-gray-500 ml-2">({item.target})</span>}
-                          </li>
-                        ))}
-                      </ul>
+                      <div className="space-y-2">
+                        {value.map((item: any, idx: number) => {
+                          // Special handling for fee calculation items
+                          if (item.fee && item.annual) {
+                            return (
+                              <div key={idx} className="flex justify-between items-center p-3 bg-white border border-gray-200 rounded-lg">
+                                <span className="text-gray-700 font-medium">{item.fee}</span>
+                                <span className="text-lg font-bold text-green-600">{item.annual}</span>
+                              </div>
+                            )
+                          }
+                          
+                          // Standard rendering for other object types
+                          return (
+                            <li key={idx} className="text-gray-700">
+                              {item.item || item.text || item.label || JSON.stringify(item)}
+                              {item.target && <span className="text-sm text-gray-500 ml-2">({item.target})</span>}
+                            </li>
+                          )
+                        })}
+                      </div>
                     ) : (
                       <ol className="space-y-2 list-decimal list-inside">
                         {value.map((item: string, idx: number) => (
@@ -1484,6 +1498,23 @@ export const LessonPage = () => {
               }
               return null
             })}
+            
+            {/* Handle total for calculations */}
+            {content.total && (
+              <div className="mt-4 p-4 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-bold text-gray-800">Total Annual Cost:</span>
+                  <span className="text-2xl font-extrabold text-red-600">{content.total}</span>
+                </div>
+              </div>
+            )}
+            
+            {/* Handle message/note */}
+            {content.message && (
+              <div className="mt-3 p-3 bg-green-50 border-l-4 border-green-500 rounded">
+                <p className="text-sm text-green-800 font-medium">{content.message}</p>
+              </div>
+            )}
             
             {/* Handle liability object */}
             {content.liability && typeof content.liability === 'object' && (
