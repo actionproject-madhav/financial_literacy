@@ -20,6 +20,16 @@ export default {
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
+          50: '#F3F1E6',
+          100: '#E1E6E3',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#1F3D33', // Main brand color
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#1F3D33',
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
@@ -58,19 +68,6 @@ export default {
         'duo-surface': '#FFFFFF',
         'duo-green': '#1F3D33',
 
-        // Keep existing primary colors for backward compatibility
-        primary: {
-          50: '#F3F1E6',
-          100: '#E1E6E3',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#1F3D33', // Main brand color
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#1F3D33',
-        },
         // Brand colors (old, kept for reference/backward compatibility)
         'duo-green-hover': '#61D800',
         'duo-green-shadow': '#46A302',

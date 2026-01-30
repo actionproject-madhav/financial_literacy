@@ -158,7 +158,7 @@ export const AuthPage: React.FC = () => {
             fullWidth
             className="bg-[#EFF09E] border-2 border-black text-black font-bold py-4 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-[#E3E480] hover:-translate-y-0.5 active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all"
             onClick={() => {
-              setLearnerId('demo-user-123');
+              setLearnerId('000000000000000000000000');
               setUser({
                 name: 'Demo User',
                 email: 'demo@test.com',
