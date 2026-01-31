@@ -17,5 +17,5 @@ COPY . .
 # Expose port
 EXPOSE 8080
 
-# Start command - Railway uses port 8000 by default
-CMD gunicorn app:app --bind 0.0.0.0:8000 --workers 2 --timeout 120
+# Start command - Railway provides the PORT environment variable
+CMD gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
