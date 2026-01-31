@@ -24,3 +24,6 @@ supabase>=2.0.0
 sentence-transformers>=2.2.0
 torch>=2.0.0
 stripe>=7.0.0
+fastapi
+uvicorn
+
