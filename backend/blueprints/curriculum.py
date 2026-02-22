@@ -297,7 +297,8 @@ def get_course_lessons(domain):
         })
 
         # NEW: Use curriculum_modules and curriculum_lessons instead of KCs
-        # Map domain to module_id
+        # Frontend passes course.id from get_courses(), which is module_id (e.g. banking-fundamentals).
+        # Also support legacy domain slugs (e.g. banking) via mapping.
         domain_to_module = {
             'banking': 'banking-fundamentals',
             'credit': 'credit-fundamentals',
@@ -312,8 +313,9 @@ def get_course_lessons(domain):
             'cryptocurrency': 'crypto-basics',
             'financial-planning': 'financial-planning'
         }
-        
-        module_id = domain_to_module.get(domain)
+        # If domain is already a module_id (from get_courses), use it; else map domain -> module_id
+        module_doc = db.collections.curriculum_modules.find_one({'module_id': domain, 'is_active': True})
+        module_id = domain if module_doc else domain_to_module.get(domain)
         if not module_id:
             return jsonify({'error': 'Course not found'}), 404
         

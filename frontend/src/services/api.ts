@@ -1,11 +1,12 @@
 // API Base URL configuration
-// In production (Vercel), use relative URLs to leverage Vercel's proxy rewrites
-// In development, use the VITE_API_BASE_URL (usually localhost:5000)
+// In production: use VITE_API_BASE_URL when set (direct to Railway), else relative URLs (Vercel proxy).
+// In development: use VITE_API_BASE_URL (usually localhost:5000).
 const isProduction = import.meta.env.PROD;
-const configuredApiBase = import.meta.env.VITE_API_BASE_URL || '';
+const configuredApiBase = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
 
-// Use relative URLs in production (goes through Vercel proxy), full URL in dev
-const API_BASE = isProduction ? '' : configuredApiBase;
+const API_BASE = isProduction
+  ? configuredApiBase
+  : (configuredApiBase || 'http://localhost:5000');
 
 // For OAuth redirects, always use the full backend URL (not proxied)
 export const OAUTH_BASE_URL = configuredApiBase || 'https://financialliteracy-production.up.railway.app';
