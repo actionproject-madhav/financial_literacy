@@ -17,6 +17,9 @@ interface QuestsData {
     weekly_reset_hours: number;
 }
 
+// Demo/guest learner ID - skip heavy backend calls, show static placeholder
+const DEMO_LEARNER_ID = '000000000000000000000000';
+
 export function QuestsPage() {
     const { user, learnerId, setUser } = useUserStore();
     const { t } = useLanguage();
@@ -29,82 +32,93 @@ export function QuestsPage() {
     const [gems, setGems] = useState<number>(0);
     const [hearts, setHearts] = useState<number>(5);
 
-    // Fetch quests from backend
+    const isDemoUser = learnerId === DEMO_LEARNER_ID;
+
+    // Fetch quests from backend (skip for demo user - backend is very slow for non-existent learners)
     useEffect(() => {
+        if (!learnerId || isDemoUser) {
+            if (isDemoUser) {
+                setQuests({
+                    daily: [],
+                    weekly: [],
+                    special: [],
+                    daily_reset_hours: 24,
+                    weekly_reset_hours: 168,
+                });
+            }
+            setLoading(false);
+            return;
+        }
+
+        let cancelled = false;
+
         const fetchQuests = async () => {
-            if (!learnerId) return;
-            
             try {
-                setLoading(true);
+                if (!cancelled) setLoading(true);
                 const data = await questsApi.getQuests(learnerId);
-                setQuests(data);
+                if (!cancelled) setQuests(data);
             } catch (error) {
-                console.error('Failed to fetch quests:', error);
-                toast.error('Failed to load quests. Please try again.');
+                if (!cancelled) {
+                    console.error('Failed to fetch quests:', error);
+                    toast.error('Failed to load quests. Please try again.');
+                }
             } finally {
-                setLoading(false);
+                if (!cancelled) setLoading(false);
             }
         };
 
         fetchQuests();
-        
-        // Refresh quests every 30 seconds to update progress
         const interval = setInterval(fetchQuests, 30000);
-        return () => clearInterval(interval);
-    }, [learnerId, toast]);
+        return () => {
+            cancelled = true;
+            clearInterval(interval);
+        };
+    }, [learnerId, isDemoUser]);
 
-    // Fetch user stats, gems, and hearts from backend
+    // Fetch user stats, gems, hearts (skip for demo user)
     useEffect(() => {
+        if (!learnerId || isDemoUser) {
+            if (isDemoUser && user) {
+                setStats({ streak: 0, total_xp: 0 });
+                setGems(user.gems ?? 0);
+                setHearts(user.hearts ?? 5);
+            }
+            return;
+        }
+
         const fetchUserData = async () => {
-            if (!learnerId) return;
-            
             try {
-                // Fetch stats (includes streak)
                 const statsData = await learnerApi.getStats(learnerId);
                 setStats(statsData);
-                
-                // Fetch gems directly from backend
                 try {
                     const gemsData = await learnerApi.getGems(learnerId);
                     setGems(gemsData.gems || 0);
-                } catch (err) {
-                    console.error('Failed to fetch gems:', err);
-                }
-                
-                // Fetch hearts directly from backend
+                } catch { /* ignore */ }
                 try {
                     const heartsData = await learnerApi.getHearts(learnerId);
                     setHearts(heartsData.hearts || 5);
-                } catch (err) {
-                    console.error('Failed to fetch hearts:', err);
-                }
-            } catch (error) {
-                console.error('Failed to fetch stats:', error);
-            }
+                } catch { /* ignore */ }
+            } catch { /* ignore */ }
         };
 
         fetchUserData();
-        
-        // Refresh every 30 seconds to keep data current
         const interval = setInterval(fetchUserData, 30000);
         return () => clearInterval(interval);
-    }, [learnerId]);
+    }, [learnerId, isDemoUser, user]);
 
-    // Fetch friend streaks
+    // Fetch friend streaks (skip for demo user)
     useEffect(() => {
+        if (!learnerId || isDemoUser) return;
+
         const fetchFriendStreaks = async () => {
-            if (!learnerId) return;
-            
             try {
                 const data = await socialApi.getFriendStreaks(learnerId);
                 setFriendStreaks(data.active_streaks || []);
-            } catch (error) {
-                console.error('Failed to fetch friend streaks:', error);
-            }
+            } catch { /* ignore */ }
         };
 
         fetchFriendStreaks();
-    }, [learnerId]);
+    }, [learnerId, isDemoUser]);
 
     const handleClaimQuest = async (questId: string, questType: 'daily' | 'weekly' | 'special') => {
         if (!learnerId || claiming.has(questId)) return;
@@ -218,6 +232,11 @@ export function QuestsPage() {
 
     return (
         <div className="max-w-6xl mx-auto p-6 pb-20 pt-8">
+            {isDemoUser && (
+                <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm">
+                    <strong>Demo mode.</strong> Log in or sign up to track quests and earn rewards.
+                </div>
+            )}
             <motion.div
                 initial="hidden"
                 animate="visible"

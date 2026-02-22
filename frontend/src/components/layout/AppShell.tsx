@@ -25,29 +25,26 @@ export const AppShell: React.FC = () => {
     };
   }, [openCoach]);
 
-  // Sync user data from backend when learnerId is available
+  // Sync user data from backend when learnerId is available (skip demo/guest user)
   useEffect(() => {
+    if (!learnerId || learnerId === '000000000000000000000000' || !user) return;
+
     const syncUserData = async () => {
-      if (learnerId && user) {
-        try {
-          const stats = await learnerApi.getStats(learnerId);
-          setUser({
-            ...user,
-            totalXp: stats.total_xp,
-            streak: stats.streak_count,
-            gems: stats.gems,
-            hearts: stats.hearts,
-          });
-        } catch (error) {
-          console.error('Failed to sync user data:', error);
-        }
+      try {
+        const stats = await learnerApi.getStats(learnerId);
+        setUser({
+          ...user,
+          totalXp: stats.total_xp,
+          streak: stats.streak_count,
+          gems: stats.gems,
+          hearts: stats.hearts,
+        });
+      } catch (error) {
+        console.error('Failed to sync user data:', error);
       }
     };
 
-    // Sync on mount and when learnerId changes
     syncUserData();
-    
-    // Also sync periodically (every 30 seconds) to keep data fresh
     const interval = setInterval(syncUserData, 30000);
     return () => clearInterval(interval);
   }, [learnerId, user, setUser]);
