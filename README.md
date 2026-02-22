@@ -1,186 +1,77 @@
-# FinLit - Financial Literacy Platform
+# FinLit
 
-A comprehensive financial literacy and stock trading education platform for international students.
+Gamified financial literacy platform for immigrants. Duolingo-style learning focused on US personal finance (banking, credit, taxes, investing, retirement, immigration finance).
 
-## Features
+## Core Features
 
-- Google OAuth Authentication
-- Receipt Scanner with OCR
-- Stock Market Education
-- Portfolio Management
-- Real-time Stock Data
-- AI-Powered Investment Recommendations
+- **Modules**: Banking, credit, taxes, investing, retirement, insurance, major purchases, consumer protection, crypto, financial planning
+- **Lesson flow**: Content blocks (text, quiz, interactive), mastery-based unlock, linear progression within sections
+- **Gamification**: Hearts (lives), gems (currency), XP, daily streaks, quests (daily/weekly/special), leaderboards
+- **Auth**: Google OAuth, guest/demo mode
 
-## Setup Instructions
+## Adaptive Learning Engine
 
-### Prerequisites
+- **BKT** (Bayesian Knowledge Tracing): Tracks skill mastery per knowledge component
+- **FSRS**: Spaced repetition scheduling for review timing
+- **IRT** (Item Response Theory): 2PL model for item difficulty calibration
+- **Content selector**: Combines BKT, FSRS, IRT with Thompson Sampling. Targets p(correct) ~0.6 (zone of proximal development)
+- **Recommendations**: Next lesson/section based on mastery, due reviews, and content selector output
 
-- Python 3.11+
-- Node.js 18+
-- MongoDB (optional, for receipt storage)
+## Personalization
 
-### Backend Setup
-
-1. Navigate to the backend directory:
-```bash
-cd backend
-```
-
-2. Install Python dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-3. Create a `.env` file based on `.env.example`:
-```bash
-cp .env.example .env
-```
-
-4. Add your Google OAuth credentials to `.env`:
-   - Get credentials from [Google Cloud Console](https://console.cloud.google.com/)
-   - Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`
-
-5. Start the backend server:
-```bash
-./start.sh
-```
-
-Or manually:
-```bash
-python3 scanner.py
-```
-
-The backend will run on `http://localhost:5000`
-
-### Frontend Setup
-
-1. Navigate to the frontend directory:
-```bash
-cd frontend
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Create a `.env` file (if needed):
-```bash
-# Optional - the app has fallback values
-VITE_GOOGLE_CLIENT_ID=your-google-client-id
-VITE_API_BASE_URL=http://localhost:5000
-```
-
-4. Start the development server:
-```bash
-npm run dev
-```
-
-The frontend will run on `http://localhost:5173`
-
-## Google OAuth Setup
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select an existing one
-3. Enable Google+ API
-4. Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client ID"
-5. Set **Authorized JavaScript origins**:
-   - `http://localhost:5000`
-   - `http://localhost:5173`
-   - `http://localhost:5174`
-   - `https://finlit-uyv5.onrender.com`
-
-6. Set **Authorized redirect URIs**:
-   - `http://localhost:5000/auth/google/callback`
-   - `http://localhost:5173`
-   - `http://localhost:5174`
-   - `https://finlit-uyv5.onrender.com`
-   - `https://finlit-uyv5.onrender.com/auth/google/callback`
-
-7. Copy the Client ID and Client Secret
-8. Add them to both:
-   - Backend `.env` file
-   - Frontend `.env` file (optional, has fallback)
-
-## Configure Your Google Client ID
-
-1. Create OAuth credentials in [Google Cloud Console](https://console.cloud.google.com/)
-2. Add your Client ID to the `.env` files
-3. Make sure to configure the correct redirect URIs in Google Console
-
-## Troubleshooting
-
-### Google Auth Not Working
-
-**Problem**: Clicking "Sign in with Google" doesn't do anything or stays on the same page.
-
-**Solution**: Make sure the backend server is running!
-
-```bash
-# Check if backend is running
-lsof -i :5000
-
-# If not running, start it
-cd backend
-./start.sh
-```
-
-### CORS Errors
-
-The backend is configured to accept requests from:
-- `http://localhost:5173` (Vite default)
-- `http://localhost:5174`
-- `http://localhost:3000`
-- Production domain
-
-If you're running on a different port, update the CORS configuration in `backend/scanner.py`.
-
-### Database Connection Issues
-
-The app works without MongoDB, but some features (receipt storage, user data) require it.
-
-To connect MongoDB:
-1. Add `MONGO_URI` to your `.env` file
-2. Restart the backend server
-
-## Architecture
-
-```
-NSAhack/
-├── backend/           # Flask API server
-│   ├── auth.py       # Google OAuth handlers
-│   ├── scanner.py    # Main API + Receipt OCR
-│   ├── database.py   # MongoDB connection
-│   └── start.sh      # Startup script
-│
-├── frontend/         # React + TypeScript + Vite
-│   ├── src/
-│   │   ├── pages/    # Route pages
-│   │   ├── components/ # Reusable components
-│   │   ├── services/ # API clients
-│   │   └── context/  # State management
-│   └── public/       # Static assets
-│
-└── README.md
-```
+- **Course prioritization**: Profile (country, visa, goals, experience) + diagnostic test results drive course order
+- **LLM personalization**: Cultural bridge text, visa-specific content, simplified explanations by English level, hints, wrong-answer explanations
+- **Diagnostic test**: Optional placement; informs domain_priority and domain_mastery for recommendations
 
 ## Tech Stack
 
-### Backend
-- Flask
-- Google OAuth 2.0
-- OpenCV (OCR)
-- PyTesseract
-- MongoDB
+- **Backend**: Flask, MongoDB, gunicorn
+- **Frontend**: React 18, TypeScript, Vite, Tailwind, Zustand, Framer Motion
+- **LLM**: Gemini (OpenAI fallback)
+- **Voice**: ElevenLabs TTS + transcription; Google TTS fallback
+- **Payments**: Stripe
+- **Deploy**: Railway (backend), Vercel (frontend)
 
-### Frontend
-- React 18
-- TypeScript
-- Vite
-- TailwindCSS
-- React Router
-- Lucide Icons
+## Project Structure
 
-## License
+```
+backend/
+  app.py              # Flask app entry
+  auth.py             # OAuth
+  blueprints/         # curriculum, adaptive, learners, quests, streaks, leaderboard, chat, social, payments, translate
+  services/           # learning_engine, bkt, scheduler (FSRS), irt, content_selector, personalization, voice
+  database.py
+  mongo_collections.py
+frontend/
+  src/
+    pages/            # Learn, Lesson, Section, Profile, Shop, Quests, Leaderboard, etc.
+    components/
+    services/api.ts   # API client
+    stores/userStore.ts
+    contexts/
+```
 
-MIT
+## Setup
+
+**Backend**
+```bash
+cd backend
+pip install -r requirements.txt
+cp .env.example .env  # add MONGO_URI, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, etc.
+# or use requirements-prod.txt for lighter deps (no torch)
+gunicorn app:app --bind 0.0.0.0:5000
+```
+
+**Frontend**
+```bash
+cd frontend
+npm install
+# VITE_API_BASE_URL=http://localhost:5000 in .env
+npm run dev
+```
+
+## Environment
+
+Backend: `MONGO_URI`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `FLASK_SECRET_KEY`, `FRONTEND_URL`, `GEMINI_API_KEY` (or `OPENAI_API_KEY`), `ELEVENLABS_API_KEY` (optional), `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`.
+
+Frontend: `VITE_API_BASE_URL`, `VITE_GOOGLE_CLIENT_ID`, `VITE_STRIPE_PUBLISHABLE_KEY`.
