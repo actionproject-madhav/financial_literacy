@@ -22,7 +22,7 @@ import { DiagnosticPage } from './pages/DiagnosticPage';
 import { ReviewPage } from './pages/ReviewPage';
 import { ToastProvider } from './components/ui/Toast';
 
-// Backend warm-up: Ping health endpoint on app load to wake up Render free tier
+// Backend warm-up: Ping health endpoint on app load (helps with cold starts)
 const warmUpBackend = () => {
   const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000').replace(/\/+$/, '')
 
@@ -37,12 +37,12 @@ const warmUpBackend = () => {
       // Silently ignore errors - this is just a warm-up
     })
 
-    console.log('✅ Backend warm-up ping sent (Render free tier cold start)')
+    console.log('✅ Backend warm-up ping sent')
   }
 }
 
 function App() {
-  // Warm up backend on app load (helps with Render free tier cold starts)
+  // Warm up backend on app load
   useEffect(() => {
     warmUpBackend()
   }, [])
